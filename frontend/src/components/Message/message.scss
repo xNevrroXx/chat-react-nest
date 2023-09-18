@@ -1,0 +1,26 @@
+.message {
+  border-radius: 20px;
+  width: max-content;
+  max-width: 70%;
+  padding: 7px 12px;
+  white-space: pre-wrap;
+  &__left {
+    align-self: self-start;
+    border-bottom-left-radius: 3px;
+    background-color: rgba(238, 238, 238, 100);
+  }
+  &__right {
+    align-self: self-end;
+    border-bottom-right-radius: 3px;
+    background-color: rgba(1, 153, 253, 100);
+  }
+  &__text {
+
+  }
+  &__audio {
+
+  }
+  &__video {
+
+  }
+}

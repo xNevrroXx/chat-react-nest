@@ -1,0 +1,84 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// tables
+model User {
+  id        String   @id @default(uuid())
+  password  String
+  name      String
+  surname   String
+  email     String
+  age       Int
+  sex       Sex
+  createdAt DateTime @default(now()) @map("created_at")
+
+  refreshToken      RefreshToken?
+  senderMessages    Message[]     @relation("sender")
+  recipientMessages Message[]     @relation("recipient")
+  friendshipUser1   Friendship[]  @relation("user1")
+  friendshipUser2   Friendship[]  @relation("user2")
+
+  @@unique([email])
+  @@map("user")
+}
+
+model Friendship {
+  userId1 String @map("user_id_1")
+  userId2 String @map("user_id_2")
+
+  user1 User @relation("user1", fields: [userId1], references: [id])
+  user2 User @relation("user2", fields: [userId2], references: [id])
+
+  @@unique([userId1, userId2])
+  @@map("friendship")
+}
+
+model RefreshToken {
+  userId    String   @map("user_id")
+  token     String   @db.VarChar(255)
+  updatedAt DateTime @default(now()) @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId])
+  @@map("refresh_token")
+}
+
+model Message {
+  id          String      @id @default(uuid())
+  text        String?     @db.Text()
+  senderId    String      @map("sender_id")
+  recipientId String      @map("recipient_id")
+  type        TypeMessage @map("type")
+  linkToFile  String?     @map("link_to_file")
+  hasRead     Boolean     @default(false) @map("has_read")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @map("updated_at")
+
+  sender    User @relation("sender", fields: [senderId], references: [id])
+  recipient User @relation("recipient", fields: [recipientId], references: [id])
+
+  @@map("message")
+}
+
+// enums
+enum Sex {
+  MALE
+  FEMALE
+}
+
+enum TypeMessage {
+  AUDIO
+  TEXT
+  VIDEO
+}

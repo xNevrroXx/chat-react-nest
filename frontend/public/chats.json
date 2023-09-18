@@ -1,0 +1,103 @@
+{
+  "user": {
+    "id": 1,
+    "name": "Владимир",
+    "surname": "Говоров",
+    "email": "govorov.2001gv@yandex.ru",
+    "age": 22,
+    "sex": "male",
+    "friends": [
+      2,
+      3,
+      5
+    ]
+  },
+  "chats": [
+    {
+      "userId": 2,
+      "messages": [
+        {
+          "from": 2,
+          "timestamp": 1694377426888,
+          "type": "text",
+          "message": "Привет, как ты там?",
+          "hasRead": true
+        },
+        {
+          "from": 2,
+          "timestamp": 1694377526888,
+          "type": "text",
+          "message": "Давненько не виделись",
+          "hasRead": true
+        },
+        {
+          "from": 1,
+          "timestamp": 1694377697542,
+          "type": "text",
+          "message": "Нормально. Есть такое)\nЧто у тебя нового?",
+          "hasRead": false
+        },
+        {
+          "from": 2,
+          "timestamp": 1694377697542,
+          "type": "text",
+          "message": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Tellus rutrum tellus pellentesque eu tincidunt tortor aliquam. Suspendisse ultrices gravida dictum fusce ut placerat orci. Donec pretium vulputate sapien nec sagittis aliquam malesuada. Convallis tellus id interdum velit laoreet. Pellentesque massa placerat duis ultricies lacus sed turpis.",
+          "hasRead": false
+        }
+      ]
+    },
+    {
+      "userId": 3,
+      "messages": [
+        {
+          "from": 2,
+          "timestamp": 1694377426888,
+          "type": "text",
+          "message": "Привет, как ты там?",
+          "hasRead": true
+        },
+        {
+          "from": 1,
+          "timestamp": 1694377697542,
+          "type": "text",
+          "message": "Корабли топлю, граблю всё что вижу. Пиратская сущность...",
+          "hasRead": false
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "id": 2,
+      "name": "Дмитрий",
+      "surname": "Соколов",
+      "age": 23,
+      "sex": "male",
+      "friends": [
+        1,
+        5
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Никита",
+      "surname": "Егорьев",
+      "age": 20,
+      "sex": "male",
+      "friends": [
+        1
+      ]
+    },
+    {
+      "id": 5,
+      "name": "Кирилл",
+      "surname": "Кулик",
+      "age": 17,
+      "sex": "male",
+      "friends": [
+        1,
+        2
+      ]
+    }
+  ]
+}

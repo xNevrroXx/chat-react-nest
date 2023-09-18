@@ -1,0 +1,17 @@
+{
+  "name": "chat-react-nest",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "build": "concurrently \"cd backend && npm run build\" \"cd frontend && npm run start\"",
+    "start:dev": "concurrently \"cd backend && npm run start:dev\" \"cd frontend && npm run build\"",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Vladimir Govorov",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "concurrently": "^8.2.0"
+  },
+  "devDependencies": {}
+}

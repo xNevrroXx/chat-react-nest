@@ -1,0 +1,43 @@
+.input-message {
+  justify-content: space-between;
+  align-items: self-end;
+  text-align: center;
+  & > div:not(&__field) {
+    padding-bottom: 5px;
+  }
+  &__field {
+    position: relative;
+  }
+  &__textbox {
+    font-size: 13px;
+    max-width: 590px;
+    width: 100%;
+    border:  1.5px solid rgb(207 222 243);
+    border-radius: 5px;
+    outline: none;
+    text-align: left;
+    padding: 9px 49px 10px 13px;
+    max-height: 15vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  &__placeholder {
+    font-size: 13px;
+    z-index: 1;
+    position: absolute;
+    left: 13px;
+    top: 9px;
+    opacity: 0.6;
+    &_hidden {
+      display: none;
+    }
+  }
+  &__input-buttons {
+    position: absolute;
+    right: 25px;
+    bottom: 7px;
+    z-index: 2;
+    cursor: pointer;
+    display: flex;
+  }
+}
