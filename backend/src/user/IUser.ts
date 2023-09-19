@@ -1,5 +1,5 @@
 import {TValueOf} from "../models/TUtils";
-import {Prisma, RefreshToken} from "@prisma/client";
+import {Prisma} from "@prisma/client";
 
 export interface IUser {
     name: string,

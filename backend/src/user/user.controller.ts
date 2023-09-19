@@ -111,7 +111,7 @@ export class UserController {
 
     }
 
-    @Get("get-all")
+    @Get("all")
     @UseGuards(AuthGuard)
     async getAll(@Req() request) {
         const users = await this.userService.findMany({

@@ -2,23 +2,28 @@ import {createSlice} from "@reduxjs/toolkit";
 // interfaces
 import type {IChats} from "../../models/IStore/IChats.ts";
 // actions
-import {getAll} from "../thunks/chats.ts";
-import {handleMessageSocket, setUserId} from "../actions/chats.ts";
+import {createSocket, getAll} from "../thunks/chat.ts";
+import {handleMessageSocket, setUserId} from "../actions/chat.ts";
 
 
 const initialState: IChats = {
     userId: "",
-    chats: []
+    chats: [],
+    socket: null
 };
 
-const chats = createSlice({
-    name: "chats",
+const chat = createSlice({
+    name: "chat",
     initialState,
     reducers: {},
     extraReducers: builder => {
         builder
             .addCase(setUserId, (state, action) => {
                 state.userId = action.payload;
+            })
+            .addCase(createSocket.fulfilled, (state, action) => {
+                // @ts-ignore
+                state.socket = action.payload;
             })
             .addCase(handleMessageSocket, (state, action) => {
                 console.log("HANDLE MESSAGE ACTION: ", action);
@@ -36,11 +41,11 @@ const chats = createSlice({
                 targetChat.messages.push(action.payload);
             })
             .addCase(getAll.fulfilled, (state, action) => {
-                state.chats = action.payload.chats;
+                state.chats = action.payload;
             });
     }
 });
 
-const {reducer} = chats;
+const {reducer} = chat;
 
 export default reducer;

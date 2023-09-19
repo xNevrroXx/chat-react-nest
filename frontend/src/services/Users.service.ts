@@ -8,7 +8,7 @@ class UsersService {
     protected static base = "/user";
 
     static async getAll(): Promise<AxiosResponse<TUsersResponse>> {
-        return $api.get<TUsersResponse>(this.base + "/get-all");
+        return $api.get<TUsersResponse>(this.base + "/all");
     }
 }
 

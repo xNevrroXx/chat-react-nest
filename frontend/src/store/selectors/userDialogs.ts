@@ -8,7 +8,7 @@ export type TUserDialogs = Map<IUserDto, IChat | null>;
 export const userDialogsSelector = createSelector(
     [
         (state: RootState) => state.users.users,
-        (state: RootState) => state.chats.chats
+        (state: RootState) => state.chat.chats
     ],
     (users, chats): [TUserDialogs, IUserDto] => {
         const userDialogs: TUserDialogs = new Map();

@@ -1,12 +1,12 @@
-import {User} from "@prisma/client";
+import {Message, User} from "@prisma/client";
 
-type keys = keyof User;
+type keys = keyof User | keyof Message;
 
-export function excludeSensitiveFields<User, Key extends keyof User>(
-    user: User,
+export function excludeSensitiveFields<Data, Key extends keyof Data>(
+    user: Data,
     keys: Key[]
-): Omit<User, Key> {
-    const result: User = {} as User;
+): Omit<Data, Key> {
+    const result: Data = {} as Data;
     for (const key of Object.keys(user) as Key[]) {
         if (keys.includes(key)) {
             continue;

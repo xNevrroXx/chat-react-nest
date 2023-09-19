@@ -1,3 +1,3 @@
-import {IChats} from "../IStore/IChats.ts";
+import {IChat} from "../IStore/IChats.ts";
 
-export type TChatsResponse = IChats;
+export type TChatsResponse = IChat[];

@@ -2,7 +2,7 @@ import {type Action, type Middleware, configureStore} from "@reduxjs/toolkit";
 import reduxThunk from "redux-thunk";
 // reducers
 import authentication from "./slices/authentication";
-import chats from "./slices/chats";
+import chat from "./slices/chat.ts";
 import users from "./slices/users";
 
 const loggerMiddleware: Middleware = (api) => (next: AppDispatch) => <A extends Action>(action: A) => {
@@ -12,9 +12,14 @@ const loggerMiddleware: Middleware = (api) => (next: AppDispatch) => <A extends 
 };
 
 const store = configureStore({
-    reducer: {authentication, chats, users},
+    reducer: {authentication, chat, users},
     middleware: getDefaultMiddleware =>
-        getDefaultMiddleware().concat(reduxThunk, loggerMiddleware),
+        getDefaultMiddleware({
+          serializableCheck: {
+              ignoredActions: ["chat/socket-create/fulfilled"],
+              ignoredPaths: ["chat.socket"]
+          }
+        }).concat(reduxThunk, loggerMiddleware),
     enhancers: [],
     preloadedState: undefined,
     devTools: import.meta.env.DEV,

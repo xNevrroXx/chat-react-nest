@@ -4,10 +4,10 @@ import $api from "../http";
 import type {TChatsResponse} from "../models/IResponse/IChatResponse.ts";
 
 class ChatService {
-    protected static base = "/chats";
+    protected static base = "/message";
 
     static async getAll(): Promise<AxiosResponse<TChatsResponse>> {
-        return $api.get<TChatsResponse>(this.base);
+        return $api.get<TChatsResponse>(this.base + "/all");
     }
 }
 

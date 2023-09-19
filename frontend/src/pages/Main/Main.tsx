@@ -7,7 +7,7 @@ import Dialogs from "../../modules/Dialogs/Dialogs.tsx";
 import ChatContent from "../../modules/ActiveChat/ChatContent.tsx";
 // selectors
 import {TUserDialogs, userDialogsSelector} from "../../store/selectors/userDialogs.ts";
-import {connectSocket, disconnectSocket} from "../../store/thunks/chats.ts";
+import {connectSocket, disconnectSocket} from "../../store/thunks/chat.ts";
 // own types
 import type {IChat} from "../../models/IStore/IChats.ts";
 import type {IUserDto} from "../../models/IStore/IAuthentication.ts";
@@ -30,11 +30,11 @@ const Main = () => {
             createRoute({path: ROUTES.AUTH});
         }
 
-        void dispatch(connectSocket());
-
-        return () => {
-            void dispatch(disconnectSocket());
-        };
+        // void dispatch(connectSocket());
+        //
+        // return () => {
+        //     void dispatch(disconnectSocket());
+        // };
     }, [user, dispatch]);
 
     useEffect(() => {

@@ -7,3 +7,7 @@ export interface INewMessage {
     type: TValueOf<Pick<Message, "type">>;
     text: TValueOf<Pick<Message, "text">>;
 }
+
+export interface IUserIdToSocketId {
+    [userId: string]: string
+}

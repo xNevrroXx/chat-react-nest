@@ -1,9 +1,11 @@
 import {IUserDto} from "./IAuthentication.ts";
 import {TOneOf, TValueOf} from "../TUtils.ts";
+import {SocketIOService} from "../../services/SocketIO.service.ts";
 
 export interface IChats {
     userId: TValueOf<Pick<IUserDto, "id">>;
     chats: IChat[];
+    socket: InstanceType<typeof SocketIOService> | null;
 }
 
 export interface IMessage {

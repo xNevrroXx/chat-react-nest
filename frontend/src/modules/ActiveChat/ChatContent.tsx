@@ -10,7 +10,7 @@ import Message from "../../components/Message/Message.tsx";
 import "./active-chat.scss";
 import {IActiveDialog} from "../../pages/Main/Main.tsx";
 import {useAppDispatch} from "../../hooks/store.hook.ts";
-import {sendMessageSocket} from "../../store/thunks/chats.ts";
+import {sendMessageSocket} from "../../store/thunks/chat.ts";
 import {TValueOf} from "../../models/TUtils.ts";
 
 const {Title} = Typography;

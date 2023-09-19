@@ -1,24 +1,13 @@
 import {CanActivate, ExecutionContext, Injectable} from "@nestjs/common";
-import {TokenService} from "../token/token.service";
-import ApiError from "../exceptions/api-error";
+import {AuthService} from "./auth.service";
 
 @Injectable() 
 export class WsAuth implements CanActivate {
-  constructor(private readonly tokenService: TokenService) {}
+  constructor(private readonly authService: AuthService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const client = context.switchToWs().getClient();
-    const accessToken = client.handshake.headers.authorization?.split(" ")[1];
-    if (!accessToken) {
-      throw ApiError.UnauthorizedError();
-    }
-    const userData = await this.tokenService.validateAccessToken(accessToken);
-    if (!userData) {
-      throw ApiError.UnauthorizedError();
-    }
-
-    client.user = userData;
-
+    client.user = await this.authService.verify(client.handshake.headers.authorization);
     return true;
   }
 }
