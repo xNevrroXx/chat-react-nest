@@ -47,7 +47,7 @@ const Dialogs: FC<IDialogsProps> = ({user, userDialogs, onChangeDialog, activeCh
                 continue;
             }
 
-            const lastMessageSender = chat.messages.at(-1)!.from === user.id ? "Вы" : interlocutor.name;
+            const lastMessageSender = chat.messages.at(-1)!.senderId === user.id ? "Вы" : interlocutor.name;
             elems.push(
                 <DialogCard
                     key={interlocutor.id.toString() + "dialog"}

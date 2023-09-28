@@ -23,7 +23,12 @@ interface IDialogProps {
 
 const DialogCard: FC<IDialogProps> = ({id, dialogName, sender, text, hasRead, onClick, isActive}) => {
     return (
-        <li data-list-id={id} className={classNames("dialog", isActive && "dialog_active")} onClick={onClick}>
+        <li
+            tabIndex={0}
+            data-list-id={id}
+            className={classNames("dialog", isActive && "dialog_active")}
+            onClick={onClick}
+        >
             <div className="dialog__left">
                 <Avatar size={48} className="dialog__photo"></Avatar>
             </div>

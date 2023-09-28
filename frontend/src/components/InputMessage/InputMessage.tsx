@@ -1,6 +1,7 @@
-import {FC, FormEventHandler, useState} from "react";
+import {FC, useRef, useState} from "react";
 import {Col, Row} from "antd";
 import {SmileTwoTone, PlusCircleTwoTone, SendOutlined, AudioTwoTone} from "@ant-design/icons";
+import InputEmojiWithRef from "react-input-emoji";
 import * as classNames from "classnames";
 // own modules
 import {IMessage} from "../../models/IStore/IChats.ts";
@@ -13,48 +14,45 @@ interface IInputMessage {
 }
 
 const InputMessage: FC<IInputMessage> = ({onSendMessage}) => {
-    const [message, setMessage] = useState<string | null>(null);
+    const [message, setMessage] = useState<string>("");
+    const buttonEmojiRef = useRef<HTMLDivElement | null>(null);
 
-    const onInput: FormEventHandler<HTMLDivElement> = (event) => {
-        if ( !(event.target instanceof HTMLDivElement) ) {
-            return;
-        }
-
-        if (event.target.innerText === "") {
-            setMessage(null);
-        }
-        else {
-            setMessage(event.target.innerHTML);
-        }
+    const onChange = (str: string) => {
+        console.log(str);
+        setMessage(str);
     };
 
+
     const sendMessage = () => {
-        if (!message || message.trim().length === 0) {
+        const trimmedMessage = message.trim();
+        if (trimmedMessage.length === 0) {
             return;
         }
 
-        onSendMessage(message);
+        onSendMessage(trimmedMessage);
     };
 
     return (
         <Row className="input-message">
-            <Col span={1}><PlusCircleTwoTone /></Col>
-            <Col span={1}><AudioTwoTone /></Col>
+            <Col span={1} className="input-message__btn-wrapper"><PlusCircleTwoTone /></Col>
+            <Col span={1} className="input-message__btn-wrapper"><AudioTwoTone /></Col>
             <Col span={20} className="input-message__field">
-                <div
-                    className="input-message__textbox"
-                    role="textbox"
-                    contentEditable={true}
-                    aria-multiline={true}
+                <InputEmojiWithRef
+                    inputClass={classNames("input-message__textbox")}
+                    borderRadius={5}
+                    borderColor={"rgb(207 222 243)"}
                     tabIndex={0}
-                    onInput={onInput}
-                ></div>
-                <div
-                    className={classNames("input-message__placeholder", message && "input-message__placeholder_hidden")}
-                >Ваше сообщение...</div>
-                <div className="input-message__input-buttons"><SmileTwoTone /></div>
+                    shouldReturn={true}
+
+                    value={message}
+                    onChange={onChange}
+                    placeholder={"Ваше сообщение"}
+                    buttonRef={buttonEmojiRef}
+                    fontFamily={"Roboto, sans-serif"}
+                />
             </Col>
-            <Col span={1}>
+            <Col span={1} className="input-message__btn-wrapper" ref={buttonEmojiRef}><SmileTwoTone/></Col>
+            <Col span={1} className="input-message__btn-wrapper">
                 <SendOutlined
                     className="input-message__send-btn"
                     onClick={sendMessage}
