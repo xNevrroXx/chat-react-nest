@@ -13,9 +13,15 @@
     max-width: 590px;
   }
   .react-emoji {
+    align-items: flex-end;
     .react-input-emoji--container {
       margin: 0;
       padding: 0;
+    }
+    .react-input-emoji--button {
+      svg {
+        fill: rgb(22, 119, 255);
+      }
     }
   }
   &__textbox {

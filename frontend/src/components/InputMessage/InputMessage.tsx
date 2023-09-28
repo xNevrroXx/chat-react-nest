@@ -1,5 +1,5 @@
-import {FC, useRef, useState} from "react";
-import {Col, Row} from "antd";
+import {FC, useEffect, useRef, useState} from "react";
+import {Button, Col, Row} from "antd";
 import {SmileTwoTone, PlusCircleTwoTone, SendOutlined, AudioTwoTone} from "@ant-design/icons";
 import InputEmojiWithRef from "react-input-emoji";
 import * as classNames from "classnames";
@@ -15,13 +15,19 @@ interface IInputMessage {
 
 const InputMessage: FC<IInputMessage> = ({onSendMessage}) => {
     const [message, setMessage] = useState<string>("");
-    const buttonEmojiRef = useRef<HTMLDivElement | null>(null);
 
     const onChange = (str: string) => {
         console.log(str);
         setMessage(str);
     };
 
+    const onKeyDown = (event: KeyboardEvent) => {
+        if (event.key !== "Enter") {
+            return;
+        }
+
+        sendMessage();
+    };
 
     const sendMessage = () => {
         const trimmedMessage = message.trim();
@@ -34,24 +40,24 @@ const InputMessage: FC<IInputMessage> = ({onSendMessage}) => {
 
     return (
         <Row className="input-message">
-            <Col span={1} className="input-message__btn-wrapper"><PlusCircleTwoTone /></Col>
-            <Col span={1} className="input-message__btn-wrapper"><AudioTwoTone /></Col>
+            <Col span={1} className="input-message__btn-wrapper"><PlusCircleTwoTone/></Col>
+            <Col span={1} className="input-message__btn-wrapper"><AudioTwoTone/></Col>
             <Col span={20} className="input-message__field">
                 <InputEmojiWithRef
                     inputClass={classNames("input-message__textbox")}
+                    tabIndex={0}
                     borderRadius={5}
                     borderColor={"rgb(207 222 243)"}
-                    tabIndex={0}
-                    shouldReturn={true}
+                    fontFamily={"Roboto, sans-serif"}
 
                     value={message}
                     onChange={onChange}
+                    shouldReturn={true}
+                    cleanOnEnter={true}
+                    onKeyDown={onKeyDown}
                     placeholder={"Ваше сообщение"}
-                    buttonRef={buttonEmojiRef}
-                    fontFamily={"Roboto, sans-serif"}
                 />
             </Col>
-            <Col span={1} className="input-message__btn-wrapper" ref={buttonEmojiRef}><SmileTwoTone/></Col>
             <Col span={1} className="input-message__btn-wrapper">
                 <SendOutlined
                     className="input-message__send-btn"
