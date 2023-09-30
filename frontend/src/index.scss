@@ -1,0 +1,48 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap');
+
+::-webkit-scrollbar {
+  width: 8px; /* THIS WILL RESET THE DEFAULT SCROLLBAR STYLING */
+  background-color: white;
+}
+
+/* TO STYLE THE SCROLLBAR TRACK */
+::-webkit-scrollbar-track {
+  background-color: white; /* THIS WILL SET THE COLOR OF THE SCROLLBAR TRACK */
+}
+
+/* TO STYLE THE SCROLLBAR THUMB */
+::-webkit-scrollbar-thumb {
+  background-color: #d3d3d3;
+  border-radius: 10px;
+  height: 20px;
+}
+::-webkit-scrollbar-thumb:active {
+  background-color: #b4b4b4;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-gutter: stable;
+
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body, html {
+  min-height: 100vh;
+  background-color: #fdfdfd;
+}
+
+.content {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+
+svg {
+  width: 24px;
+  height: 24px;
+  fill: rgb(22, 119, 255);
+  cursor: pointer;
+}

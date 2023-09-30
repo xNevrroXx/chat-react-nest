@@ -2,16 +2,17 @@ import {MenuFoldOutlined, PhoneTwoTone} from "@ant-design/icons";
 import {Typography, Avatar, Spin} from "antd";
 import {type FC, useMemo} from "react";
 // own modules
-import type {IMessage, ISendMessage} from "../../models/IStore/IChats.ts";
-import type {IUserDto} from "../../models/IStore/IAuthentication.ts";
 import InputMessage from "../../components/InputMessage/InputMessage.tsx";
 import Message from "../../components/Message/Message.tsx";
-// styles
-import "./active-chat.scss";
-import {IActiveDialog} from "../../pages/Main/Main.tsx";
+import type {ISendMessage} from "../../models/IStore/IChats.ts";
+import type {IUserDto} from "../../models/IStore/IAuthentication.ts";
+import type {IActiveDialog} from "../../pages/Main/Main.tsx";
+import type {TValueOf} from "../../models/TUtils.ts";
+// actions
 import {useAppDispatch} from "../../hooks/store.hook.ts";
 import {sendMessageSocket} from "../../store/thunks/chat.ts";
-import {TValueOf} from "../../models/TUtils.ts";
+// styles
+import "./active-chat.scss";
 
 const {Title} = Typography;
 
@@ -76,8 +77,10 @@ const ChatContent: FC<IActiveChatProps> = ({user, dialog}) => {
                         <MenuFoldOutlined/>
                     </div>
                 </div>
-                <div className="active-chat__content">
-                    {listMessages}
+                <div className="active-chat__content-wrapper">
+                    <div className="active-chat__content">
+                        {listMessages}
+                    </div>
                 </div>
                 <div className="active-chat__footer">
                     <InputMessage

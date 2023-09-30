@@ -36,6 +36,11 @@
     display: flex;
     gap: 25px;
   }
+  &__content-wrapper {
+    display: block;
+    overflow-y: auto;
+    padding-right: 5px;
+  }
   &__content {
     display: flex;
     flex-direction: column;
