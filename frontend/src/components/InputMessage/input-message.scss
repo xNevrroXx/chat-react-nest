@@ -9,16 +9,20 @@
   }
   &__field {
     position: relative;
-    width: 100%;
-    max-width: 590px;
   }
   .react-emoji {
     align-items: flex-end;
+    flex-grow: 1;
     .react-input-emoji--container {
       margin: 0;
       padding: 0;
     }
     .react-input-emoji--button {
+      &:focus-visible {
+        outline: 4px solid #91caff;
+        outline-offset: 1px;
+        transition: outline-offset 0s,outline 0s;
+      }
       svg {
         fill: rgb(22, 119, 255);
       }
@@ -45,9 +49,6 @@
     }
   }
   &__input-buttons {
-    //position: absolute !important;
-    //right: 25px;
-    //bottom: 7px;
     z-index: 2;
     cursor: pointer;
     display: flex;

@@ -2,10 +2,12 @@ import {FC, useState} from "react";
 import {Row} from "antd";
 // own modules
 import InputDuringMessage from "./InputDuringMessage.tsx";
+import InputDuringAudio from "./InputDuringAudio.tsx";
+import {useAudioRecorder} from "../../hooks/useAudioRecorder.hook.ts";
 import {IMessage} from "../../models/IStore/IChats.ts";
 import {TValueOf} from "../../models/TUtils.ts";
 // styles
-import "./inputMessage.scss";
+import "./input-message.scss";
 
 interface IInputMessage {
     onSendMessage: (text: TValueOf<Pick<IMessage, "text">>) => void
@@ -13,6 +15,17 @@ interface IInputMessage {
 
 const InputMessage: FC<IInputMessage> = ({onSendMessage}) => {
     const [message, setMessage] = useState<string>("");
+    const {
+        mediaRecorder,
+        permission,
+        isRecording,
+        audio,
+        audioURL,
+        getMicrophonePermission,
+        startRecording,
+        stopRecording,
+        cleanAudio
+    } = useAudioRecorder();
 
     const onChange = (str: string) => {
         setMessage(str);
@@ -46,14 +59,31 @@ const InputMessage: FC<IInputMessage> = ({onSendMessage}) => {
         onSendMessage(trimmedMessage);
     };
 
+
     return (
         <Row className="input-message">
-            <InputDuringMessage
-                message={message}
-                sendMessage={sendMessage}
-                onChange={onChange}
-                onKeyDown={onKeyDown}
-            />
+            { mediaRecorder.current && (isRecording || audioURL) ?
+                <InputDuringAudio
+                    audio={audio}
+                    mediaRecorder={mediaRecorder.current}
+                    stopRecording={stopRecording}
+                    cleanAudio={cleanAudio}
+                    isRecording={isRecording}
+                    audioURL={audioURL}
+                />
+                :
+                <InputDuringMessage
+                    message={message}
+                    sendMessage={sendMessage}
+                    onChange={onChange}
+                    onKeyDown={onKeyDown}
+                    permission={permission}
+                    isRecording={isRecording}
+                    getMicrophonePermission={getMicrophonePermission}
+                    startRecording={startRecording}
+                    stopRecording={stopRecording}
+                />
+            }
         </Row>
     );
 };
