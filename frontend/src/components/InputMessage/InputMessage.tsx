@@ -1,8 +1,7 @@
-import {FC, FormEventHandler, useState} from "react";
-import {Col, Row} from "antd";
-import {SmileTwoTone, PlusCircleTwoTone, SendOutlined, AudioTwoTone} from "@ant-design/icons";
-import * as classNames from "classnames";
+import {FC, useState} from "react";
+import {Row} from "antd";
 // own modules
+import InputDuringMessage from "./InputDuringMessage.tsx";
 import {IMessage} from "../../models/IStore/IChats.ts";
 import {TValueOf} from "../../models/TUtils.ts";
 // styles
@@ -13,15 +12,24 @@ interface IInputMessage {
 }
 
 const InputMessage: FC<IInputMessage> = ({onSendMessage}) => {
-    const [message, setMessage] = useState<string | null>(null);
+    const [message, setMessage] = useState<string>("");
 
-    const onInput: FormEventHandler<HTMLDivElement> = (event) => {
-        if ( !(event.target instanceof HTMLDivElement) ) {
+    const onChange = (str: string) => {
+        setMessage(str);
+    };
+
+    const onKeyDown = (event: KeyboardEvent) => {
+        if (event.key !== "Enter") {
+            return;
+        }
+
+        sendMessage();
+        if (event.key !== "Enter" || !(event.target instanceof HTMLDivElement)) {
             return;
         }
 
         if (event.target.innerText === "") {
-            setMessage(null);
+            setMessage("");
         }
         else {
             setMessage(event.target.innerHTML);
@@ -29,37 +37,23 @@ const InputMessage: FC<IInputMessage> = ({onSendMessage}) => {
     };
 
     const sendMessage = () => {
-        if (!message || message.trim().length === 0) {
+        const trimmedMessage = message.trim();
+        if (trimmedMessage.length === 0) {
             return;
         }
 
-        onSendMessage(message);
+        setMessage("");
+        onSendMessage(trimmedMessage);
     };
 
     return (
         <Row className="input-message">
-            <Col span={1}><PlusCircleTwoTone /></Col>
-            <Col span={1}><AudioTwoTone /></Col>
-            <Col span={20} className="input-message__field">
-                <div
-                    className="input-message__textbox"
-                    role="textbox"
-                    contentEditable={true}
-                    aria-multiline={true}
-                    tabIndex={0}
-                    onInput={onInput}
-                ></div>
-                <div
-                    className={classNames("input-message__placeholder", message && "input-message__placeholder_hidden")}
-                >Ваше сообщение...</div>
-                <div className="input-message__input-buttons"><SmileTwoTone /></div>
-            </Col>
-            <Col span={1}>
-                <SendOutlined
-                    className="input-message__send-btn"
-                    onClick={sendMessage}
-                />
-            </Col>
+            <InputDuringMessage
+                message={message}
+                sendMessage={sendMessage}
+                onChange={onChange}
+                onKeyDown={onKeyDown}
+            />
         </Row>
     );
 };

@@ -2,18 +2,30 @@
   justify-content: space-between;
   align-items: self-end;
   text-align: center;
-  & > div:not(&__field) {
-    padding-bottom: 5px;
+  &__btn-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
   &__field {
     position: relative;
+    width: 100%;
+    max-width: 590px;
+  }
+  .react-emoji {
+    align-items: flex-end;
+    .react-input-emoji--container {
+      margin: 0;
+      padding: 0;
+    }
+    .react-input-emoji--button {
+      svg {
+        fill: rgb(22, 119, 255);
+      }
+    }
   }
   &__textbox {
-    font-size: 13px;
-    max-width: 590px;
-    width: 100%;
-    border:  1.5px solid rgb(207 222 243);
-    border-radius: 5px;
+    font-size: 14px;
     outline: none;
     text-align: left;
     padding: 9px 49px 10px 13px;
@@ -33,9 +45,9 @@
     }
   }
   &__input-buttons {
-    position: absolute;
-    right: 25px;
-    bottom: 7px;
+    //position: absolute !important;
+    //right: 25px;
+    //bottom: 7px;
     z-index: 2;
     cursor: pointer;
     display: flex;
