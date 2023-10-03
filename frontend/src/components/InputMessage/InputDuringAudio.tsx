@@ -1,4 +1,4 @@
-import React, {FC, Fragment, useRef} from "react";
+import React, {FC, Fragment, useRef, useState} from "react";
 import {Button, Col} from "antd";
 import {CloseCircleOutlined, SendOutlined} from "@ant-design/icons";
 // @ts-ignore
@@ -21,14 +21,23 @@ interface IInputDuringAudioProps {
 const InputDuringAudio: FC<IInputDuringAudioProps> = ({mediaRecorder, stopRecording, audio, audioURL, cleanAudio, isRecording}) => {
     const visualizerRef = useRef<HTMLDivElement | null>(null);
     const audioRef = useRef<HTMLAudioElement | null>(null);
-    const audioTimestampRef = useRef<number | null>(null);
+    const [audioTimestamp, setAudioTimestamp] = useState<number | null>(null);
 
-    const onPlay = () => {
+    const playRecording = () => {
         if (!audioRef.current) {
             return;
         }
 
         void audioRef.current.play();
+    };
+
+    const onTimeUpdate: React.ReactEventHandler<HTMLAudioElement> = (event) => {
+        if (!(event.target instanceof HTMLAudioElement)) {
+            return;
+        }
+
+        setAudioTimestamp(event.target.currentTime);
+        // audioTimestampRef.current = event.target.currentTime;
     };
 
     return (
@@ -51,7 +60,7 @@ const InputDuringAudio: FC<IInputDuringAudioProps> = ({mediaRecorder, stopRecord
                     :
                     <Button
                         type={"text"}
-                        onClick={onPlay}
+                        onClick={playRecording}
                         icon={<PlayCircleOutlined/>}
                     />
                 }
@@ -70,14 +79,13 @@ const InputDuringAudio: FC<IInputDuringAudioProps> = ({mediaRecorder, stopRecord
                                 barWidth={3}
                                 gap={2}
                                 barColor={"lightblue"}
-                                currentTime={audioRef || undefined}
+                                barPlayedColor="rgb(160, 198, 255)"
+                                currentTime={audioTimestamp}
                             />
                             <audio
                                 ref={audioRef}
                                 src={audioURL || "fake"}
-                                onPlaying={(event) => {
-                                    audioTimestampRef.current = event.timeStamp;
-                                }}
+                                onTimeUpdate={onTimeUpdate}
                             />
                         </Fragment>
                     )
