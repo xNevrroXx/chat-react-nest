@@ -3,11 +3,16 @@ import {MessageService} from "./message.service";
 import {AuthGuard} from "../auth/auth.guard";
 import {TChats} from "./IMessage";
 import {Request} from "express";
+import {File, Prisma} from "@prisma/client";
+import {FileService} from "../file/file.service";
+import {excludeSensitiveFields} from "../utils/excludeSensitiveFields";
+import {TFileToClient} from "../file/IFile";
 
 @Controller("message")
 export class MessageController {
     constructor(
-        private readonly messageService: MessageService
+        private readonly messageService: MessageService,
+        private readonly fileService: FileService
     ) {}
 
     @Get("all")
@@ -26,28 +31,50 @@ export class MessageController {
                     }
                 ]
             },
+            include: {
+                files: true
+            },
             orderBy: {
                 createdAt: "asc"
             }
-        });
+        }) as Prisma.MessageGetPayload<{include: {files: true}}>[];
 
-        const chats: TChats = messages.reduce<TChats>((previousValue, message) => {
+        const chats: TChats = await messages.reduce<Promise<TChats>>(async (previousValue, message) => {
+            const prev = await previousValue;
             const interlocutorId = userPayload.id === message.senderId ? message.recipientId : message.senderId;
+            const chat = prev.find(chat => chat.userId === interlocutorId);
+            const hasFiles = message.files.length > 0;
+            let files: TFileToClient[] = [];
+            if (hasFiles) {
+                const filePromises: Promise<TFileToClient>[] = message.files.map(file => {
+                    const f: TFileToClient = excludeSensitiveFields(file, ["filename"]) as TFileToClient;
+                    return this.fileService.findOnDisk(file.filename)
+                        .then((buffer) => {
+                            f.buffer = buffer;
+                            return f;
+                        });
+                });
+                files = await Promise.all(filePromises);
+            }
 
-            const chat = previousValue.find(chat => chat.userId === interlocutorId);
             if (!chat) {
-                previousValue.push({
+                prev.push({
                     userId: interlocutorId,
-                    messages: [message]
+                    messages: [{
+                        ...message,
+                        files
+                    }]
+                });
+            } else {
+                chat.messages.push({
+                    ...message,
+                    files
                 });
             }
-            else {
-                chat.messages.push(message);
-            }
 
 
-            return previousValue;
-        }, []);
+            return prev;
+        }, Promise.resolve([]));
 
         return chats;
     }

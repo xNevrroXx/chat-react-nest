@@ -4,6 +4,7 @@ import {DatabaseService} from "../database/database.service";
 import {AppConstantsService} from "../app.constants.service";
 import {type File, Prisma} from "@prisma/client";
 import ApiError from "../exceptions/api-error";
+import * as path from "path";
 
 @Injectable()
 export class FileService {
@@ -17,11 +18,24 @@ export class FileService {
         }
     }
 
-    async writeFile(arrayBuffer: ArrayBuffer, filename: string): Promise<void> {
-        console.log("Buffer: ", arrayBuffer);
+    async findOnDisk(filename: string): Promise<ArrayBuffer> {
+        const pathToFile = path.join(this.constants.USERS_DATA_FOLDER_PATH, filename);
+
+        return new Promise<ArrayBuffer>((resolve, reject) => {
+            fs.readFile(pathToFile, (error, buffer) => {
+                if (error) {
+                    reject(error);
+                }
+
+                resolve(buffer);
+            });
+        });
+    }
+
+    async write(arrayBuffer: ArrayBuffer, filename: string): Promise<void> {
         const buffer = Buffer.from(arrayBuffer);
-        console.log("CONST: ", this.constants.USERS_DATA_FOLDER_PATH);
-        fs.writeFile(this.constants.USERS_DATA_FOLDER_PATH + filename, buffer, (error) => {
+        const pathToFile = path.join(this.constants.USERS_DATA_FOLDER_PATH, filename);
+        fs.writeFile(pathToFile, buffer, (error) => {
             if (error) {
                 throw ApiError.InternalServerError();
             }

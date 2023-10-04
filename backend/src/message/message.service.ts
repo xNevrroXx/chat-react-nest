@@ -15,23 +15,25 @@ export class MessageService {
         });
     }
 
-    async findMany(
+    async findMany<T extends Prisma.MessageInclude>(
         params: {
             skip?: number;
             take?: number;
             cursor?: Prisma.MessageWhereUniqueInput;
             where?: Prisma.MessageWhereInput;
             orderBy?: Prisma.MessageOrderByWithRelationInput;
+            include?: T;
         }
-    ): Promise<Message[]> {
-        const {skip, take, cursor, where, orderBy} = params;
+    ): Promise<Prisma.MessageGetPayload<{include: T}>[] | Message[]> {
+        const {skip, take, cursor, where, orderBy, include} = params;
 
         return this.prisma.message.findMany({
             skip,
             take,
             cursor,
             where,
-            orderBy
+            orderBy,
+            include
         });
     }
 

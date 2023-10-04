@@ -4,7 +4,7 @@ import {ROUTES} from "../../router/routes.ts";
 import {useAppDispatch, useAppSelector} from "../../hooks/store.hook.ts";
 import {createRoute} from "../../router/createRoute.ts";
 import Dialogs from "../../modules/Dialogs/Dialogs.tsx";
-import ChatContent from "../../modules/ActiveChat/ChatContent.tsx";
+import ChatContent from "../../modules/ChatContent/ChatContent.tsx";
 // selectors
 import {userDialogsSelector} from "../../store/selectors/userDialogs.ts";
 // own types
@@ -66,12 +66,11 @@ const Main = () => {
                 activeChatId={activeDialog ? activeDialog.interlocutor.id : null}
             />
             {
-                activeDialog ?
+                activeDialog &&
                     <ChatContent
                         dialog={activeDialog}
                         user={user}
                     />
-                    : null
             }
         </div>
     );

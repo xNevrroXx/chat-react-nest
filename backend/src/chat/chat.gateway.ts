@@ -71,7 +71,6 @@ export class ChatGateway
             throw ApiError.BadRequest("Не найден отправитель или получатель сообщения");
         }
 
-        console.log("message: ", message);
         const newMessage = await this.messageService.create({
             data: {
                 sender: {
@@ -102,7 +101,6 @@ export class ChatGateway
     async handleAudioMessage(@ConnectedSocket() client, @MessageBody() message: INewVoiceMessage) {
         const senderPayloadJWT: IUserPayloadJWT = client.user;
 
-        console.log("message: ", message);
         const sender = await this.userService.findOne({
             id: senderPayloadJWT.id
         });
@@ -141,7 +139,7 @@ export class ChatGateway
             }
         }) as Prisma.MessageGetPayload<{include: {files: true}}>;
 
-        void this.fileService.writeFile(message.blob, filename);
+        void this.fileService.write(message.blob, filename);
         const voiceFile: TFileToClient = newMessage.files.map(file => {
             const f = excludeSensitiveFields(file, ["filename", "messageId"]) as TFileToClient;
             f.buffer = message.blob;

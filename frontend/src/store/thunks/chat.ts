@@ -5,8 +5,9 @@ import {SocketIOService} from "../../services/SocketIO.service.ts";
 // actions
 import {handleMessageSocket} from "../actions/chat.ts";
 // types
-import {ISendMessage, ISendVoiceMessage} from "../../models/IStore/IChats.ts";
+import {IChat, IChats, IFile, IMessage, ISendMessage, ISendVoiceMessage} from "../../models/IStore/IChats.ts";
 import {RootState} from "../index.ts";
+import {TChatsResponse} from "../../models/IResponse/IChatResponse.ts";
 
 
 const createSocket = createAsyncThunk<InstanceType<typeof SocketIOService> | undefined, string, {state: RootState}>(
@@ -33,8 +34,9 @@ const connectSocket = createAsyncThunk<void, void, {state: RootState}>(
             socket?.on("message", (data) => {
                 thunkApi.dispatch(handleMessageSocket(data));
             });
-
-            return;
+            socket?.on("voiceMessage", (data) => {
+                thunkApi.dispatch(handleMessageSocket(data));
+            });
         }
         catch (error) {
             thunkApi.rejectWithValue(error);
@@ -97,8 +99,32 @@ const getAll = createAsyncThunk(
     async(_, thunkAPI) => {
         try {
             const response = await ChatService.getAll();
-            console.log(response);
-            return response.data;
+            const chatsHTTPResponse = response.data;
+            const chats: IChat[] = [];
+            chatsHTTPResponse.forEach(chat => {
+                const messages: IMessage[] = chat.messages.map((message) => {
+                    const files: IFile[] = message.files.map(file => {
+                        const u = new Uint8Array(file.buffer.data);
+                        const blob = new Blob([u], {type: "audio/webm"});
+                        return {
+                            ...file,
+                            blob
+                        };
+                    });
+
+                    return {
+                        ...message,
+                        files
+                    };
+                });
+
+                chats.push({
+                    ...chat,
+                    messages
+                });
+            });
+
+            return chats;
         }
         catch (error) {
             return thunkAPI.rejectWithValue(error);

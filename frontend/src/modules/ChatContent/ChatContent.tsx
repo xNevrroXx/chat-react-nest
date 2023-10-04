@@ -8,12 +8,12 @@ import type {ISendMessage} from "../../models/IStore/IChats.ts";
 import type {IUserDto} from "../../models/IStore/IAuthentication.ts";
 import type {IActiveDialog} from "../../pages/Main/Main.tsx";
 import type {TValueOf} from "../../models/TUtils.ts";
+import type {ISendVoiceMessage} from "../../models/IStore/IChats.ts";
 // actions
 import {useAppDispatch} from "../../hooks/store.hook.ts";
 import {sendMessageSocket, sendVoiceMessageSocket} from "../../store/thunks/chat.ts";
 // styles
-import "./active-chat.scss";
-import {ISendVoiceMessage} from "../../models/IStore/IChats.ts";
+import "./chat-content.scss";
 
 const {Title} = Typography;
 

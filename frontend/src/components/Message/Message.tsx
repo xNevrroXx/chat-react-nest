@@ -25,13 +25,12 @@ const Message: FC<TMessageProps> = ({side, text, files}) => {
         }
 
         if (files.at(0)!.type === TFileType[TFileType.VOICE]) {
-            const blob = new Blob([files.at(0)!.buffer], {type: "audio/webm"});
+            const blob = files.at(0)!.blob;
             setBlob(blob);
             setBlobURL(URL.createObjectURL(blob));
             setIsVoice(true);
         }
     }, [files]);
-
 
     return (
         <div

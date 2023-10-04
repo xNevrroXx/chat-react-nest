@@ -1,5 +1,6 @@
 import {io, Socket} from "socket.io-client";
 import {ClientToServerEvents, ServerToClientEvents} from "../models/ISocket-io.ts";
+import {TValueOf} from "../models/TUtils.ts";
 
 class SocketIOService {
     public socket: Socket<ServerToClientEvents, ClientToServerEvents>;
@@ -20,11 +21,9 @@ class SocketIOService {
     async connect(): Promise<void> {
         return new Promise((resolve, reject) => {
             this.socket.on("connect", () => {
-                console.log("CONNECTED");
                 resolve();
             });
             this.socket.on("connect_error", (error) => {
-                console.log("CONNECT ERROR: ", error);
                 reject(error);
             });
 
@@ -34,8 +33,7 @@ class SocketIOService {
 
     async disconnect(): Promise<void> {
         return new Promise((resolve) => {
-            this.socket.on("disconnect", (reason, description) => {
-                console.log("Disconnection: ", reason, description);
+            this.socket.on("disconnect", () => {
                 this.socket.removeAllListeners();
                 resolve();
             });
@@ -46,16 +44,13 @@ class SocketIOService {
 
     emit<Event extends keyof ClientToServerEvents>(event: Event, data: Parameters<ClientToServerEvents[Event]>) {
         this.socket.emit(event, ...data);
-        console.log("event: ", event);
-        console.log("data: ", data);
     }
 
-    on<Event extends keyof ServerToClientEvents>(event: Event, fn: ServerToClientEvents[Event]) {
+    on<Event extends keyof ServerToClientEvents>(event: Event, fn: TValueOf<ServerToClientEvents[Event]>) {
         if (!this.socket) {
             return;
         }
 
-        // @ts-ignore
         this.socket.on(event, fn);
     }
 }

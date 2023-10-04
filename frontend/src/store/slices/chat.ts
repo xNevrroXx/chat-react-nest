@@ -1,9 +1,10 @@
 import {createSlice} from "@reduxjs/toolkit";
 // interfaces
-import type {IChats} from "../../models/IStore/IChats.ts";
+import type {IChats, IFile} from "../../models/IStore/IChats.ts";
 // actions
 import {createSocket, getAll} from "../thunks/chat.ts";
 import {handleMessageSocket, setUserId} from "../actions/chat.ts";
+import {TFileType} from "../../models/IStore/IChats.ts";
 
 
 const initialState: IChats = {
@@ -29,15 +30,29 @@ const chat = createSlice({
                 const interlocutorId = state.userId === action.payload.senderId ? action.payload.recipientId : action.payload.senderId;
 
                 const targetChat = state.chats.find(chat => chat.userId === interlocutorId);
+                const files: IFile[] = action.payload.files.map(file => {
+                    const blob = new Blob([file.buffer], {type: "audio/webm"});
+                    return {
+                        id: file.id,
+                        createdAt: file.createdAt,
+                        type: file.type,
+                        blob: blob
+                    };
+                });
+                const newMessage = {
+                    ...action.payload,
+                    files
+                };
+
                 if (!targetChat) {
                     state.chats.push({
                         userId: interlocutorId,
-                        messages: [action.payload]
+                        messages: [newMessage]
                     });
                     return;
                 }
 
-                targetChat.messages.push(action.payload);
+                targetChat.messages.push(newMessage);
             })
             .addCase(getAll.fulfilled, (state, action) => {
                 state.chats = action.payload;
