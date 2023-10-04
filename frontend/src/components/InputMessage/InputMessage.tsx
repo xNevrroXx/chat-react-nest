@@ -10,10 +10,11 @@ import {TValueOf} from "../../models/TUtils.ts";
 import "./input-message.scss";
 
 interface IInputMessage {
-    onSendMessage: (text: TValueOf<Pick<IMessage, "text">>) => void
+    onSendMessage: (text: TValueOf<Pick<IMessage, "text">>) => void;
+    sendVoiceMessage: (record: Blob) => void;
 }
 
-const InputMessage: FC<IInputMessage> = ({onSendMessage}) => {
+const InputMessage: FC<IInputMessage> = ({onSendMessage, sendVoiceMessage}) => {
     const [message, setMessage] = useState<string>("");
     const {
         mediaRecorder,
@@ -70,6 +71,7 @@ const InputMessage: FC<IInputMessage> = ({onSendMessage}) => {
                     cleanAudio={cleanAudio}
                     isRecording={isRecording}
                     audioURL={audioURL}
+                    sendVoiceMessage={sendVoiceMessage}
                 />
                 :
                 <InputDuringMessage

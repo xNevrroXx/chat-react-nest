@@ -1,13 +1,13 @@
-import React, {FC, Fragment, useRef, useState} from "react";
+import React, {FC, Fragment} from "react";
 import {Button, Col} from "antd";
 import {CloseCircleOutlined, SendOutlined} from "@ant-design/icons";
 // @ts-ignore
-import {AudioVisualizer, LiveAudioVisualizer} from "react-audio-visualize";
+import {LiveAudioVisualizer} from "react-audio-visualize";
 // own modules
 import {TValueOf} from "../../models/TUtils.ts";
 import {IUseAudioRecorderReturnType} from "../../hooks/useAudioRecorder.hook.ts";
 import StopCircleOutlined from "../../icons/StopCircleOutlined.tsx";
-import PlayCircleOutlined from "../../icons/PlayCircleOutlined.tsx";
+import AudioElement from "../AudioElement/AudioElement.tsx";
 
 interface IInputDuringAudioProps {
     mediaRecorder: MediaRecorder;
@@ -16,28 +16,24 @@ interface IInputDuringAudioProps {
     isRecording: TValueOf<Pick<IUseAudioRecorderReturnType, "isRecording">>;
     stopRecording: TValueOf<Pick<IUseAudioRecorderReturnType, "stopRecording">>;
     cleanAudio: TValueOf<Pick<IUseAudioRecorderReturnType, "cleanAudio">>;
+    sendVoiceMessage: (record: Blob) => void;
 }
 
-const InputDuringAudio: FC<IInputDuringAudioProps> = ({mediaRecorder, stopRecording, audio, audioURL, cleanAudio, isRecording}) => {
-    const visualizerRef = useRef<HTMLDivElement | null>(null);
-    const audioRef = useRef<HTMLAudioElement | null>(null);
-    const [audioTimestamp, setAudioTimestamp] = useState<number | null>(null);
-
-    const playRecording = () => {
-        if (!audioRef.current) {
+const InputDuringAudio: FC<IInputDuringAudioProps> = ({
+                                                          mediaRecorder,
+                                                          stopRecording,
+                                                          audio,
+                                                          audioURL,
+                                                          cleanAudio,
+                                                          isRecording,
+                                                          sendVoiceMessage: onSendVoiceMessage
+                                                      }) => {
+    const sendVoiceMessage = () => {
+        if (!audio) {
             return;
         }
 
-        void audioRef.current.play();
-    };
-
-    const onTimeUpdate: React.ReactEventHandler<HTMLAudioElement> = (event) => {
-        if (!(event.target instanceof HTMLAudioElement)) {
-            return;
-        }
-
-        setAudioTimestamp(event.target.currentTime);
-        // audioTimestampRef.current = event.target.currentTime;
+        onSendVoiceMessage(audio);
     };
 
     return (
@@ -50,45 +46,19 @@ const InputDuringAudio: FC<IInputDuringAudioProps> = ({mediaRecorder, stopRecord
                 />
             </Col>
 
-            <Col span={1} className="input-message__btn-wrapper">
-                { isRecording ?
+            {isRecording &&
+                <Col span={1} className="input-message__btn-wrapper">
                     <Button
                         type={"text"}
                         onClick={stopRecording}
                         icon={<StopCircleOutlined/>}
                     />
-                    :
-                    <Button
-                        type={"text"}
-                        onClick={playRecording}
-                        icon={<PlayCircleOutlined/>}
-                    />
-                }
-
-            </Col>
+                </Col>
+            }
 
             <Col span={20} className="input-message__field">
-                { audio && audioURL ?
-                    (
-                        <Fragment>
-                            <AudioVisualizer
-                                ref={visualizerRef}
-                                blob={audio}
-                                width={600}
-                                height={50}
-                                barWidth={3}
-                                gap={2}
-                                barColor={"lightblue"}
-                                barPlayedColor="rgb(160, 198, 255)"
-                                currentTime={audioTimestamp}
-                            />
-                            <audio
-                                ref={audioRef}
-                                src={audioURL || "fake"}
-                                onTimeUpdate={onTimeUpdate}
-                            />
-                        </Fragment>
-                    )
+                {audio && audioURL ?
+                    <AudioElement blob={audio} blobURL={audioURL}/>
                     :
                     <LiveAudioVisualizer
                         width={"610px"}
@@ -99,7 +69,11 @@ const InputDuringAudio: FC<IInputDuringAudioProps> = ({mediaRecorder, stopRecord
             </Col>
 
             <Col span={1} className="input-message__btn-wrapper">
-                <Button type="text" icon={<SendOutlined/>}/>
+                <Button
+                    type="text"
+                    icon={<SendOutlined/>}
+                    onClick={sendVoiceMessage}
+                />
             </Col>
         </Fragment>
     );

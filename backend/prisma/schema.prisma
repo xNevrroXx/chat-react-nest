@@ -12,20 +12,22 @@ datasource db {
 
 // tables
 model User {
-  id        String   @id @default(uuid())
-  password  String
-  name      String
-  surname   String
-  email     String
-  age       Int
-  sex       Sex
-  createdAt DateTime @default(now()) @map("created_at")
+  id       String @id @default(uuid())
+  password String
+  name     String
+  surname  String
+  email    String
+  age      Int
+  sex      Sex
 
-  refreshToken      RefreshToken?
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @map("updated_at")
+
   senderMessages    Message[]     @relation("sender")
   recipientMessages Message[]     @relation("recipient")
   friendshipUser1   Friendship[]  @relation("user1")
   friendshipUser2   Friendship[]  @relation("user2")
+  refreshToken      RefreshToken? @relation("refresh_token")
 
   @@unique([email])
   @@map("user")
@@ -43,32 +45,45 @@ model Friendship {
 }
 
 model RefreshToken {
-  userId    String   @map("user_id")
-  token     String   @db.VarChar(255)
+  userId String @map("user_id")
+  token  String @db.VarChar(255)
+
   updatedAt DateTime @default(now()) @map("updated_at")
 
-  user User @relation(fields: [userId], references: [id])
+  user User @relation("refresh_token", fields: [userId], references: [id])
 
   @@unique([userId])
   @@map("refresh_token")
 }
 
 model Message {
-  id          String      @id @default(uuid())
-  text        String?     @db.Text()
-  senderId    String      @map("sender_id")
-  recipientId String      @map("recipient_id")
-  type        TypeMessage @map("type")
-  linkToFile  String?     @map("link_to_file")
-  hasRead     Boolean     @default(false) @map("has_read")
+  id          String  @id @default(uuid())
+  text        String? @db.Text()
+  senderId    String  @map("sender_id")
+  recipientId String  @map("recipient_id")
+  hasRead     Boolean @default(false) @map("has_read")
 
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime? @map("updated_at")
 
-  sender    User @relation("sender", fields: [senderId], references: [id])
-  recipient User @relation("recipient", fields: [recipientId], references: [id])
+  sender    User   @relation("sender", fields: [senderId], references: [id])
+  recipient User   @relation("recipient", fields: [recipientId], references: [id])
+  files     File[] @relation("files")
 
   @@map("message")
+}
+
+model File {
+  id        String   @id @default(uuid())
+  messageId String   @map("message_id")
+  filename  String
+  type      FileType
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  message Message @relation("files", fields: [messageId], references: [id])
+
+  @@map("file")
 }
 
 // enums
@@ -77,8 +92,10 @@ enum Sex {
   FEMALE
 }
 
-enum TypeMessage {
-  AUDIO
+enum FileType {
   TEXT
+  AUDIO
   VIDEO
+  VOICE
+  OTHER
 }

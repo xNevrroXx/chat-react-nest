@@ -8,16 +8,21 @@ import {
     ConnectedSocket
 } from "@nestjs/websockets";
 import {UseGuards} from "@nestjs/common";
-import {Server, Socket} from "socket.io";
+import {Server} from "socket.io";
 // own modules
 import ApiError from "../exceptions/api-error";
 import {WsAuth} from "../auth/ws-auth.guard";
-import {MessageService} from "../message/message.service";
 import {UserService} from "../user/user.service";
+import {AuthService} from "../auth/auth.service";
+import {MessageService} from "../message/message.service";
 // types
 import {IUserPayloadJWT} from "../user/IUser";
-import {INewMessage, IUserIdToSocketId} from "./IChat";
-import {AuthService} from "../auth/auth.service";
+import {INewMessage, INewVoiceMessage, IUserIdToSocketId} from "./IChat";
+import {FileService} from "../file/file.service";
+import {generateFileName} from "../utils/generateFileName";
+import {excludeSensitiveFields} from "../utils/excludeSensitiveFields";
+import {Prisma, FileType} from "@prisma/client";
+import {TFileToClient} from "../file/IFile";
 
 @WebSocketGateway({
     namespace: "api/chat",
@@ -31,7 +36,8 @@ export class ChatGateway
     constructor(
         private readonly messageService: MessageService,
         private readonly userService: UserService,
-        private readonly authService: AuthService
+        private readonly authService: AuthService,
+        private readonly fileService: FileService
     ) {}
 
     @WebSocketServer()
@@ -41,15 +47,12 @@ export class ChatGateway
 
     async handleConnection(@ConnectedSocket() client) {
         const userData = await this.authService.verify(client.handshake.headers.authorization);
-        console.log("before connect: ", this.userIdToSocketId);
         this.userIdToSocketId[userData.id] = client.id;
-        console.log("connect: ", this.userIdToSocketId);
     }
 
     @UseGuards(WsAuth)
     handleDisconnect(@ConnectedSocket() client) {
         delete this.userIdToSocketId[client.id];
-        console.log("disconnect: ", this.userIdToSocketId);
     }
 
     @UseGuards(WsAuth)
@@ -68,19 +71,21 @@ export class ChatGateway
             throw ApiError.BadRequest("Не найден отправитель или получатель сообщения");
         }
 
+        console.log("message: ", message);
         const newMessage = await this.messageService.create({
-            sender: {
-                connect: {
-                    id: sender.id
-                }
-            },
-            recipient: {
-                connect: {
-                    id: recipient.id
-                }
-            },
-            type: message.type,
-            text: message.text
+            data: {
+                sender: {
+                    connect: {
+                        id: sender.id
+                    }
+                },
+                recipient: {
+                    connect: {
+                        id: recipient.id
+                    }
+                },
+                text: message.text
+            }
         });
 
         client.emit("message", newMessage);
@@ -90,5 +95,69 @@ export class ChatGateway
         this.server
             .to(this.userIdToSocketId[recipient.id])
             .emit("message", newMessage);
+    }
+
+    @UseGuards(WsAuth)
+    @SubscribeMessage("voiceMessage")
+    async handleAudioMessage(@ConnectedSocket() client, @MessageBody() message: INewVoiceMessage) {
+        const senderPayloadJWT: IUserPayloadJWT = client.user;
+
+        console.log("message: ", message);
+        const sender = await this.userService.findOne({
+            id: senderPayloadJWT.id
+        });
+        const recipient = await this.userService.findOne({
+            id: message.interlocutorId
+        });
+
+        if (!sender || !recipient) {
+            throw ApiError.BadRequest("Не найден отправитель или получатель сообщения");
+        }
+
+        const filename = generateFileName(sender.id);
+        const newMessage = await this.messageService.create({
+            data: {
+                sender: {
+                    connect: {
+                        id: sender.id
+                    }
+                },
+                recipient: {
+                    connect: {
+                        id: recipient.id
+                    }
+                },
+                files: {
+                    create: [
+                        {
+                            filename: filename,
+                            type: FileType.VOICE
+                        }
+                    ]
+                }
+            },
+            include: {
+                files: true
+            }
+        }) as Prisma.MessageGetPayload<{include: {files: true}}>;
+
+        void this.fileService.writeFile(message.blob, filename);
+        const voiceFile: TFileToClient = newMessage.files.map(file => {
+            const f = excludeSensitiveFields(file, ["filename", "messageId"]) as TFileToClient;
+            f.buffer = message.blob;
+            return f;
+        })[0];
+        const messageExcludingFields = {
+            ...newMessage,
+            files: [voiceFile]
+        };
+
+        client.emit("message", messageExcludingFields);
+        if (!this.userIdToSocketId[recipient.id]) {
+            return;
+        }
+        this.server
+            .to(this.userIdToSocketId[recipient.id])
+            .emit("voiceMessage", messageExcludingFields);
     }
 }

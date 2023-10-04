@@ -3,7 +3,7 @@ import {Button, Col} from "antd";
 import {PlusCircleTwoTone, SendOutlined} from "@ant-design/icons";
 import InputEmojiWithRef from "react-input-emoji";
 import * as classNames from "classnames";
-import AudioRecorder from "../AudioRecord/AudioRecorder.tsx";
+import AudioRecorderButton from "../AudioRecorderButton/AudioRecorderButton.tsx";
 import {TValueOf} from "../../models/TUtils.ts";
 import {IUseAudioRecorderReturnType} from "../../hooks/useAudioRecorder.hook.ts";
 
@@ -63,7 +63,7 @@ const InputDuringMessage: FC<IInputDuringMessageProps> = ({
                             onClick={sendMessage}
                         />
                         :
-                        <AudioRecorder
+                        <AudioRecorderButton
                             permission={permission}
                             isRecording={isRecording}
                             getMicrophonePermission={getMicrophonePermission}

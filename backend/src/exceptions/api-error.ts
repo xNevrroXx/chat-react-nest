@@ -24,6 +24,10 @@ class ApiError extends Error {
     static AccessDenied() {
         return new ApiError(403, "Нет доступа к этому ресурсу");
     }
+
+    static InternalServerError() {
+        return new ApiError(403, "Internal server error");
+    }
 }
 
 export default ApiError;

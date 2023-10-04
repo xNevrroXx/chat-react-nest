@@ -40,12 +40,14 @@
     display: block;
     overflow-y: auto;
     padding-right: 5px;
+    height: 100%;
   }
   &__content {
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
     gap: 5px;
+    min-height: 100%;
   }
   &__footer {
     padding-top: 15px;

@@ -12,18 +12,33 @@ export interface IMessage {
     id: string,
     senderId: TValueOf<Pick<IUserDto, "id">>,
     recipientId: TValueOf<Pick<IUserDto, "id">>,
-    hasRead: boolean
-    type: keyof TMessageType,
-    text: string,
+    hasRead: boolean,
+    text?: string,
+    files: IFile[],
 
     createdAt: number;
-    updatedAt: number;
+    updatedAt?: number;
+}
+
+interface IFile {
+    id: string,
+    createdAt: number,
+    type: keyof TFileType,
+    buffer: ArrayBuffer
 }
 
 export interface IChat {
     userId: TValueOf<Pick<IUserDto, "id">>,
     messages: IMessage[]
 }
+export enum TFileType {
+    TEXT,
+    AUDIO,
+    VIDEO,
+    VOICE,
+    OTHER
+}
+
 
 export type TMessageType = TOneOf<{
     TEXT: string | null,
@@ -33,6 +48,10 @@ export type TMessageType = TOneOf<{
 
 export interface ISendMessage {
     interlocutorId: TValueOf<Pick<IUserDto, "id">>;
-    type: TValueOf<Pick<IMessage, "type">>,
-    text: TValueOf<Pick<IMessage, "text">>
+    text: TValueOf<Pick<IMessage, "text">>;
+}
+
+export interface ISendVoiceMessage {
+    interlocutorId: TValueOf<Pick<IUserDto, "id">>;
+    blob: Blob;
 }

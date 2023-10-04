@@ -10,9 +10,10 @@ import type {IActiveDialog} from "../../pages/Main/Main.tsx";
 import type {TValueOf} from "../../models/TUtils.ts";
 // actions
 import {useAppDispatch} from "../../hooks/store.hook.ts";
-import {sendMessageSocket} from "../../store/thunks/chat.ts";
+import {sendMessageSocket, sendVoiceMessageSocket} from "../../store/thunks/chat.ts";
 // styles
 import "./active-chat.scss";
+import {ISendVoiceMessage} from "../../models/IStore/IChats.ts";
 
 const {Title} = Typography;
 
@@ -25,14 +26,21 @@ const ChatContent: FC<IActiveChatProps> = ({user, dialog}) => {
     const dispatch = useAppDispatch();
 
     const onSendMessage = (text: TValueOf<Pick<ISendMessage, "text">>) => {
-        console.log("SEND");
-        const infoMessage: ISendMessage = {
+        const message: ISendMessage = {
             interlocutorId: dialog?.interlocutor.id,
-            type: "TEXT",
             text: text
         };
 
-      void dispatch(sendMessageSocket(infoMessage));
+      void dispatch(sendMessageSocket(message));
+    };
+
+    const sendVoiceMessage = (record: Blob) => {
+        const message: ISendVoiceMessage = {
+            interlocutorId: dialog?.interlocutor.id,
+            blob: record
+        };
+
+        void dispatch(sendVoiceMessageSocket(message));
     };
 
     const listMessages = useMemo(() => {
@@ -40,17 +48,19 @@ const ChatContent: FC<IActiveChatProps> = ({user, dialog}) => {
             return null;
         }
 
-        return dialog.chat.messages.map(({senderId, type, text, createdAt}) => {
+        return dialog.chat.messages.map(({senderId, text, createdAt, hasRead, updatedAt, files}) => {
             const isMeSender = user.id === senderId;
 
-            console.log("type: ", type);
             return (
                 <Message
                     key={createdAt.toString() + Math.random().toString()}
                     side={isMeSender ? "right" : "left"}
-                    AUDIO={null}
-                    VIDEO={null}
-                    TEXT={type === "TEXT" ? text : null}
+                    hasRead={hasRead}
+                    text={text}
+                    files={files}
+
+                    createdAt={createdAt}
+                    updatedAt={updatedAt}
                 />
             );
         });
@@ -85,6 +95,7 @@ const ChatContent: FC<IActiveChatProps> = ({user, dialog}) => {
                 <div className="active-chat__footer">
                     <InputMessage
                         onSendMessage={onSendMessage}
+                        sendVoiceMessage={sendVoiceMessage}
                     />
                 </div>
             </>

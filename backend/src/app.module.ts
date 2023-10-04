@@ -7,7 +7,8 @@ import {UserModule} from "./user/user.module";
 import {MessageModule} from "./message/message.module";
 import {TokenService} from "./token/token.service";
 import {DatabaseModule} from "./database/database.module";
-import { AuthService } from './auth/auth.service';
+import {AuthService} from "./auth/auth.service";
+import {AppConstantsService} from "./app.constants.service";
 
 
 @Module({
@@ -19,6 +20,7 @@ import { AuthService } from './auth/auth.service';
         ChatModule
     ],
     controllers: [AppController],
-    providers: [AppService, TokenService, AuthService]
+    providers: [AppService, TokenService, AuthService, AppConstantsService]
 })
-export class AppModule {}
+export class AppModule {
+}

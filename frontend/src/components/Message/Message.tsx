@@ -1,9 +1,10 @@
-import {FC} from "react";
+import React, {FC, useEffect, useState} from "react";
 import {Typography} from "antd";
-// own modules
 import * as classNames from "classnames";
+// own modules
+import AudioElement from "../AudioElement/AudioElement.tsx";
 // types
-import {TMessageType} from "../../models/IStore/IChats.ts";
+import {IMessage, TFileType} from "../../models/IStore/IChats.ts";
 // styles
 import "./message.scss";
 
@@ -11,22 +12,42 @@ const {Text} = Typography;
 
 type TMessageProps = {
     side: "left" | "right"
-} & TMessageType
+} & Omit<IMessage, "id" | "recipientId" | "senderId">
 
-const Message: FC<TMessageProps> = ({side, TEXT, AUDIO, VIDEO}) => {
+const Message: FC<TMessageProps> = ({side, text, files}) => {
+    const [isVoice, setIsVoice] = useState<boolean>(false);
+    const [blob, setBlob] = useState<Blob | null>(null);
+    const [blobURL, setBlobURL] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (!files || files.length !== 1) {
+            return;
+        }
+
+        if (files.at(0)!.type === TFileType[TFileType.VOICE]) {
+            const blob = new Blob([files.at(0)!.buffer], {type: "audio/webm"});
+            setBlob(blob);
+            setBlobURL(URL.createObjectURL(blob));
+            setIsVoice(true);
+        }
+    }, [files]);
+
+
     return (
         <div
             className={
-                classNames("message",
-                            "message__" + side,
-                            "message__" + (AUDIO ? "audio" : (VIDEO ? "video" : "text"))
-                )
+                classNames("message", "message__" + side)
             }
         >
-            {
-                <Text>{TEXT}</Text> ||
-                AUDIO ||
-                VIDEO
+            {isVoice && (blob && blobURL) ?
+                <AudioElement
+                    blob={blob}
+                    blobURL={blobURL}
+                    width={200}
+                    height={35}
+                />
+                :
+                <Text>{text}</Text>
             }
         </div>
     );

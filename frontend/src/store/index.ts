@@ -16,6 +16,7 @@ const store = configureStore({
     middleware: getDefaultMiddleware =>
         getDefaultMiddleware({
           serializableCheck: {
+              ignoredActionPaths: ["authentication/login/rejected"],
               ignoredActions: ["chat/socket-create/fulfilled"],
               ignoredPaths: ["chat.socket"]
           }

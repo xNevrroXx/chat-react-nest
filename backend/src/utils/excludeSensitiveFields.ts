@@ -3,16 +3,16 @@ import {Message, User} from "@prisma/client";
 type keys = keyof User | keyof Message;
 
 export function excludeSensitiveFields<Data, Key extends keyof Data>(
-    user: Data,
+    obj: Data,
     keys: Key[]
 ): Omit<Data, Key> {
     const result: Data = {} as Data;
-    for (const key of Object.keys(user) as Key[]) {
+    for (const key of Object.keys(obj) as Key[]) {
         if (keys.includes(key)) {
             continue;
         }
 
-        result[key] = user[key];
+        result[key] = obj[key];
     }
 
     return result;

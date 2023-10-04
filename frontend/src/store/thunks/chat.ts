@@ -5,7 +5,7 @@ import {SocketIOService} from "../../services/SocketIO.service.ts";
 // actions
 import {handleMessageSocket} from "../actions/chat.ts";
 // types
-import {ISendMessage} from "../../models/IStore/IChats.ts";
+import {ISendMessage, ISendVoiceMessage} from "../../models/IStore/IChats.ts";
 import {RootState} from "../index.ts";
 
 
@@ -29,7 +29,6 @@ const connectSocket = createAsyncThunk<void, void, {state: RootState}>(
         try {
             const socket = thunkApi.getState().chat.socket;
             await socket?.connect();
-            console.log("SOCKET: ", socket);
 
             socket?.on("message", (data) => {
                 thunkApi.dispatch(handleMessageSocket(data));
@@ -75,6 +74,24 @@ const sendMessageSocket = createAsyncThunk<void, ISendMessage, {state: RootState
     }
 );
 
+const sendVoiceMessageSocket = createAsyncThunk<void, ISendVoiceMessage, {state: RootState}> (
+    "chat/socket-send-voice-message",
+    (data, thunkAPI) => {
+        try {
+            const socket = thunkAPI.getState().chat.socket;
+            if (!socket) {
+                throw new Error("There is no socket");
+            }
+
+            socket.emit("voiceMessage", [data]);
+            return;
+        }
+        catch (error) {
+            thunkAPI.rejectWithValue(error);
+        }
+    }
+);
+
 const getAll = createAsyncThunk(
     "chat/get-all",
     async(_, thunkAPI) => {
@@ -89,4 +106,4 @@ const getAll = createAsyncThunk(
     }
 );
 
-export {getAll, createSocket, sendMessageSocket, connectSocket, disconnectSocket};
+export {getAll, createSocket, sendMessageSocket, sendVoiceMessageSocket, connectSocket, disconnectSocket};

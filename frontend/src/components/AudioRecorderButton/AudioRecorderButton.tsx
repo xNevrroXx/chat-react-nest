@@ -12,7 +12,7 @@ interface IAudioRecorderProps {
     stopRecording: TValueOf<Pick<IUseAudioRecorderReturnType, "stopRecording">>;
 }
 
-const AudioRecorder: FC<IAudioRecorderProps> = ({
+const AudioRecorderButton: FC<IAudioRecorderProps> = ({
                                                     permission,
                                                     isRecording,
                                                     getMicrophonePermission,
@@ -20,7 +20,6 @@ const AudioRecorder: FC<IAudioRecorderProps> = ({
                                                     stopRecording
                                                 }) => {
     const content = useMemo(() => {
-        console.log("CONTENT");
         if (!permission) {
             return (
                 <Button
@@ -55,4 +54,4 @@ const AudioRecorder: FC<IAudioRecorderProps> = ({
     );
 };
 
-export default AudioRecorder;
+export default AudioRecorderButton;

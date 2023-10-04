@@ -1,9 +1,8 @@
 import {Controller, Get, Req, UseGuards} from "@nestjs/common";
 import {MessageService} from "./message.service";
 import {AuthGuard} from "../auth/auth.guard";
-import {Request} from "express";
 import {TChats} from "./IMessage";
-import {excludeSensitiveFields} from "../utils/excludeSensitiveFields";
+import {Request} from "express";
 
 @Controller("message")
 export class MessageController {
@@ -37,7 +36,6 @@ export class MessageController {
 
             const chat = previousValue.find(chat => chat.userId === interlocutorId);
             if (!chat) {
-                const excludingLinkToFile = excludeSensitiveFields(message, ["linkToFile"]);
                 previousValue.push({
                     userId: interlocutorId,
                     messages: [message]

@@ -1,10 +1,11 @@
 import {Injectable} from "@nestjs/common";
 import {DatabaseService} from "../database/database.service";
-import {type Message, Prisma} from "@prisma/client";
+import {type Message, Prisma, User} from "@prisma/client";
 
 @Injectable()
 export class MessageService {
-    constructor(private prisma: DatabaseService) {}
+    constructor(private prisma: DatabaseService) {
+    }
 
     async findOne(
         messageWhereUniqueInput: Prisma.MessageWhereUniqueInput
@@ -34,10 +35,13 @@ export class MessageService {
         });
     }
 
-    async create(data: Prisma.MessageCreateInput): Promise<Message> {
-        return this.prisma.message.create({
-            data
-        });
+    async create<T extends Prisma.MessageInclude>(
+        params: {
+            data: Prisma.MessageCreateInput,
+            include?: T
+        }
+    ): Promise<Prisma.MessageGetPayload<{include: T}> | Message | null> {
+        return this.prisma.message.create(params);
     }
 
     async update(params: {

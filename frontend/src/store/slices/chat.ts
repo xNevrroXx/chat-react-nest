@@ -26,7 +26,6 @@ const chat = createSlice({
                 state.socket = action.payload;
             })
             .addCase(handleMessageSocket, (state, action) => {
-                console.log("HANDLE MESSAGE ACTION: ", action);
                 const interlocutorId = state.userId === action.payload.senderId ? action.payload.recipientId : action.payload.senderId;
 
                 const targetChat = state.chats.find(chat => chat.userId === interlocutorId);
