@@ -5,9 +5,13 @@ import {SocketIOService} from "../../services/SocketIO.service.ts";
 // actions
 import {handleMessageSocket} from "../actions/chat.ts";
 // types
-import {IChat, IChats, IFile, IMessage, ISendMessage, ISendVoiceMessage} from "../../models/IStore/IChats.ts";
+import {
+    IChat,
+    TFile,
+    IMessage,
+    TSendMessage
+} from "../../models/IStore/IChats.ts";
 import {RootState} from "../index.ts";
-import {TChatsResponse} from "../../models/IResponse/IChatResponse.ts";
 
 
 const createSocket = createAsyncThunk<InstanceType<typeof SocketIOService> | undefined, string, {state: RootState}>(
@@ -34,9 +38,6 @@ const connectSocket = createAsyncThunk<void, void, {state: RootState}>(
             socket?.on("message", (data) => {
                 thunkApi.dispatch(handleMessageSocket(data));
             });
-            socket?.on("voiceMessage", (data) => {
-                thunkApi.dispatch(handleMessageSocket(data));
-            });
         }
         catch (error) {
             thunkApi.rejectWithValue(error);
@@ -58,7 +59,7 @@ const disconnectSocket = createAsyncThunk<void, void, {state: RootState}>(
     }
 );
 
-const sendMessageSocket = createAsyncThunk<void, ISendMessage, {state: RootState}>(
+const sendMessageSocket = createAsyncThunk<void, TSendMessage, {state: RootState}>(
     "chat/socket-send-message",
     (data, thunkAPI) => {
         try {
@@ -76,24 +77,6 @@ const sendMessageSocket = createAsyncThunk<void, ISendMessage, {state: RootState
     }
 );
 
-const sendVoiceMessageSocket = createAsyncThunk<void, ISendVoiceMessage, {state: RootState}> (
-    "chat/socket-send-voice-message",
-    (data, thunkAPI) => {
-        try {
-            const socket = thunkAPI.getState().chat.socket;
-            if (!socket) {
-                throw new Error("There is no socket");
-            }
-
-            socket.emit("voiceMessage", [data]);
-            return;
-        }
-        catch (error) {
-            thunkAPI.rejectWithValue(error);
-        }
-    }
-);
-
 const getAll = createAsyncThunk(
     "chat/get-all",
     async(_, thunkAPI) => {
@@ -103,12 +86,17 @@ const getAll = createAsyncThunk(
             const chats: IChat[] = [];
             chatsHTTPResponse.forEach(chat => {
                 const messages: IMessage[] = chat.messages.map((message) => {
-                    const files: IFile[] = message.files.map(file => {
+                    const files = message.files.map<TFile>(file => {
                         const u = new Uint8Array(file.buffer.data);
                         const blob = new Blob([u], {type: "audio/webm"});
                         return {
-                            ...file,
-                            blob
+                            id: file.id,
+                            originalName: file.originalName,
+                            fileType: file.fileType,
+                            mimeType: file.mimeType,
+                            extension: file.extension,
+                            createdAt: file.createdAt,
+                            blob: blob
                         };
                     });
 
@@ -132,4 +120,4 @@ const getAll = createAsyncThunk(
     }
 );
 
-export {getAll, createSocket, sendMessageSocket, sendVoiceMessageSocket, connectSocket, disconnectSocket};
+export {getAll, createSocket, sendMessageSocket, connectSocket, disconnectSocket};

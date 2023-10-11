@@ -22,4 +22,4 @@ export interface IAuthentication {
 }
 
 export type TLoginFormData = Omit<IUserAuth, "name" | "surname" | "sex" | "age">;
-export type TRegisterFormData = IUserAuth & { passwordConfirmation: TValueOf<Pick<IUserAuth, "password">> };
+export type TRegisterFormData = Omit<IUserAuth, "sex"> & { passwordConfirmation: TValueOf<Pick<IUserAuth, "password">>, sex: string};

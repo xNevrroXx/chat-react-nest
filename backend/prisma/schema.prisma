@@ -74,10 +74,13 @@ model Message {
 }
 
 model File {
-  id        String   @id @default(uuid())
-  messageId String   @map("message_id")
-  filename  String
-  type      FileType
+  id           String   @id @default(uuid())
+  messageId    String   @map("message_id")
+  fileName     String   @map("file_name")
+  originalName String?  @map("original_name")
+  mimeType     String   @map("mime_type")
+  fileType     FileType @default(ATTACHMENT) @map("file_type")
+  extension    String?
 
   createdAt DateTime @default(now()) @map("created_at")
 
@@ -93,9 +96,7 @@ enum Sex {
 }
 
 enum FileType {
-  TEXT
-  AUDIO
-  VIDEO
-  VOICE
-  OTHER
+  VOICE_RECORD
+  VIDEO_RECORD
+  ATTACHMENT
 }

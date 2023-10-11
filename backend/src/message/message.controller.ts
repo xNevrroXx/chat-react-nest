@@ -3,7 +3,7 @@ import {MessageService} from "./message.service";
 import {AuthGuard} from "../auth/auth.guard";
 import {TChats} from "./IMessage";
 import {Request} from "express";
-import {File, Prisma} from "@prisma/client";
+import {Prisma} from "@prisma/client";
 import {FileService} from "../file/file.service";
 import {excludeSensitiveFields} from "../utils/excludeSensitiveFields";
 import {TFileToClient} from "../file/IFile";
@@ -47,8 +47,8 @@ export class MessageController {
             let files: TFileToClient[] = [];
             if (hasFiles) {
                 const filePromises: Promise<TFileToClient>[] = message.files.map(file => {
-                    const f: TFileToClient = excludeSensitiveFields(file, ["filename"]) as TFileToClient;
-                    return this.fileService.findOnDisk(file.filename)
+                    const f: TFileToClient = excludeSensitiveFields(file, ["fileName"]) as TFileToClient;
+                    return this.fileService.findOnDisk(file.fileName)
                         .then((buffer) => {
                             f.buffer = buffer;
                             return f;

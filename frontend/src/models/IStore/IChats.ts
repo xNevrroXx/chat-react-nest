@@ -1,5 +1,5 @@
 import {IUserDto} from "./IAuthentication.ts";
-import {TOneOf, TValueOf} from "../TUtils.ts";
+import {TValueOf} from "../TUtils.ts";
 import {SocketIOService} from "../../services/SocketIO.service.ts";
 
 export interface IChats {
@@ -18,18 +18,25 @@ export interface IMessage {
     senderId: TValueOf<Pick<IUserDto, "id">>,
     recipientId: TValueOf<Pick<IUserDto, "id">>,
     hasRead: boolean,
-    text?: string,
-    files: IFile[],
+    text: string | null,
+    files: TFile[],
 
     createdAt: number;
     updatedAt?: number;
 }
 
-export interface IFile {
+export type TFile = {
     id: string,
     createdAt: number,
-    type: keyof TFileType,
-    blob: Blob
+    originalName: string,
+    fileType: TFileType,
+    mimeType: string,
+    extension: string;
+    blob: Blob;
+}
+
+export interface IFileForRender extends TFile {
+    blobUrl: string
 }
 
 export interface IChatHTTPResponse  {
@@ -42,7 +49,7 @@ export type TMessageHTTPResponse = Omit<IMessage, "files"> & {
 }
 
 
-type TFileHTTPResponse = Omit<IFile, "buffer"> & {
+type TFileHTTPResponse = Omit<TFile, "buffer"> & {
     buffer: {
         type: "Buffer",
         data: number[]
@@ -54,31 +61,29 @@ export type TMessageFromSocket = Omit<IMessage, "files"> & {
 }
 
 
-type TFileFromSocket = Omit<IFile, "buffer"> & {
+type TFileFromSocket = Omit<TFile, "buffer"> & {
     buffer: ArrayBuffer
 }
 
 export enum TFileType {
-    TEXT,
-    AUDIO,
-    VIDEO,
-    VOICE,
-    OTHER
+    VOICE_RECORD = "VOICE_RECORD",
+    VIDEO_RECORD = "VIDEO_RECORD",
+    ATTACHMENT = "ATTACHMENT"
 }
 
-
-export type TMessageType = TOneOf<{
-    TEXT: string | null,
-    AUDIO: string | null,
-    VIDEO: string | null
-}>;
-
-export interface ISendMessage {
+export type TSendMessage = {
     interlocutorId: TValueOf<Pick<IUserDto, "id">>;
     text: TValueOf<Pick<IMessage, "text">>;
+} & ISendAttachments;
+
+export interface ISendAttachments {
+    attachments: IAttachment[]
 }
 
-export interface ISendVoiceMessage {
-    interlocutorId: TValueOf<Pick<IUserDto, "id">>;
-    blob: Blob;
+export interface IAttachment {
+    originalName: string,
+    fileType: TFileType,
+    mimeType: string,
+    extension: string;
+    buffer: ArrayBuffer;
 }

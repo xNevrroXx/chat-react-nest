@@ -40,7 +40,6 @@ const logout = createAsyncThunk<void, void, {state: RootState}>(
     async (_, thunkAPI) => {
         try {
             await AuthService.logout();
-            console.log("LOGOUT DISCONNECT");
             await thunkAPI.dispatch(disconnectSocket());
             void router.navigate(createRoute({path: ROUTES.AUTH}));
         }

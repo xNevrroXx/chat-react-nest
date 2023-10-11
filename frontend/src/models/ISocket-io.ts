@@ -1,13 +1,11 @@
-import {ISendMessage, ISendVoiceMessage, TMessageFromSocket} from "./IStore/IChats.ts";
+import {TSendMessage, TMessageFromSocket} from "./IStore/IChats.ts";
 
 export interface ServerToClientEvents {
     message: (data: TMessageFromSocket) => void
-    voiceMessage: (data: TMessageFromSocket) => void
 }
 
 export interface ClientToServerEvents {
-    message: (data: ISendMessage) => void;
-    voiceMessage: (data: ISendVoiceMessage) => void;
+    message: (data: TSendMessage) => void;
 }
 
 export interface SocketData {

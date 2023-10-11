@@ -1,71 +1,93 @@
-import React, {useState, useEffect, FC} from "react";
+import React, {useState, useEffect, FC, RefObject, useMemo} from "react";
 import {Upload, Modal, UploadFile} from "antd";
+import {RcFile} from "antd/es/upload";
+// styles
+import "./upload-files.scss";
 
-function getBase64(file: File): Promise<string | ArrayBuffer | null> {
+function getBase64(file: File): Promise<string | null> {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result);
+        reader.onload = () => resolve(reader.result as string);
         reader.onerror = error => reject(error);
     });
 }
 
 interface IUploadFilesProps {
-    attachments: UploadFile[],
-    removeAttachment: (file: UploadFile) => void
+    attachments: File[],
+    removeAttachment: (fileId: string | number) => void,
+    buttonRef: RefObject<HTMLButtonElement>
 }
-const UploadFiles: FC<IUploadFilesProps> = ({ attachments, removeAttachment }) => {
-    const [state, setState] = useState({
-        previewVisible: false,
-        previewImage: "",
-        fileList: attachments
-    });
+
+const UploadFiles: FC<IUploadFilesProps> = ({attachments, removeAttachment}) => {
+    const [isPreviewOpen, setIsPreviewOpen] = useState<boolean>(false);
+    const [previewTitle, setPreviewTitle] = useState<string>("");
+    const [previewImage, setPreviewImage] = useState<string>("");
+    const [fileList, setFileList] = useState<UploadFile[]>();
 
     useEffect(() => {
-        setState({
-            ...state,
-            fileList: attachments
-        });
+        void addUrlToFiles();
+
+        async function addUrlToFiles() {
+            const filePromises = attachments.map<Promise<UploadFile>>(file => {
+                return new Promise((resolve, reject) => {
+                    getBase64(file)
+                        .then(url => {
+                            resolve({
+                               ...file,
+                               url: url || "fake"
+                            });
+                        })
+                        .catch(error => {
+                            console.warn(error);
+                            reject(error);
+                        });
+                });
+            });
+            const files = await Promise.all(filePromises);
+
+            setFileList(files);
+        }
     }, [attachments]);
 
-    const handleCancel = () => setState({ ...state, previewVisible: false });
+    const handleCancel = () => setIsPreviewOpen(false);
 
     const handlePreview = async (file: UploadFile) => {
-        if (!file.url && !file.preview && file.originFileObj) {
-            const base64 = await getBase64(file.originFileObj);
-            file.preview = base64 as string;
+        if (!file.url && !file.preview) {
+            file.preview = await getBase64(file as RcFile) || undefined;
         }
 
-        setState({
-            ...state,
-            previewImage: file.url! || file.preview!,
-            previewVisible: true
-        });
+        setPreviewImage(file.url || file.preview!);
+        setPreviewTitle(file.name || file.url!.substring(file.url!.lastIndexOf("/") + 1));
+        setIsPreviewOpen(true);
     };
 
-    const handleChange = ({ fileList }: {fileList: UploadFile[]}) => {
-        setState({
-            ...state,
-            fileList
-        });
+    const handleChange = ({fileList}: { fileList: UploadFile[] }) => {
+        setFileList(fileList);
     };
 
     return (
-        <div className="clearfix">
+        <div className="attachments">
             <Upload
-                action="https://www.mocky.io/v2/5cc8019d300000980a055e76"
                 listType="picture-card"
-                fileList={state.fileList}
-                onPreview={void handlePreview}
+                fileList={fileList}
+                onPreview={handlePreview}
                 onChange={handleChange}
-                onRemove={file => removeAttachment(file)}
+                onRemove={file => removeAttachment(file.name)}
             />
             <Modal
-                visible={state.previewVisible}
+                className="file-input__preview-wrapper"
+                title={previewTitle}
+                open={isPreviewOpen}
                 footer={null}
                 onCancel={handleCancel}
             >
-                <img alt="example" style={{ width: "100%" }} src={state.previewImage} />
+                <img
+                    className="file-input__preview"
+                    alt="preview image"
+                    style={{width: "100%"}}
+                    src={previewImage}
+                />
             </Modal>
         </div>
     );

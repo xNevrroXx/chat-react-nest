@@ -15,7 +15,7 @@ const loginUserValidation =
         .object({
             email: zod.string({required_error: "Обязательное поле"}).email("Неверный email-адрес"),
             password: passwordValidation
-            });
+        });
     type TLoginInferType = Exclude<zod.infer<typeof loginUserValidation>, TLoginFormData>;
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const _loginTypeExhaustiveCheck = 0 as TLoginInferType;
@@ -30,7 +30,6 @@ const registerUserValidation =
             passwordConfirmation: passwordValidation
         })
         .superRefine(({password, passwordConfirmation}, ctx) => {
-            console.log("Refine method");
             if (password !== passwordConfirmation) {
                 ctx.addIssue({
                     code: zod.ZodIssueCode.custom,
@@ -43,6 +42,7 @@ const registerUserValidation =
 type TRegisterInferType = Exclude<zod.infer<typeof registerUserValidation>, TRegisterFormData>;
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const _registerTypeExhaustiveCheck = 0 as TRegisterInferType;
+
 
 
 export {loginUserValidation, registerUserValidation};

@@ -1,10 +1,10 @@
+import {useEffect, useRef} from "react";
 import {RouterProvider} from "react-router-dom";
 // own modules
 import {router} from "../router";
 import {useAppDispatch} from "../hooks/store.hook.ts";
 // actions
 import {checkAuthentication} from "../store/thunks/authentication.ts";
-import {useEffect, useRef} from "react";
 
 function App() {
     const dispatch = useAppDispatch();

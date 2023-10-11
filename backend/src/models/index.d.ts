@@ -1,9 +1,17 @@
 import {IUserPayloadJWT} from "../user/IUser";
-import {ExecutionContext} from "@nestjs/common";
 
 declare global {
     namespace NestJS {
         export interface ExecutionContext {
+            user?: IUserPayloadJWT
+        }
+        export interface Socket {
+            user?: IUserPayloadJWT
+        }
+    }
+
+    namespace SocketIO { // todo: how to properly do this one?
+        export interface Socket {
             user?: IUserPayloadJWT
         }
     }

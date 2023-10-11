@@ -34,6 +34,7 @@ const InputDuringAudio: FC<IInputDuringAudioProps> = ({
         }
 
         onSendVoiceMessage(audio);
+        cleanAudio();
     };
 
     return (

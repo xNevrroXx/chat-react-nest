@@ -46,11 +46,12 @@ class SocketIOService {
         this.socket.emit(event, ...data);
     }
 
-    on<Event extends keyof ServerToClientEvents>(event: Event, fn: TValueOf<ServerToClientEvents[Event]>) {
+    on<Event extends keyof ServerToClientEvents>(event: Event, fn: TValueOf<Pick<ServerToClientEvents, Event>>) {
         if (!this.socket) {
             return;
         }
 
+        // @ts-ignore
         this.socket.on(event, fn);
     }
 }

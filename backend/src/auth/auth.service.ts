@@ -11,12 +11,10 @@ export class AuthService {
         const accessToken = authorizationHeader.split(" ")[1];
 
         if (!accessToken) {
-            console.log("no token");
             throw ApiError.UnauthorizedError();
         }
         const userData = await this.tokenService.validateAccessToken(accessToken);
         if (!userData) {
-            console.log("no data");
             throw ApiError.UnauthorizedError();
         }
 

@@ -1,11 +1,14 @@
-import React, {FC} from "react";
+import React, {FC, useRef} from "react";
+import * as classNames from "classnames";
 import {Button, Col} from "antd";
 import {PlusCircleTwoTone, SendOutlined} from "@ant-design/icons";
 import InputEmojiWithRef from "react-input-emoji";
-import * as classNames from "classnames";
 import AudioRecorderButton from "../AudioRecorderButton/AudioRecorderButton.tsx";
-import {TValueOf} from "../../models/TUtils.ts";
+import useFileUpload from "react-use-file-upload";
+import UploadFiles from "../UploadFiles/UploadFiles.tsx";
 import {IUseAudioRecorderReturnType} from "../../hooks/useAudioRecorder.hook.ts";
+import {TValueOf} from "../../models/TUtils.ts";
+import {useFileUploadHook} from "react-use-file-upload/dist/lib/types";
 
 interface IInputDuringMessageProps {
     message: string;
@@ -17,6 +20,9 @@ interface IInputDuringMessageProps {
     getMicrophonePermission: TValueOf<Pick<IUseAudioRecorderReturnType, "getMicrophonePermission">>
     startRecording: TValueOf<Pick<IUseAudioRecorderReturnType, "startRecording">>
     stopRecording: TValueOf<Pick<IUseAudioRecorderReturnType, "stopRecording">>
+    files: TValueOf<Pick<useFileUploadHook, "files">>,
+    setFiles: TValueOf<Pick<useFileUploadHook, "setFiles">>,
+    removeFile: TValueOf<Pick<useFileUploadHook, "removeFile">>
 }
 
 const InputDuringMessage: FC<IInputDuringMessageProps> = ({
@@ -28,14 +34,43 @@ const InputDuringMessage: FC<IInputDuringMessageProps> = ({
                                                               isRecording,
                                                               getMicrophonePermission,
                                                               startRecording,
-                                                              stopRecording
+                                                              stopRecording,
+                                                              files,
+                                                              setFiles,
+                                                              removeFile
                                                           }) => {
+    const inputFilesRef = useRef<HTMLInputElement | null>(null);
+    const buttonAddFilesRef = useRef<HTMLButtonElement | null>(null);
+
+    const onClickButtonFiles = () => {
+        if (!inputFilesRef.current) {
+            return;
+        }
+        inputFilesRef.current.click();
+    };
+
     return (
         <>
             <Col span={1} className="input-message__btn-wrapper">
                 <Button
+                    ref={buttonAddFilesRef}
                     type="text"
                     icon={<PlusCircleTwoTone/>}
+                    onClick={onClickButtonFiles}
+                />
+                <input
+                    ref={inputFilesRef}
+                    type="file"
+                    multiple
+                    style={{display: "none"}}
+                    onChange={(e) => {
+                            setFiles(e, "a");
+                            if (!inputFilesRef.current || inputFilesRef.current.type !== "file") {
+                                return;
+                            }
+                            inputFilesRef.current.value = "";
+                        }
+                    }
                 />
             </Col>
             <Col span={20} className="input-message__field">
@@ -56,7 +91,7 @@ const InputDuringMessage: FC<IInputDuringMessageProps> = ({
             </Col>
             <Col span={1} className="input-message__btn-wrapper">
                 {
-                    message ?
+                    message || files.length > 0 ?
                         <Button
                             type="text"
                             icon={<SendOutlined/>}
@@ -72,6 +107,11 @@ const InputDuringMessage: FC<IInputDuringMessageProps> = ({
                         />
                 }
             </Col>
+            <UploadFiles
+                buttonRef={buttonAddFilesRef}
+                attachments={files}
+                removeAttachment={removeFile}
+            />
         </>
     );
 };

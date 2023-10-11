@@ -1,4 +1,4 @@
-import {useEffect, useState} from "react";
+import {Fragment, useEffect, useState} from "react";
 // own modules
 import {ROUTES} from "../../router/routes.ts";
 import {useAppDispatch, useAppSelector} from "../../hooks/store.hook.ts";
@@ -58,21 +58,23 @@ const Main = () => {
     };
 
     return (
-        <div className="messenger">
-            <Dialogs
-                user={user}
-                userDialogs={userDialogs}
-                onChangeDialog={onChangeDialog}
-                activeChatId={activeDialog ? activeDialog.interlocutor.id : null}
-            />
-            {
-                activeDialog &&
-                    <ChatContent
-                        dialog={activeDialog}
-                        user={user}
-                    />
-            }
-        </div>
+        <Fragment>
+            <div className="messenger">
+                <Dialogs
+                    user={user}
+                    userDialogs={userDialogs}
+                    onChangeDialog={onChangeDialog}
+                    activeChatId={activeDialog ? activeDialog.interlocutor.id : null}
+                />
+                {
+                    activeDialog &&
+                        <ChatContent
+                            dialog={activeDialog}
+                            user={user}
+                        />
+                }
+            </div>
+        </Fragment>
     );
 };
 

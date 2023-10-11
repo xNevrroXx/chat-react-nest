@@ -1,10 +1,9 @@
 import {createSlice} from "@reduxjs/toolkit";
 // interfaces
-import type {IChats, IFile} from "../../models/IStore/IChats.ts";
+import type {IChats, TFile} from "../../models/IStore/IChats.ts";
 // actions
 import {createSocket, getAll} from "../thunks/chat.ts";
 import {handleMessageSocket, setUserId} from "../actions/chat.ts";
-import {TFileType} from "../../models/IStore/IChats.ts";
 
 
 const initialState: IChats = {
@@ -30,12 +29,16 @@ const chat = createSlice({
                 const interlocutorId = state.userId === action.payload.senderId ? action.payload.recipientId : action.payload.senderId;
 
                 const targetChat = state.chats.find(chat => chat.userId === interlocutorId);
-                const files: IFile[] = action.payload.files.map(file => {
-                    const blob = new Blob([file.buffer], {type: "audio/webm"});
+                const files: TFile[] = action.payload.files.map(file => {
+                    const u = new Uint8Array(file.buffer);
+                    const blob = new Blob([u], {type: file.mimeType});
                     return {
                         id: file.id,
+                        originalName: file.originalName,
+                        fileType: file.fileType,
+                        mimeType: file.mimeType,
+                        extension: file.extension,
                         createdAt: file.createdAt,
-                        type: file.type,
                         blob: blob
                     };
                 });

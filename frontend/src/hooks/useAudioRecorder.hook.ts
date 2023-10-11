@@ -14,7 +14,6 @@ const useAudioRecorder = () => {
     const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
 
     const getMicrophonePermission = async () => {
-        console.log("get permission");
         if ("MediaRecorder" in window) {
             try {
                 const streamData = await navigator.mediaDevices.getUserMedia({
@@ -36,7 +35,6 @@ const useAudioRecorder = () => {
     };
 
     const startRecording = () => {
-        console.log("start recording");
         if (!stream) {
             return;
         }
@@ -51,7 +49,6 @@ const useAudioRecorder = () => {
         const localAudioChunks: Blob[] = [];
 
         mediaRecorder.current.ondataavailable = (event) => {
-            console.log("blobEvent: ", event);
             if (typeof event.data === "undefined") return;
             if (event.data.size === 0) return;
             localAudioChunks.push(event.data);
@@ -60,7 +57,6 @@ const useAudioRecorder = () => {
     };
 
     const stopRecording = () => {
-        console.log("stop recording");
         if (!mediaRecorder.current) {
             return;
         }

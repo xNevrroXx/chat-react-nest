@@ -9,7 +9,6 @@ import {AuthGuard} from "../auth/auth.guard";
 import {excludeSensitiveFields} from "../utils/excludeSensitiveFields";
 import {Request, Response} from "express";
 import {isUserWithRefreshToken, IUserPayloadJWT} from "./IUser";
-import {Prisma} from "@prisma/client";
 
 @Controller("user")
 @UseFilters(new ExceptionsFilter())
@@ -113,7 +112,7 @@ export class UserController {
 
     @Get("all")
     @UseGuards(AuthGuard)
-    async getAll(@Req() request) {
+    async getAll(@Req() request: Request) {
         const users = await this.userService.findMany({
             where: {
                 NOT: {

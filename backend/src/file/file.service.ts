@@ -13,7 +13,6 @@ export class FileService {
         private constants: AppConstantsService
     ) {
         if (!fs.existsSync(this.constants.USERS_DATA_FOLDER_PATH)) {
-            console.log("Doesn't");
             fs.mkdirSync(this.constants.USERS_DATA_FOLDER_PATH);
         }
     }
