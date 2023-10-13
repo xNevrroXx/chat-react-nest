@@ -46,6 +46,7 @@ const Main = () => {
             setActiveDialog(firstUser ? {
                 interlocutor: firstUser,
                 chat: {
+                    isTyping: false,
                     userId: firstUser.id,
                     messages: []
                 }

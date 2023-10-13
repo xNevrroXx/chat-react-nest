@@ -1,6 +1,6 @@
 import {TUserDto} from "../user/IUser";
 import {TValueOf} from "../models/TUtils";
-import {Message, File} from "@prisma/client";
+import {Message, File, UserTyping} from "@prisma/client";
 
 export interface INewVoiceMessage {
     interlocutorId: TValueOf<Pick<TUserDto, "id">>;
@@ -19,6 +19,8 @@ export interface IGetAttachments {
 export interface IAttachment extends Omit<File, "id" | "messageId" | "createdAt" | "fileName"> {
     buffer: ArrayBuffer;
 }
+
+export type TToggleUserTypingMessage = Pick<UserTyping, "userTargetId" | "isTyping">;
 
 export interface IUserIdToSocketId {
     [userId: string]: string

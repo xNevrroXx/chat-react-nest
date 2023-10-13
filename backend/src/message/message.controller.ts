@@ -7,18 +7,42 @@ import {Prisma} from "@prisma/client";
 import {FileService} from "../file/file.service";
 import {excludeSensitiveFields} from "../utils/excludeSensitiveFields";
 import {TFileToClient} from "../file/IFile";
+import {UserService} from "../user/user.service";
 
 @Controller("message")
 export class MessageController {
     constructor(
+        private readonly userService: UserService,
         private readonly messageService: MessageService,
         private readonly fileService: FileService
     ) {}
-
+ 
     @Get("all")
     @UseGuards(AuthGuard)
     async getAll(@Req() request: Request) {
         const userPayload = request.user;
+
+        // const messages1 = await this.userService.findOne({
+        //     id: userPayload.id,
+        // }, {
+        //     senderMessages: {
+        //         where: {
+        //             senderId: userPayload.id
+        //         },
+        //         include: {
+        //             files: true
+        //         }
+        //     },
+        //     recipientMessages: {
+        //         where: {
+        //             recipientId: userPayload.id
+        //         },
+        //         include: {
+        //             files: true
+        //         }
+        //     },
+        //     userTyping: true
+        // });
 
         const messages = await this.messageService.findMany({
             where: {
@@ -37,7 +61,7 @@ export class MessageController {
             orderBy: {
                 createdAt: "asc"
             }
-        }) as Prisma.MessageGetPayload<{include: {files: true}}>[];
+        }) as Prisma.MessageGetPayload<{include: {files: true, userTyping: true}}>[];
 
         const chats: TChats = await messages.reduce<Promise<TChats>>(async (previousValue, message) => {
             const prev = await previousValue;
@@ -60,12 +84,14 @@ export class MessageController {
             if (!chat) {
                 prev.push({
                     userId: interlocutorId,
+                    isTyping: false,
                     messages: [{
                         ...message,
                         files
                     }]
                 });
             } else {
+                chat.isTyping = false;
                 chat.messages.push({
                     ...message,
                     files

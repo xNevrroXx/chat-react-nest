@@ -10,8 +10,13 @@ export interface IChats {
 
 export interface IChat {
     userId: TValueOf<Pick<IUserDto, "id">>,
+    isTyping: boolean,
     messages: IMessage[]
 }
+
+export type TUserTyping = Pick<IChat, "isTyping"> & {
+    userTargetId: TValueOf<Pick<IUserDto, "id">>
+};
 
 export interface IMessage {
     id: string,
@@ -41,6 +46,7 @@ export interface IFileForRender extends TFile {
 
 export interface IChatHTTPResponse  {
     userId: TValueOf<Pick<IUserDto, "id">>,
+    isTyping: TValueOf<Pick<IChat, "isTyping">>,
     messages: TMessageHTTPResponse[]
 }
 

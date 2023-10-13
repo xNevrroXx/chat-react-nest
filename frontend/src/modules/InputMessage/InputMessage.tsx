@@ -13,9 +13,10 @@ import "./input-message.scss";
 interface IInputMessage {
     onSendMessage: (text: TValueOf<Pick<TSendMessage, "text">>, attachments: IAttachment[]) => void;
     sendVoiceMessage: (record: Blob) => void;
+    onTyping: () => void;
 }
 
-const InputMessage: FC<IInputMessage> = ({onSendMessage, sendVoiceMessage}) => {
+const InputMessage: FC<IInputMessage> = ({onSendMessage, sendVoiceMessage, onTyping}) => {
     const [message, setMessage] = useState<string | null>(null);
     const {
         files,
@@ -42,21 +43,18 @@ const InputMessage: FC<IInputMessage> = ({onSendMessage, sendVoiceMessage}) => {
     };
 
     const onKeyDown = (event: KeyboardEvent) => {
-        if (event.key !== "Enter") {
+        if (
+            event.key !== "Enter"
+            || !(event.target instanceof HTMLDivElement)
+            || !message
+            || message.length === 0
+        ) {
+            onTyping();
             return;
         }
 
         void sendMessage();
-        if (event.key !== "Enter" || !(event.target instanceof HTMLDivElement)) {
-            return;
-        }
-
-        if (event.target.innerText === "") {
-            setMessage("");
-        }
-        else {
-            setMessage(event.target.innerHTML);
-        }
+        setMessage(event.target.innerHTML);
     };
 
     const sendMessage = async () => {

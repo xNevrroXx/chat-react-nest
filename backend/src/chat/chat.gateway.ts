@@ -17,11 +17,11 @@ import {AuthService} from "../auth/auth.service";
 import {MessageService} from "../message/message.service";
 // types
 import {IUserPayloadJWT} from "../user/IUser";
-import {TNewMessage, INewVoiceMessage, IUserIdToSocketId} from "./IChat";
+import {TNewMessage, IUserIdToSocketId, TToggleUserTypingMessage} from "./IChat";
 import {FileService} from "../file/file.service";
 import {generateFileName} from "../utils/generateFileName";
 import {excludeSensitiveFields} from "../utils/excludeSensitiveFields";
-import {Prisma, FileType, File} from "@prisma/client";
+import {Prisma, File} from "@prisma/client";
 import {TFileToClient} from "../file/IFile";
 import * as mime from "mime-types";
 
@@ -44,11 +44,11 @@ export class ChatGateway
     @WebSocketServer()
     server: Server;
 
-    userIdToSocketId: IUserIdToSocketId = {};
+    socketToUserId: IUserIdToSocketId = {};
 
     async handleConnection(@ConnectedSocket() client: Socket) {
         const userData = await this.authService.verify(client.handshake.headers.authorization);
-        this.userIdToSocketId[client.id] = userData.id;
+        this.socketToUserId[client.id] = userData.id;
         const userOnline = await this.userService.updateOnlineStatus({
             userId: userData.id,
             isOnline: true
@@ -57,13 +57,40 @@ export class ChatGateway
     }
 
     async handleDisconnect(@ConnectedSocket() client) {
-        const userId = this.userIdToSocketId[client.id];
-        delete this.userIdToSocketId[client.id];
+        const userId = this.socketToUserId[client.id];
+        delete this.socketToUserId[client.id];
         const userOnline = await this.userService.updateOnlineStatus({
             userId: userId,
             isOnline: false
         });
         client.broadcast.emit("user:toggle-online", userOnline);
+    }
+
+    @UseGuards(WsAuth)
+    @SubscribeMessage("user:toggle-typing")
+    async handleTyping(@ConnectedSocket() client, @MessageBody() typingInfo: TToggleUserTypingMessage) {
+        const userData = client.user;
+        void this.toggleTypingStatus(client, userData.id, typingInfo);
+    }
+
+    async toggleTypingStatus(client, typingUserId: string, typingInfo: TToggleUserTypingMessage) {
+        await this.userService.updateTypingStatus({
+            userId: typingUserId,
+            userTargetId: typingInfo.userTargetId,
+            isTyping: typingInfo.isTyping
+        });
+        const interlocutorSocket = Object.entries(this.socketToUserId)
+            .find(([, value]) => value === typingInfo.userTargetId);
+
+        if (!interlocutorSocket) {
+            return;
+        }
+        client.broadcast
+            .to(interlocutorSocket[0])
+            .emit("user:toggle-typing", {
+                userTargetId: typingUserId,
+                isTyping: typingInfo.isTyping
+            });
     }
 
     @UseGuards(WsAuth)
@@ -81,6 +108,11 @@ export class ChatGateway
         if (!sender || !recipient) {
             throw ApiError.BadRequest("Не найден отправитель или получатель сообщения");
         }
+        void this.toggleTypingStatus(client, sender.id, {
+            userTargetId: recipient.id,
+            isTyping: false
+        });
+
 
         const attachmentPromises: Promise<Omit<File, "id" | "messageId" | "createdAt">>[] = message.attachments.map(async (value) => {
             let extension: string;

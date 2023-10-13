@@ -7,5 +7,6 @@ export type TChats = IChat[];
 
 export interface IChat {
     userId: TValueOf<Pick<TUserDto, "id">>,
+    isTyping: boolean,
     messages: ( Message & {files: TFileToClient[]} )[]
 }

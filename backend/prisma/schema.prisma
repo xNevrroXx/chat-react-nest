@@ -29,9 +29,25 @@ model User {
   friendshipUser2   Friendship[]  @relation("user2")
   refreshToken      RefreshToken? @relation("refresh_token")
   userOnline        UserOnline?   @relation("user_online")
+  userTyping        UserTyping[]  @relation("user_typing")
+  userTypingTarget  UserTyping[]  @relation("user_typing_target")
 
   @@unique([email])
   @@map("user")
+}
+
+model UserTyping {
+  id           String  @id @default(uuid())
+  userId       String  @map("user_id")
+  userTargetId String? @map("user_target_id")
+  isTyping     Boolean @default(false) @map("is_typing")
+
+  updatedAt DateTime @default(now()) @map("updated_at")
+
+  user       User  @relation("user_typing", fields: [userId], references: [id])
+  userTarget User? @relation("user_typing_target", fields: [userTargetId], references: [id])
+
+  @@unique([userId])
 }
 
 model UserOnline {

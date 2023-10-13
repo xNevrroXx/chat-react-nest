@@ -1,6 +1,6 @@
 import {MenuFoldOutlined, PhoneTwoTone} from "@ant-design/icons";
 import {Typography, Avatar, Spin} from "antd";
-import {type FC, useMemo} from "react";
+import {type FC, useMemo, useRef} from "react";
 // own modules
 import InputMessage from "../InputMessage/InputMessage.tsx";
 import Message from "../../HOC/Message/Message.tsx";
@@ -11,7 +11,7 @@ import type {TValueOf} from "../../models/TUtils.ts";
 import {type IAttachment, TFileType} from "../../models/IStore/IChats.ts";
 // actions
 import {useAppDispatch} from "../../hooks/store.hook.ts";
-import {sendMessageSocket} from "../../store/thunks/chat.ts";
+import {sendMessageSocket, toggleUserTypingSocket} from "../../store/thunks/chat.ts";
 // styles
 import "./chat-content.scss";
 
@@ -24,6 +24,42 @@ interface IActiveChatProps {
 
 const ChatContent: FC<IActiveChatProps> = ({user, dialog}) => {
     const dispatch = useAppDispatch();
+    const typingTimoutRef = useRef<NodeJS.Timeout | null>(null);
+
+    const onTyping = () => {
+        if (typingTimoutRef.current) {
+            // if the user has recently typed
+            clearTimeout(typingTimoutRef.current);
+
+            typingTimoutRef.current = setTimeout(() => {
+                void dispatch(
+                    toggleUserTypingSocket({
+                        userTargetId: dialog.interlocutor.id,
+                        isTyping: false
+                    })
+                );
+                typingTimoutRef.current = null;
+            }, 4000);
+
+            return;
+        }
+
+        void dispatch(
+            toggleUserTypingSocket({
+                userTargetId: dialog.interlocutor.id,
+                isTyping: true
+            })
+        );
+
+        typingTimoutRef.current = setTimeout(() => {
+            void dispatch(
+                toggleUserTypingSocket({
+                    userTargetId: dialog.interlocutor.id,
+                    isTyping: false
+                })
+            );
+        }, 4000);
+    };
 
     const onSendMessage = (text: TValueOf<Pick<TSendMessage, "text">>, attachments: IAttachment[]) => {
         const message: TSendMessage = {
@@ -32,7 +68,11 @@ const ChatContent: FC<IActiveChatProps> = ({user, dialog}) => {
             attachments: attachments
         };
 
-      void dispatch(sendMessageSocket(message));
+        if (typingTimoutRef.current) {
+            clearTimeout(typingTimoutRef.current);
+            typingTimoutRef.current = null;
+        }
+        void dispatch(sendMessageSocket(message));
     };
 
     const sendVoiceMessage = async (record: Blob) => {
@@ -48,9 +88,13 @@ const ChatContent: FC<IActiveChatProps> = ({user, dialog}) => {
         onSendMessage(null, [attachment]);
     };
 
-    const isOnline = useMemo(() => {
+    const isOnlineOrTyping = useMemo(() => {
+        if (dialog.chat.isTyping) {
+            return "Печатает...";
+        }
+
         return dialog.interlocutor.userOnline.isOnline ? "В сети" : "Оффлайн";
-    }, [dialog.interlocutor]);
+    }, [dialog]);
 
     const listMessages = useMemo(() => {
         if (!dialog) {
@@ -85,8 +129,9 @@ const ChatContent: FC<IActiveChatProps> = ({user, dialog}) => {
                     <div className="active-chat__info">
                         <Avatar size={36} className="active-chat__photo">{/*photo*/}</Avatar>
                         <div className="active-chat__wrapper">
-                            <Title level={5} className="active-chat__name">{dialog.interlocutor.name.concat(" ", dialog.interlocutor.surname)}</Title>
-                            <p className="active-chat__status">{isOnline}</p>
+                            <Title level={5}
+                                   className="active-chat__name">{dialog.interlocutor.name.concat(" ", dialog.interlocutor.surname)}</Title>
+                            <p className="active-chat__status">{isOnlineOrTyping}</p>
                         </div>
                     </div>
                     <div className="active-chat__space"></div>
@@ -102,6 +147,7 @@ const ChatContent: FC<IActiveChatProps> = ({user, dialog}) => {
                 </div>
                 <div className="active-chat__footer">
                     <InputMessage
+                        onTyping={onTyping}
                         onSendMessage={onSendMessage}
                         sendVoiceMessage={sendVoiceMessage}
                     />

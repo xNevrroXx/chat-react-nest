@@ -3,7 +3,7 @@ import {createSlice} from "@reduxjs/toolkit";
 import type {IChats, TFile} from "../../models/IStore/IChats.ts";
 // actions
 import {createSocketInstance, getAll} from "../thunks/chat.ts";
-import {handleMessageSocket, setUserId} from "../actions/chat.ts";
+import {handleMessageSocket, setUserId, handleUserToggleTypingSocket} from "../actions/chat.ts";
 
 
 const initialState: IChats = {
@@ -50,7 +50,8 @@ const chat = createSlice({
                 if (!targetChat) {
                     state.chats.push({
                         userId: interlocutorId,
-                        messages: [newMessage]
+                        messages: [newMessage],
+                        isTyping: false
                     });
                     return;
                 }
@@ -59,6 +60,14 @@ const chat = createSlice({
             })
             .addCase(getAll.fulfilled, (state, action) => {
                 state.chats = action.payload;
+            })
+            .addCase(handleUserToggleTypingSocket, (state, action) => {
+                const targetChat = state.chats.find(chat => chat.userId === action.payload.userTargetId);
+                if (!targetChat) {
+                    return;
+                }
+
+                targetChat.isTyping = action.payload.isTyping;
             });
     }
 });

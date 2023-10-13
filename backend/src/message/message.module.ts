@@ -6,11 +6,12 @@ import {AuthService} from "../auth/auth.service";
 import {TokenService} from "../token/token.service";
 import {FileService} from "../file/file.service";
 import {AppConstantsService} from "../app.constants.service";
+import {UserService} from "../user/user.service";
 
 @Module({
     imports: [DatabaseModule],
     controllers: [MessageController],
-    providers: [MessageService, AuthService, TokenService, FileService, AppConstantsService]
+    providers: [MessageService, AuthService, TokenService, FileService, AppConstantsService, UserService]
 })
 export class MessageModule {
 }

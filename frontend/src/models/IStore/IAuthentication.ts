@@ -1,5 +1,5 @@
 import {TValueOf} from "../TUtils.ts";
-import {TUserOnline} from "./IUsers.ts";
+import {TUserOnline, TUserTyping} from "./IUsers.ts";
 
 export interface IUser {
     name: string,
