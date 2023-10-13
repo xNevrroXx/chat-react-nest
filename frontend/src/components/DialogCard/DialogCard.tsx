@@ -1,4 +1,4 @@
-import React, {FC} from "react";
+import React, {FC, Fragment} from "react";
 import {Avatar, Typography} from "antd";
 import {CheckOutlined} from "@ant-design/icons";
 import * as classNames from "classnames";
@@ -8,6 +8,7 @@ import {truncateTheText} from "../../utils/truncateTheText.ts";
 import "./dialog.scss";
 import {IUserDto} from "../../models/IStore/IAuthentication.ts";
 import {TValueOf} from "../../models/TUtils.ts";
+import {Markup} from "interweave";
 
 const {Title, Text} = Typography;
 
@@ -35,12 +36,13 @@ const DialogCard: FC<IDialogProps> = ({id, dialogName, sender, text, hasRead, on
             <div className="dialog__right">
                 <Title level={5} style={{margin: 0}}>{dialogName}</Title>
                 <p className="dialog__message">
-                    <Text className="dialog__text">
-                        {truncateTheText({
-                            text: sender ? sender.concat(": ", text) : text,
+                    {sender && <span>{sender + ": "}</span>}
+                    <Markup content={
+                        truncateTheText({
+                            text: text,
                             maxLength: 35
-                        })}
-                    </Text>
+                        })
+                    } />
                 </p>
             </div>
             <div className="dialog__message-status">

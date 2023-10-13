@@ -8,6 +8,7 @@ import AudioElement from "../AudioElement/AudioElement.tsx";
 import {IFileForRender} from "../../models/IStore/IChats.ts";
 // styles
 import "./message.scss";
+import {Interweave} from "interweave";
 
 interface IMessageProps {
     side: "left" | "right",
@@ -136,9 +137,15 @@ const Message: FC<IMessageProps> = ({
                         <a ref={downloadLinkRef}/>
                     </div>
                     {text &&
-                        <p
+                        // <p
+                        //     className="message__text"
+                        //     dangerouslySetInnerHTML={{__html: text}}
+                        // />
+
+                        <Interweave
+                            tagName="p"
                             className="message__text"
-                            dangerouslySetInnerHTML={{__html: text}}
+                            content={text}
                         />
                     }
                     <Modal

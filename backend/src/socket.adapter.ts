@@ -9,6 +9,7 @@ import {filter, first, map, mergeMap, share, takeUntil} from "rxjs/operators";
 import {Server, ServerOptions} from "socket.io";
 import {IoAdapter} from "@nestjs/platform-socket.io";
 import {ConfigService} from "@nestjs/config";
+import {ClientToServerEvents, ServerToClientEvents} from "./chat/ISocket-io";
 
 // TODO: Using this until socket.io v3 is part of Nest.js, see: https://github.com/nestjs/nest/issues/5676
 export class SocketIoAdapter extends IoAdapter
@@ -37,7 +38,10 @@ export class SocketIoAdapter extends IoAdapter
 
     public createIOServer(port: number, serverOptions?: ServerOptions): any {
         if (this.httpServer && port === 0) {
-            const s = new Server(this.httpServer, {
+            const s = new Server<
+                ClientToServerEvents,
+                ServerToClientEvents
+            >(this.httpServer, {
                 cors: {
                     origin: "*",
                     credentials: true,
@@ -48,7 +52,10 @@ export class SocketIoAdapter extends IoAdapter
 
             return s;
         }
-        return new Server(port, serverOptions);
+        return new Server<
+            ClientToServerEvents,
+            ServerToClientEvents
+        >(port, serverOptions);
     }
 
     public bindMessageHandlers(

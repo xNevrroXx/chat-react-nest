@@ -8,12 +8,12 @@ import type {TSendMessage} from "../../models/IStore/IChats.ts";
 import type {IUserDto} from "../../models/IStore/IAuthentication.ts";
 import type {IActiveDialog} from "../../pages/Main/Main.tsx";
 import type {TValueOf} from "../../models/TUtils.ts";
+import {type IAttachment, TFileType} from "../../models/IStore/IChats.ts";
 // actions
 import {useAppDispatch} from "../../hooks/store.hook.ts";
 import {sendMessageSocket} from "../../store/thunks/chat.ts";
 // styles
 import "./chat-content.scss";
-import {IAttachment, TFileType} from "../../models/IStore/IChats.ts";
 
 const {Title} = Typography;
 
@@ -39,7 +39,7 @@ const ChatContent: FC<IActiveChatProps> = ({user, dialog}) => {
         const buffer = await record.arrayBuffer();
         const attachment: IAttachment = {
             originalName: "",
-            fileType: TFileType[TFileType.VOICE_RECORD],
+            fileType: TFileType.VOICE_RECORD,
             mimeType: "audio/webm",
             extension: "webm",
             buffer: buffer
@@ -47,6 +47,10 @@ const ChatContent: FC<IActiveChatProps> = ({user, dialog}) => {
 
         onSendMessage(null, [attachment]);
     };
+
+    const isOnline = useMemo(() => {
+        return dialog.interlocutor.userOnline.isOnline ? "В сети" : "Оффлайн";
+    }, [dialog.interlocutor]);
 
     const listMessages = useMemo(() => {
         if (!dialog) {
@@ -82,7 +86,7 @@ const ChatContent: FC<IActiveChatProps> = ({user, dialog}) => {
                         <Avatar size={36} className="active-chat__photo">{/*photo*/}</Avatar>
                         <div className="active-chat__wrapper">
                             <Title level={5} className="active-chat__name">{dialog.interlocutor.name.concat(" ", dialog.interlocutor.surname)}</Title>
-                            <p className="active-chat__status">В сети</p>
+                            <p className="active-chat__status">{isOnline}</p>
                         </div>
                     </div>
                     <div className="active-chat__space"></div>

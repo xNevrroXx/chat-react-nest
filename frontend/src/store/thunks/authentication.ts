@@ -9,7 +9,7 @@ import {getAll as getAllUsers} from "./users.ts";
 import {setUserId} from "../actions/chat.ts";
 // types
 import type {IUserAuth, TLoginFormData} from "../../models/IStore/IAuthentication.ts";
-import {connectSocket, createSocket, disconnectSocket, getAll as getAllChats} from "./chat.ts";
+import {connectSocket, createSocketInstance, disconnectSocket, getAll as getAllChats} from "./chat.ts";
 import {IAuthResponse} from "../../models/IResponse/IAuthResponse.ts";
 import {RootState} from "../index.ts";
 
@@ -24,7 +24,7 @@ const login = createAsyncThunk<IAuthResponse, TLoginFormData, {state: RootState}
             void dispatch(setUserId(response.data.user.id));
             void dispatch(getAllUsers());
             void dispatch(getAllChats());
-            await dispatch(createSocket(response.data.accessToken));
+            await dispatch(createSocketInstance(response.data.accessToken));
             void dispatch(connectSocket());
             void router.navigate(createRoute({path: ROUTES.MAIN}));
             return response.data;
@@ -75,7 +75,7 @@ async (_, thunkAPI) => {
         void dispatch(setUserId(response.data.user.id));
         void dispatch(getAllUsers());
         void dispatch(getAllChats());
-        await dispatch(createSocket(response.data.accessToken));
+        await dispatch(createSocketInstance(response.data.accessToken));
         void dispatch(connectSocket());
         void router.navigate(createRoute({path: ROUTES.MAIN}));
         return response.data;

@@ -2,7 +2,7 @@ import {createSlice} from "@reduxjs/toolkit";
 // interfaces
 import type {IChats, TFile} from "../../models/IStore/IChats.ts";
 // actions
-import {createSocket, getAll} from "../thunks/chat.ts";
+import {createSocketInstance, getAll} from "../thunks/chat.ts";
 import {handleMessageSocket, setUserId} from "../actions/chat.ts";
 
 
@@ -21,7 +21,7 @@ const chat = createSlice({
             .addCase(setUserId, (state, action) => {
                 state.userId = action.payload;
             })
-            .addCase(createSocket.fulfilled, (state, action) => {
+            .addCase(createSocketInstance.fulfilled, (state, action) => {
                 // @ts-ignore
                 state.socket = action.payload;
             })

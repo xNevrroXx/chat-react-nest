@@ -48,12 +48,22 @@ export class ChatGateway
 
     async handleConnection(@ConnectedSocket() client: Socket) {
         const userData = await this.authService.verify(client.handshake.headers.authorization);
-        this.userIdToSocketId[userData.id] = client.id;
+        this.userIdToSocketId[client.id] = userData.id;
+        const userOnline = await this.userService.updateOnlineStatus({
+            userId: userData.id,
+            isOnline: true
+        });
+        client.broadcast.emit("user:toggle-online", userOnline);
     }
 
-    @UseGuards(WsAuth)
-    handleDisconnect(@ConnectedSocket() client) {
+    async handleDisconnect(@ConnectedSocket() client) {
+        const userId = this.userIdToSocketId[client.id];
         delete this.userIdToSocketId[client.id];
+        const userOnline = await this.userService.updateOnlineStatus({
+            userId: userId,
+            isOnline: false
+        });
+        client.broadcast.emit("user:toggle-online", userOnline);
     }
 
     @UseGuards(WsAuth)
@@ -141,12 +151,7 @@ export class ChatGateway
             ...newMessage,
             files: files
         };
-        client.emit("message", messageExcludingFields);
-        if (!this.userIdToSocketId[recipient.id]) {
-            return;
-        }
         this.server
-            .to(this.userIdToSocketId[recipient.id])
             .emit("message", messageExcludingFields);
     }
 }

@@ -19,7 +19,7 @@ async function bootstrap() {
     app.useGlobalPipes(new ValidationPipe());
     app.useWebSocketAdapter(new SocketIoAdapter(app, configService));
     app.useGlobalFilters(new ExceptionsFilter());
-    await app.listen(3000);
+    await app.listen(3000); 
 
 
     const url = new URL(await app.getUrl());

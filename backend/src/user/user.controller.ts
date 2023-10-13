@@ -118,6 +118,9 @@ export class UserController {
                 NOT: {
                     id: request.user.id
                 }
+            },
+            include: {
+                userOnline: true
             }
         });
 

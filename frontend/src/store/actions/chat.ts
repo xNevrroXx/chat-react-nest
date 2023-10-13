@@ -5,6 +5,6 @@ import {IUserDto} from "../../models/IStore/IAuthentication.ts";
 
 const setUserId = createAction<TValueOf<Pick<IUserDto, "id">>>("chat/set-user-id");
 
-const handleMessageSocket = createAction<TMessageFromSocket>("chat/socket-handle-message");
+const handleMessageSocket = createAction<TMessageFromSocket>("chat/socket:handle-message");
 
 export {setUserId, handleMessageSocket};

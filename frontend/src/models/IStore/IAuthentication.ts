@@ -1,4 +1,5 @@
 import {TValueOf} from "../TUtils.ts";
+import {TUserOnline} from "./IUsers.ts";
 
 export interface IUser {
     name: string,
@@ -13,7 +14,8 @@ export interface IUserAuth extends IUser {
 }
 
 export interface IUserDto extends IUser {
-    id: string
+    id: string,
+    userOnline: TUserOnline
 }
 
 export interface IAuthentication {

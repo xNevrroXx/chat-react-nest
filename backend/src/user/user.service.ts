@@ -1,7 +1,9 @@
 import {Injectable} from "@nestjs/common";
-import {type User, Prisma} from "@prisma/client";
+import {type User, Prisma, UserOnline} from "@prisma/client";
 import {DatabaseService} from "../database/database.service";
 import ApiError from "../exceptions/api-error";
+import {TValueOf} from "../models/TUtils";
+import {IUserPayloadJWT} from "./IUser";
 
 @Injectable()
 export class UserService {
@@ -19,14 +21,15 @@ export class UserService {
         return user;
     }
 
-    async findMany(params: {
+    async findMany<T extends Prisma.UserInclude>(params: {
         skip?: number;
         take?: number;
         cursor?: Prisma.UserWhereUniqueInput;
         where?: Prisma.UserWhereInput;
         orderBy?: Prisma.UserOrderByWithRelationInput;
-    }): Promise<User[]> {
-        const { skip, take, cursor, where, orderBy } = params;
+        include?: T
+    }): Promise<Prisma.UserGetPayload<{include: T}>[] | User[]> {
+        const { skip, take, cursor, where, orderBy, include } = params;
 
         const users = await this.prisma.user.findMany({
             skip,
@@ -34,6 +37,7 @@ export class UserService {
             cursor,
             where,
             orderBy,
+            include
         });
         return users;
     }
@@ -43,7 +47,7 @@ export class UserService {
             where: { email: data.email }
         });
         if (isExistAlready) {
-            throw ApiError.BadRequest(`Пользователь с почтовым адресом ${data.email} уже сущетсвует`);
+            throw ApiError.BadRequest(`Пользователь с почтовым адресом ${data.email} уже существует`);
         }
 
         const newUser = await this.prisma.user.create({
@@ -59,7 +63,7 @@ export class UserService {
         const { where, data } = params;
         const isExist = await this.prisma.user.findUnique({where});
         if (!isExist) {
-            throw ApiError.BadRequest(`Пользователя с почтовым адресом ${data.email} не сущетсвует`);
+            throw ApiError.BadRequest(`Пользователя с почтовым адресом ${data.email} не сущeствует`);
         }
 
         return this.prisma.user.update({
@@ -71,9 +75,39 @@ export class UserService {
     async delete(where: Prisma.UserWhereUniqueInput): Promise<User> {
         const isExist = await this.prisma.user.findUnique({where});
         if (!isExist) {
-            throw ApiError.BadRequest(`Пользователя с почтовым адресом ${"BOILERPLATE"} не сущетсвует`);
+            throw ApiError.BadRequest(`Пользователя с почтовым адресом ${"BOILERPLATE"} не существует`);
         }
 
         return this.prisma.user.delete({where});
+    }
+
+    async updateOnlineStatus(params: {
+        userId: TValueOf<Pick<IUserPayloadJWT, "id">>,
+        isOnline: TValueOf<Pick<UserOnline, "isOnline">>
+    }): Promise<UserOnline> {
+        const {userId, isOnline} = params;
+        const isExistAlready = await this.prisma.userOnline.findUnique({
+            where: {userId: userId}
+        });
+
+        let userOnline: UserOnline;
+        if (!isExistAlready) {
+            userOnline = await this.prisma.userOnline.create({
+                data: {
+                    userId,
+                    isOnline
+                }
+            });
+        }
+        else {
+            userOnline = await this.prisma.userOnline.update({
+                where: {userId: userId},
+                data: {
+                    isOnline
+                }
+            });
+        }
+
+        return userOnline;
     }
 }

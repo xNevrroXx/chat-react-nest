@@ -12,10 +12,11 @@ import {
     TSendMessage
 } from "../../models/IStore/IChats.ts";
 import {RootState} from "../index.ts";
+import {handleUserChangeOnlineSocket} from "../actions/users.ts";
 
 
-const createSocket = createAsyncThunk<InstanceType<typeof SocketIOService> | undefined, string, {state: RootState}>(
-    "chat/socket-create",
+const createSocketInstance = createAsyncThunk<InstanceType<typeof SocketIOService> | undefined, string, {state: RootState}>(
+    "chat/socket:create-instance",
     (token: string, thunkAPI) => {
         try {
             const socket = new SocketIOService(token);
@@ -29,7 +30,7 @@ const createSocket = createAsyncThunk<InstanceType<typeof SocketIOService> | und
 );
 
 const connectSocket = createAsyncThunk<void, void, {state: RootState}>(
-    "chat/socket-connect",
+    "chat/socket:connect",
     async(_, thunkApi) => {
         try {
             const socket = thunkApi.getState().chat.socket;
@@ -37,6 +38,9 @@ const connectSocket = createAsyncThunk<void, void, {state: RootState}>(
 
             socket?.on("message", (data) => {
                 thunkApi.dispatch(handleMessageSocket(data));
+            });
+            socket?.on("user:toggle-online", (data) => {
+                thunkApi.dispatch(handleUserChangeOnlineSocket(data));
             });
         }
         catch (error) {
@@ -46,7 +50,7 @@ const connectSocket = createAsyncThunk<void, void, {state: RootState}>(
 );
 
 const disconnectSocket = createAsyncThunk<void, void, {state: RootState}>(
-    "chat/socket-disconnect",
+    "chat/socket:disconnect",
     async(_, thunkApi) => {
         try {
             const socket = thunkApi.getState().chat.socket;
@@ -60,7 +64,7 @@ const disconnectSocket = createAsyncThunk<void, void, {state: RootState}>(
 );
 
 const sendMessageSocket = createAsyncThunk<void, TSendMessage, {state: RootState}>(
-    "chat/socket-send-message",
+    "chat/socket:send-message",
     (data, thunkAPI) => {
         try {
             const socket = thunkAPI.getState().chat.socket;
@@ -120,4 +124,4 @@ const getAll = createAsyncThunk(
     }
 );
 
-export {getAll, createSocket, sendMessageSocket, connectSocket, disconnectSocket};
+export {getAll, createSocketInstance, sendMessageSocket, connectSocket, disconnectSocket};

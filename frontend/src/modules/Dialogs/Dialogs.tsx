@@ -56,7 +56,7 @@ const Dialogs: FC<IDialogsProps> = ({user, userDialogs, onChangeDialog, activeCh
                     dialogName={interlocutor.name + " " + interlocutor.surname}
                     sender={lastMessageSender}
                     hasRead={chat.messages.at(-1)!.hasRead}
-                    text={chat.messages.at(-1)!.text}
+                    text={chat.messages.at(-1)!.text || ""}
                     isActive={activeChatId === interlocutor.id}
                 />
             );
