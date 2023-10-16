@@ -56,12 +56,17 @@ export class MessageController {
                 ]
             },
             include: {
-                files: true
+                files: true,
+                replyToMessage: {
+                    include: {
+                        files: true
+                    }
+                }
             },
             orderBy: {
                 createdAt: "asc"
             }
-        }) as Prisma.MessageGetPayload<{include: {files: true, userTyping: true}}>[];
+        }) as Prisma.MessageGetPayload<{include: {files: true}}>[];
 
         const chats: TChats = await messages.reduce<Promise<TChats>>(async (previousValue, message) => {
             const prev = await previousValue;

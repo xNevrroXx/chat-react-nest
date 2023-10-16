@@ -24,6 +24,7 @@ import {excludeSensitiveFields} from "../utils/excludeSensitiveFields";
 import {Prisma, File} from "@prisma/client";
 import {TFileToClient} from "../file/IFile";
 import * as mime from "mime-types";
+import {isFulfilledPromise} from "../utils/isFulfilledPromise";
 
 @WebSocketGateway({
     namespace: "api/chat",
@@ -150,9 +151,13 @@ export class ChatGateway
                     }
                 });
 
-        function isFulfilledPromise<T>(promiseResult: PromiseSettledResult<unknown>): promiseResult is PromiseFulfilledResult<T> {
-            return promiseResult.status === "fulfilled";
-        }
+        const replyConnect: Pick<Prisma.MessageCreateInput, "replyToMessage"> | null = message.replyToMessageId ? {
+            replyToMessage: {
+                connect: {
+                    id: message.replyToMessageId
+                }
+            }
+        } : null;
         const newMessage = await this.messageService.create({
             data: {
                 sender: {
@@ -164,16 +169,22 @@ export class ChatGateway
                     connect: {
                         id: recipient.id
                     }
-                }, 
+                },
+                ...replyConnect,
                 text: message.text,
                 files: {
                     create: successfullyRecordedAttachments
                 },
             },
             include: {
-                files: true
+                files: true,
+                replyToMessage: {
+                    include: {
+                        files: true
+                    }
+                }
             }
-        }) as Prisma.MessageGetPayload<{include: {files: true}}>;
+        }) as Prisma.MessageGetPayload<{include: {files: true, replyToMessage: true}}>;
         const files: TFileToClient[] = newMessage.files.map((file, index) => {
             const f = excludeSensitiveFields(file, ["fileName", "messageId"]) as TFileToClient;
             f.buffer = message.attachments[index].buffer;

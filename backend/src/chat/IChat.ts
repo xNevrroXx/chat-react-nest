@@ -10,6 +10,7 @@ export interface INewVoiceMessage {
 export type TNewMessage = {
     interlocutorId: TValueOf<Pick<TUserDto, "id">>;
     text: TValueOf<Pick<Message, "text">>;
+    replyToMessageId: TValueOf<Pick<Message, "id">> | null
 } & IGetAttachments
 
 export interface IGetAttachments {

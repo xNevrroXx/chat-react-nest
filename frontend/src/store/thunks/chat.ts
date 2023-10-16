@@ -113,7 +113,7 @@ const getAll = createAsyncThunk(
                 const messages: IMessage[] = chat.messages.map((message) => {
                     const files = message.files.map<TFile>(file => {
                         const u = new Uint8Array(file.buffer.data);
-                        const blob = new Blob([u], {type: "audio/webm"});
+                        const blob = new Blob([u], {type: file.mimeType});
                         return {
                             id: file.id,
                             originalName: file.originalName,

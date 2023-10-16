@@ -1,5 +1,5 @@
 import React, {FC, Fragment} from "react";
-import {Button, Col} from "antd";
+import {Button, Col, Flex} from "antd";
 import {CloseCircleOutlined, SendOutlined} from "@ant-design/icons";
 // @ts-ignore
 import {LiveAudioVisualizer} from "react-audio-visualize";
@@ -38,26 +38,26 @@ const InputDuringAudio: FC<IInputDuringAudioProps> = ({
     };
 
     return (
-        <Fragment>
-            <Col span={1} className="input-message__btn-wrapper">
+        <Flex vertical={false} style={{width: "100%"}} align="self-end" gap="middle">
+            <div className="input-message__btn-wrapper">
                 <Button
                     type={"text"}
                     onClick={cleanAudio}
                     icon={<CloseCircleOutlined/>}
                 />
-            </Col>
+            </div>
 
             {isRecording &&
-                <Col span={1} className="input-message__btn-wrapper">
+                <div className="input-message__btn-wrapper">
                     <Button
                         type={"text"}
                         onClick={stopRecording}
                         icon={<StopCircleOutlined/>}
                     />
-                </Col>
+                </div>
             }
 
-            <Col span={20} className="input-message__field">
+            <div className="input-message__field">
                 {audio && audioURL ?
                     <AudioElement blob={audio} blobURL={audioURL}/>
                     :
@@ -67,16 +67,16 @@ const InputDuringAudio: FC<IInputDuringAudioProps> = ({
                         mediaRecorder={mediaRecorder}
                     />
                 }
-            </Col>
+            </div>
 
-            <Col span={1} className="input-message__btn-wrapper">
+            <div className="input-message__btn-wrapper">
                 <Button
                     type="text"
                     icon={<SendOutlined/>}
                     onClick={sendVoiceMessage}
                 />
-            </Col>
-        </Fragment>
+            </div>
+        </Flex>
     );
 };
 

@@ -1,29 +1,33 @@
-import React, {FC, useCallback, useEffect, useState} from "react";
+import React, {FC, useCallback, useEffect, useMemo, useState} from "react";
 // own modules
 import {default as DumbMessage} from "../../components/Message/Message.tsx";
 // types
 import {IMessage, IFileForRender, TFileType} from "../../models/IStore/IChats.ts";
+import {IUserDto} from "../../models/IStore/IAuthentication.ts";
+import {TValueOf} from "../../models/TUtils.ts";
 
 type TMessageProps = {
-    side: "left" | "right"
-} & Omit<IMessage, "id" | "recipientId" | "senderId">
+    userId: TValueOf<Pick<IUserDto, "id">>;
+    chooseMessageForReply: (message: IMessage) => void;
+    message: IMessage
+};
 
-const Message: FC<TMessageProps> = ({side, text, files}) => {
+const Message: FC<TMessageProps> = ({userId, message, chooseMessageForReply}) => {
     const [isVoice, setIsVoice] = useState<boolean>(false);
     const [filesWithBlobUrls, setFilesWithBlobUrls] = useState<IFileForRender[]>([]);
     const [isPreviewOpen, setIsPreviewOpen] = useState<boolean>(false);
     const [previewFile, setPreviewFile] = useState<IFileForRender | null>(null);
 
     useEffect(() => {
-        if (!files || files.length === 0) {
+        if (!message.files || message.files.length === 0) {
             return;
         }
 
-        if (files.at(0)!.fileType === TFileType[TFileType.VOICE_RECORD]) {
-            const blob = files.at(0)!.blob;
+        if (message.files[0].fileType === TFileType[TFileType.VOICE_RECORD]) {
+            const blob = message.files[0].blob;
             const blobUrl = URL.createObjectURL(blob);
             const voiceInfo = {
-                ...files[0],
+                ...message.files[0],
                 blobUrl
             };
             setFilesWithBlobUrls([voiceInfo]);
@@ -31,7 +35,7 @@ const Message: FC<TMessageProps> = ({side, text, files}) => {
         }
         else {
             const filesWithBlobUrl: IFileForRender[] = [];
-            files.forEach(file => {
+            message.files.forEach(file => {
                 const blobUrl = URL.createObjectURL(file.blob);
                 filesWithBlobUrl.push({
                     ...file,
@@ -40,7 +44,15 @@ const Message: FC<TMessageProps> = ({side, text, files}) => {
             });
             setFilesWithBlobUrls(filesWithBlobUrl);
         }
-    }, [files]);
+    }, [message.files]);
+
+    const onClickMessageForReply = useCallback(() => {
+        chooseMessageForReply(message);
+    }, [chooseMessageForReply, message]);
+
+    const side = useMemo((): "right" | "left" => {
+        return userId === message.senderId ? "right" : "left";
+    }, [message.senderId, userId]);
 
     const handlePreview = useCallback((file: IFileForRender) => {
         setPreviewFile(file);
@@ -55,13 +67,14 @@ const Message: FC<TMessageProps> = ({side, text, files}) => {
     return (
         <DumbMessage
             side={side}
-            text={text}
             isVoice={isVoice}
             files={filesWithBlobUrls}
             isPreviewOpen={isPreviewOpen}
             previewFile={previewFile}
             handlePreview={handlePreview}
             handleCancel={handleCancel}
+            chooseMessageForReply={onClickMessageForReply}
+            message={message}
         />
     );
 };

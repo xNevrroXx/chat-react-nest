@@ -1,11 +1,13 @@
 import {FC, useState} from "react";
-import {Row} from "antd";
+import {Button, Flex} from "antd";
+import {DeleteOutlined} from "@ant-design/icons";
 import useFileUpload from "react-use-file-upload";
 // own modules
 import InputDuringMessage from "../../components/InputDuringMessage/InputDuringMessage.tsx";
 import InputDuringAudio from "../../components/InputDuringAudio/InputDuringAudio.tsx";
 import {useAudioRecorder} from "../../hooks/useAudioRecorder.hook.ts";
-import {IAttachment, TFileType, TSendMessage} from "../../models/IStore/IChats.ts";
+import MessageReply from "../../components/MessageReply/MessageReply.tsx";
+import {IAttachment, IMessage, TFileType, TSendMessage} from "../../models/IStore/IChats.ts";
 import {TValueOf} from "../../models/TUtils.ts";
 // styles
 import "./input-message.scss";
@@ -14,9 +16,11 @@ interface IInputMessage {
     onSendMessage: (text: TValueOf<Pick<TSendMessage, "text">>, attachments: IAttachment[]) => void;
     sendVoiceMessage: (record: Blob) => void;
     onTyping: () => void;
+    messageForReply: IMessage | null;
+    removeMessageForReply: () => void;
 }
 
-const InputMessage: FC<IInputMessage> = ({onSendMessage, sendVoiceMessage, onTyping}) => {
+const InputMessage: FC<IInputMessage> = ({onSendMessage, sendVoiceMessage, onTyping, messageForReply, removeMessageForReply}) => {
     const [message, setMessage] = useState<string | null>(null);
     const {
         files,
@@ -81,34 +85,50 @@ const InputMessage: FC<IInputMessage> = ({onSendMessage, sendVoiceMessage, onTyp
 
 
     return (
-        <Row className="input-message">
-            { mediaRecorder.current && (isRecording || audioURL) ?
-                <InputDuringAudio
-                    audio={audio}
-                    mediaRecorder={mediaRecorder.current}
-                    stopRecording={stopRecording}
-                    cleanAudio={cleanAudio}
-                    isRecording={isRecording}
-                    audioURL={audioURL}
-                    sendVoiceMessage={sendVoiceMessage}
-                />
-                :
-                <InputDuringMessage
-                    message={message || ""}
-                    sendMessage={sendMessage}
-                    onChange={onChangeMessage}
-                    onKeyDown={onKeyDown}
-                    permission={permission}
-                    isRecording={isRecording}
-                    getMicrophonePermission={getMicrophonePermission}
-                    startRecording={startRecording}
-                    stopRecording={stopRecording}
-                    files={files}
-                    setFiles={setFiles}
-                    removeFile={removeFile}
-                />
-            }
-        </Row>
+        <>
+            <Flex className="input-message" justify="space-between" vertical align="self-start" gap="small">
+                {messageForReply &&
+                    <Flex align="center">
+                        <MessageReply
+                            isInput={true}
+                            message={messageForReply}
+                        />
+                        <Button
+                            size="small"
+                            type="text"
+                            icon={<DeleteOutlined/>}
+                            onClick={removeMessageForReply}
+                        />
+                    </Flex>
+                }
+                { mediaRecorder.current && (isRecording || audioURL) ?
+                    <InputDuringAudio
+                        audio={audio}
+                        mediaRecorder={mediaRecorder.current}
+                        stopRecording={stopRecording}
+                        cleanAudio={cleanAudio}
+                        isRecording={isRecording}
+                        audioURL={audioURL}
+                        sendVoiceMessage={sendVoiceMessage}
+                    />
+                    :
+                    <InputDuringMessage
+                        message={message || ""}
+                        sendMessage={sendMessage}
+                        onChange={onChangeMessage}
+                        onKeyDown={onKeyDown}
+                        permission={permission}
+                        isRecording={isRecording}
+                        getMicrophonePermission={getMicrophonePermission}
+                        startRecording={startRecording}
+                        stopRecording={stopRecording}
+                        files={files}
+                        setFiles={setFiles}
+                        removeFile={removeFile}
+                    />
+                }
+            </Flex>
+        </>
     );
 };
 

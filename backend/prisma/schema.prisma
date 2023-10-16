@@ -89,18 +89,21 @@ model RefreshToken {
 }
 
 model Message {
-  id          String  @id @default(uuid())
-  text        String? @db.Text()
-  senderId    String  @map("sender_id")
-  recipientId String  @map("recipient_id")
-  hasRead     Boolean @default(false) @map("has_read")
+  id               String  @id @default(uuid())
+  text             String? @db.Text()
+  senderId         String  @map("sender_id")
+  recipientId      String  @map("recipient_id")
+  hasRead          Boolean @default(false) @map("has_read")
+  replyToMessageId String? @map("reply_to_message_id")
 
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime? @map("updated_at")
 
-  sender    User   @relation("sender", fields: [senderId], references: [id])
-  recipient User   @relation("recipient", fields: [recipientId], references: [id])
-  files     File[] @relation("files")
+  sender             User      @relation("sender", fields: [senderId], references: [id])
+  recipient          User      @relation("recipient", fields: [recipientId], references: [id])
+  files              File[]    @relation("files")
+  replyToMessage     Message?  @relation("reply_to_message", fields: [replyToMessageId], references: [id])
+  repliesThisMessage Message[] @relation("reply_to_message")
 
   @@map("message")
 }

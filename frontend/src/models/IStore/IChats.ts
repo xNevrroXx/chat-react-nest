@@ -25,6 +25,8 @@ export interface IMessage {
     hasRead: boolean,
     text: string | null,
     files: TFile[],
+    replyToMessageId: TValueOf<Pick<IMessage, "id">> | null,
+    replyToMessage: IMessage | null
 
     createdAt: number;
     updatedAt?: number;
@@ -80,6 +82,7 @@ export enum TFileType {
 export type TSendMessage = {
     interlocutorId: TValueOf<Pick<IUserDto, "id">>;
     text: TValueOf<Pick<IMessage, "text">>;
+    replyToMessageId: TValueOf<Pick<IMessage, "id">> | null;
 } & ISendAttachments;
 
 export interface ISendAttachments {

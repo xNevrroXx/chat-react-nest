@@ -1,4 +1,4 @@
-import React, {useState, useEffect, FC, RefObject, useMemo} from "react";
+import React, {useState, useEffect, FC, RefObject} from "react";
 import {Upload, Modal, UploadFile} from "antd";
 import {RcFile} from "antd/es/upload";
 // styles
@@ -36,7 +36,7 @@ const UploadFiles: FC<IUploadFilesProps> = ({attachments, removeAttachment}) => 
                             resolve({
                                ...file,
                                url: url || "fake"
-                            });
+                            } as never as UploadFile); // get an uid automatically
                         })
                         .catch(error => {
                             console.warn(error);

@@ -1,6 +1,6 @@
-import React, {FC, useRef} from "react";
+import React, {FC, Fragment, useRef} from "react";
 import * as classNames from "classnames";
-import {Button, Col} from "antd";
+import {Button, Col, Flex, Row} from "antd";
 import {PlusCircleTwoTone, SendOutlined} from "@ant-design/icons";
 import InputEmojiWithRef from "react-input-emoji";
 import AudioRecorderButton from "../AudioRecorderButton/AudioRecorderButton.tsx";
@@ -50,69 +50,71 @@ const InputDuringMessage: FC<IInputDuringMessageProps> = ({
     };
 
     return (
-        <>
-            <Col span={1} className="input-message__btn-wrapper">
-                <Button
-                    ref={buttonAddFilesRef}
-                    type="text"
-                    icon={<PlusCircleTwoTone/>}
-                    onClick={onClickButtonFiles}
-                />
-                <input
-                    ref={inputFilesRef}
-                    type="file"
-                    multiple
-                    style={{display: "none"}}
-                    onChange={(e) => {
+        <Fragment>
+            <Flex vertical={false} style={{width: "100%"}} align="self-end" gap="middle">
+                <div className="input-message__btn-wrapper">
+                    <Button
+                        ref={buttonAddFilesRef}
+                        type="text"
+                        icon={<PlusCircleTwoTone/>}
+                        onClick={onClickButtonFiles}
+                    />
+                    <input
+                        ref={inputFilesRef}
+                        type="file"
+                        multiple
+                        style={{display: "none"}}
+                        onChange={(e) => {
                             setFiles(e, "a");
                             if (!inputFilesRef.current || inputFilesRef.current.type !== "file") {
                                 return;
                             }
                             inputFilesRef.current.value = "";
                         }
-                    }
-                />
-            </Col>
-            <Col span={20} className="input-message__field">
-                <InputEmojiWithRef
-                    inputClass={classNames("input-message__textbox")}
-                    tabIndex={0}
-                    borderRadius={5}
-                    borderColor={"rgb(207 222 243)"}
-                    fontFamily={"Roboto, sans-serif"}
+                        }
+                    />
+                </div>
+                <div className="input-message__field" style={{flexGrow: 1}}>
+                    <InputEmojiWithRef
+                        inputClass={classNames("input-message__textbox")}
+                        tabIndex={0}
+                        borderRadius={5}
+                        borderColor={"rgb(207 222 243)"}
+                        fontFamily={"Roboto, sans-serif"}
 
-                    value={message}
-                    onChange={onChange}
-                    shouldReturn={true}
-                    cleanOnEnter={true}
-                    onKeyDown={onKeyDown}
-                    placeholder={"Ваше сообщение"}
-                />
-            </Col>
-            <Col span={1} className="input-message__btn-wrapper">
-                {
-                    message || files.length > 0 ?
-                        <Button
-                            type="text"
-                            icon={<SendOutlined/>}
-                            onClick={sendMessage}
-                        />
-                        :
-                        <AudioRecorderButton
-                            permission={permission}
-                            isRecording={isRecording}
-                            getMicrophonePermission={getMicrophonePermission}
-                            startRecording={startRecording}
-                            stopRecording={stopRecording}
-                        />
-                }
-            </Col>
+                        value={message}
+                        onChange={onChange}
+                        shouldReturn={true}
+                        cleanOnEnter={true}
+                        onKeyDown={onKeyDown}
+                        placeholder={"Ваше сообщение"}
+                    />
+                </div>
+                <div className="input-message__btn-wrapper">
+                    {
+                        message || files.length > 0 ?
+                            <Button
+                                type="text"
+                                icon={<SendOutlined/>}
+                                onClick={sendMessage}
+                            />
+                            :
+                            <AudioRecorderButton
+                                permission={permission}
+                                isRecording={isRecording}
+                                getMicrophonePermission={getMicrophonePermission}
+                                startRecording={startRecording}
+                                stopRecording={stopRecording}
+                            />
+                    }
+                </div>
+            </Flex>
             <UploadFiles
                 buttonRef={buttonAddFilesRef}
                 attachments={files}
                 removeAttachment={removeFile}
             />
-        </>
+        </Fragment>
     );
 };
 

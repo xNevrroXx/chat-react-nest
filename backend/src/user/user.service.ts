@@ -51,7 +51,10 @@ export class UserService {
         }
 
         const newUser = await this.prisma.user.create({
-            data,
+            data: {
+                ...data
+            }
+
         });
         return newUser;
     }
