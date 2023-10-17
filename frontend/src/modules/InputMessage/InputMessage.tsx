@@ -7,7 +7,13 @@ import InputDuringMessage from "../../components/InputDuringMessage/InputDuringM
 import InputDuringAudio from "../../components/InputDuringAudio/InputDuringAudio.tsx";
 import {useAudioRecorder} from "../../hooks/useAudioRecorder.hook.ts";
 import MessageReply from "../../components/MessageReply/MessageReply.tsx";
-import {IAttachment, IMessage, TFileType, TSendMessage} from "../../models/IStore/IChats.ts";
+import {
+    IAttachment,
+    TSendMessage,
+    TFileType,
+    Message as MessageClass,
+    ForwardedMessage as ForwardedMessageClass
+} from "../../models/IStore/IChats.ts";
 import {TValueOf} from "../../models/TUtils.ts";
 // styles
 import "./input-message.scss";
@@ -16,7 +22,7 @@ interface IInputMessage {
     onSendMessage: (text: TValueOf<Pick<TSendMessage, "text">>, attachments: IAttachment[]) => void;
     sendVoiceMessage: (record: Blob) => void;
     onTyping: () => void;
-    messageForReply: IMessage | null;
+    messageForReply: MessageClass | ForwardedMessageClass | null;
     removeMessageForReply: () => void;
 }
 

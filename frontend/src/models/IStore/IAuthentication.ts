@@ -1,5 +1,4 @@
 import {TValueOf} from "../TUtils.ts";
-import {TUserOnline} from "./IUsers.ts";
 
 export interface IUser {
     name: string,
@@ -16,6 +15,13 @@ export interface IUserAuth extends IUser {
 export interface IUserDto extends IUser {
     id: string,
     userOnline: TUserOnline | null
+}
+
+export type TUserOnline = {
+    id: string
+    userId: TValueOf<Pick<IUserDto, "id">>
+    isOnline: boolean
+    updatedAt: Date
 }
 
 export interface IAuthentication {

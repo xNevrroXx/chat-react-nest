@@ -3,7 +3,7 @@ import {Input, Typography} from "antd";
 // own modules
 import DialogCard from "../../components/DialogCard/DialogCard.tsx";
 // types
-import {IChat} from "../../models/IStore/IChats.ts";
+import {IChat, Message} from "../../models/IStore/IChats.ts";
 import {TValueOf} from "../../models/TUtils.ts";
 import {TUserDialogs} from "../../store/selectors/userDialogs.ts";
 import {IUserDto} from "../../models/IStore/IAuthentication.ts";
@@ -32,6 +32,7 @@ const Dialogs: FC<IDialogsProps> = ({user, userDialogs, onChangeDialog, activeCh
                         onClick={() => onChangeDialog({
                             interlocutor,
                             chat: {
+                                isTyping: false,
                                 userId: interlocutor.id,
                                 messages: []
                             }
@@ -48,6 +49,7 @@ const Dialogs: FC<IDialogsProps> = ({user, userDialogs, onChangeDialog, activeCh
             }
 
             const lastMessageSender = chat.messages.at(-1)!.senderId === user.id ? "Вы" : interlocutor.name;
+            const lastMessage = chat.messages.at(-1);
             elems.push(
                 <DialogCard
                     key={interlocutor.id.toString() + "dialog"}
@@ -55,8 +57,8 @@ const Dialogs: FC<IDialogsProps> = ({user, userDialogs, onChangeDialog, activeCh
                     onClick={() => onChangeDialog({interlocutor, chat})}
                     dialogName={interlocutor.name + " " + interlocutor.surname}
                     sender={lastMessageSender}
-                    hasRead={chat.messages.at(-1)!.hasRead}
-                    text={chat.messages.at(-1)!.text || ""}
+                    hasRead={lastMessage!.hasRead}
+                    text={lastMessage instanceof Message && lastMessage.text || ""}
                     isActive={activeChatId === interlocutor.id}
                 />
             );

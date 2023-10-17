@@ -13,6 +13,11 @@ export type TNewMessage = {
     replyToMessageId: TValueOf<Pick<Message, "id">> | null
 } & IGetAttachments
 
+export type TNewForwardedMessage = {
+    interlocutorId: TValueOf<Pick<TUserDto, "id">>;
+    forwardedMessageId: TValueOf<Pick<Message, "id">>;
+}
+
 export interface IGetAttachments {
     attachments: IAttachment[]
 }

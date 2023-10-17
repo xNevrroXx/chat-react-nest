@@ -1,6 +1,5 @@
-.message-reply {
-  cursor: pointer;
-  padding: 1px 10px 1px 20px;
+.forwarded-message {
+  padding: 7px 10px 7px 20px;
   position: relative;
   opacity: 0.8;
   text-align: left;
@@ -17,15 +16,12 @@
     border-radius: 1px;
     content: "";
   }
-  &:hover {
-    background: rgba(black, 0.1);
+  a {
+    font-weight: 500;
   }
-  &_input {
-    &:hover {
-      background: none;
+  &_right {
+    a {
+      color: white;
     }
-  }
-  &__text {
-    color: inherit;
   }
 }

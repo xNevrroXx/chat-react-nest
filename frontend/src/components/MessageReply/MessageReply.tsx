@@ -1,19 +1,24 @@
-import {FC} from "react";
+import React, {FC, Fragment} from "react";
 import {Flex, Typography} from "antd";
-import {useAppSelector} from "../../hooks/store.hook.ts";
 import * as classNames from "classnames";
+import {Interweave} from "interweave";
 // own modules
 import {messageOwnerSelector} from "../../store/selectors/messageOwner.ts";
-import {truncateTheText} from "../../utils/truncateTheText.ts";
-import {IMessage} from "../../models/IStore/IChats.ts";
+import {
+    InnerMessage,
+    InnerForwardMessage
+} from "../../models/IStore/IChats.ts";
+// selectors
+import {useAppSelector} from "../../hooks/store.hook.ts";
 // styles
 import "./message-reply.scss";
+import {truncateTheText} from "../../utils/truncateTheText.ts";
 
 const {Text} = Typography;
 
 type TMessageReplyProps = {
-    message: IMessage;
-    isInput?: boolean
+    message: InnerMessage | InnerForwardMessage;
+    isInput?: boolean;
 }
 const MessageReply: FC<TMessageReplyProps> = ({message, isInput}) => {
     const ownerMessage = useAppSelector(state => messageOwnerSelector(state, message));
@@ -31,17 +36,30 @@ const MessageReply: FC<TMessageReplyProps> = ({message, isInput}) => {
                 <Text strong>{ownerMessage.name.concat(" ").concat(ownerMessage.surname)}</Text>
             }
 
-            {message.files && message.files.length > 0 &&
-                <Text italic>вложения: {message.files.length}</Text>
-            }
+            {message instanceof InnerMessage ?
+                <Fragment>
+                    {message.files && message.files.length > 0 &&
+                        <Text italic>вложения: {message.files.length}</Text>
+                    }
 
-            {message.text &&
-                <Text>
-                    {truncateTheText({
-                        text: message.text,
-                        maxLength: 35
-                    })}
-                </Text>
+                    {message.text &&
+                        <Interweave
+                            className="ant-typography css-dev-only-do-not-override-3mqfnx"
+                            tagName="span"
+                            content={message.text}
+                        />
+                        // <Text>
+                        //     {truncateTheText({
+                        //         text: message.text,
+                        //         maxLength: 35
+                        //     })}
+                        // </Text>
+                    }
+                </Fragment>
+                :
+                <Fragment>
+                    <Text>1 пересланное сообщение</Text>
+                </Fragment>
             }
         </Flex>
     );

@@ -5,11 +5,17 @@ import {FileTwoTone} from "@ant-design/icons";
 import {Interweave} from "interweave";
 // own modules
 import AudioElement from "../AudioElement/AudioElement.tsx";
+import MessageReply from "../MessageReply/MessageReply.tsx";
+import ForwardedMessage from "../ForwardedMessage/ForwardedMessage.tsx";
 import ReplyOutlined from "../../icons/ReplyOutlined.tsx";
 import PinOutlined from "../../icons/PinOutlined.tsx";
-import MessageReply from "../MessageReply/MessageReply.tsx";
+import ForwardOutlined from "../../icons/ForwardOutlined.tsx";
 // types
-import {IFileForRender, IMessage} from "../../models/IStore/IChats.ts";
+import {
+    IFileForRender,
+    Message as MessageClass,
+    ForwardedMessage as ForwardedMessageClass
+} from "../../models/IStore/IChats.ts";
 // styles
 import "./message.scss";
 
@@ -21,11 +27,12 @@ type TMessageProps = {
     previewFile: IFileForRender | null;
     handlePreview: (file: IFileForRender) => void;
     handleCancel: () => void;
-    chooseMessageForReply: () => void;
-    message: IMessage
+    onChooseMessageForReply: () => void;
+    onChooseMessageForForward: () => void;
+    message: MessageClass | ForwardedMessageClass
 }
 
-const Message: FC<TMessageProps> = ({
+const DumbMessage: FC<TMessageProps> = ({
                                         message,
                                         side,
                                         isVoice,
@@ -34,7 +41,8 @@ const Message: FC<TMessageProps> = ({
                                         previewFile,
                                         handlePreview,
                                         handleCancel,
-                                        chooseMessageForReply
+                                        onChooseMessageForReply,
+                                        onChooseMessageForForward
                                     }) => {
     const downloadLinkRef = useRef<HTMLAnchorElement | null>(null);
 
@@ -118,6 +126,63 @@ const Message: FC<TMessageProps> = ({
         });
     }, [files, imageElem, otherElem, videoElem]);
 
+    const messageContent = useMemo(() => {
+        if (!message) {
+            return;
+        }
+
+        if (message instanceof MessageClass) {
+            return (
+                <Fragment>
+                    {
+                        message.replyToMessage &&
+                        <MessageReply message={message.replyToMessage}/>
+                    }
+                    {isVoice && (files.length === 1) ?
+                        <div className="message__audio-element-wrapper">
+                            <AudioElement
+                                blob={files[0].blob}
+                                blobURL={files[0].blobUrl}
+                                width={200}
+                                height={35}
+                                alignCenter={true}
+                            />
+                        </div>
+                        :
+                        <Fragment>
+                            <div className="message__attachment-wrapper">
+                                {attachments}
+                            </div>
+                            { message.text &&
+                                <Interweave
+                                    tagName="p"
+                                    className="message__text"
+                                    content={message.text}
+                                />
+                            }
+                            <Modal
+                                className="file-input__preview-wrapper"
+                                title={previewFile?.originalName}
+                                open={isPreviewOpen}
+                                footer={null}
+                                onCancel={handleCancel}
+                            >
+                                <img
+                                    className="file-input__preview"
+                                    alt="preview image"
+                                    style={{width: "100%"}}
+                                    src={previewFile?.blobUrl || ""}
+                                />
+                            </Modal>
+                        </Fragment>
+                    }
+                </Fragment>
+            );
+        }
+
+        return <ForwardedMessage message={message} side={side}/>;
+    }, [attachments, files, handleCancel, isPreviewOpen, isVoice, message, previewFile, side]);
+
     return (
         <div
             id={message.id}
@@ -136,53 +201,23 @@ const Message: FC<TMessageProps> = ({
                 <Button
                     type="text"
                     size="small"
+                    title="Переслать"
+                    icon={<ForwardOutlined/>}
+                    onClick={onChooseMessageForForward}
+                />
+                <Button
+                    type="text"
+                    size="small"
                     title="Ответить"
                     icon={<ReplyOutlined/>}
-                    onClick={chooseMessageForReply}
+                    onClick={onChooseMessageForReply}
                 />
             </div>
             <div className="message__content">
-                {message.replyToMessage && <MessageReply message={message.replyToMessage}/>}
-                {isVoice && (files.length === 1) ?
-                    <div className="message__audio-element-wrapper">
-                        <AudioElement
-                            blob={files[0].blob}
-                            blobURL={files[0].blobUrl}
-                            width={200}
-                            height={35}
-                        />
-                    </div>
-                    :
-                    <Fragment>
-                        <div className="message__attachment-wrapper">
-                            {attachments}
-                        </div>
-                        {message.text &&
-                            <Interweave
-                                tagName="p"
-                                className="message__text"
-                                content={message.text}
-                            />
-                        }
-                        <Modal
-                            className="file-input__preview-wrapper"
-                            title={previewFile?.originalName}
-                            open={isPreviewOpen}
-                            footer={null}
-                            onCancel={handleCancel}
-                        >
-                            <img
-                                className="file-input__preview"
-                                alt="preview image"
-                                style={{width: "100%"}}
-                                src={previewFile?.blobUrl || ""}
-                            />
-                        </Modal>
-                    </Fragment>
-                }
+                {messageContent}
             </div>
         </div>
     );
 };
 
-export default Message;
+export default DumbMessage;

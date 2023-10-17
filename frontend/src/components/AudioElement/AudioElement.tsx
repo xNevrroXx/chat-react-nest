@@ -1,8 +1,10 @@
-import React, {FC, useEffect, useRef, useState} from "react";
+import React, {FC, useRef, useState} from "react";
+import * as classNames from "classnames";
 // @ts-ignore
 import {AudioVisualizer} from "react-audio-visualize";
 import {Button} from "antd";
 import {PauseCircleOutlined} from "@ant-design/icons";
+// own modules
 import PlayCircleOutlined from "../../icons/PlayCircleOutlined.tsx";
 // styles
 import "./audio-element.scss";
@@ -13,9 +15,10 @@ interface IVoiceRecording {
     // default: 600px
     width?: number,
     // default: 50px
-    height?:number
+    height?:number,
+    alignCenter?: boolean
 }
-const AudioElement: FC<IVoiceRecording> = ({blob, blobURL, height = 50, width= 600}) => {
+const AudioElement: FC<IVoiceRecording> = ({blob, blobURL, height = 50, width= 600, alignCenter}) => {
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const [audioTimestamp, setAudioTimestamp] = useState<number | null>(null);
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
@@ -47,7 +50,7 @@ const AudioElement: FC<IVoiceRecording> = ({blob, blobURL, height = 50, width= 6
     };
 
     return (
-        <div className="audio-element">
+        <div className={classNames("audio-element", alignCenter && "audio-element_align-center")}>
             <div className="audio-element__control-btn">
                 { isPlaying ?
                     <Button

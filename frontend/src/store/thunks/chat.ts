@@ -3,15 +3,27 @@ import {createAsyncThunk} from "@reduxjs/toolkit";
 import {ChatService} from "../../services/Chat.service.ts";
 import {SocketIOService} from "../../services/SocketIO.service.ts";
 // actions
-import {handleMessageSocket, handleUserToggleTypingSocket} from "../actions/chat.ts";
+import {
+    handleMessageSocket,
+    handleForwardedMessageSocket,
+    handleUserToggleTypingSocket
+} from "../actions/chat.ts";
 import {handleUserToggleOnlineSocket} from "../actions/users.ts";
 // types
 import {
     IChat,
     TFile,
-    IMessage,
     TSendMessage,
-    TUserTyping
+    TUserTyping,
+    TForwardMessage,
+    Message,
+    ForwardedMessage,
+    checkIsForwardedMessage,
+    checkIsMessageHTTPResponse,
+    checkIsInnerMessageHTTPResponse,
+    IMessage,
+    IForwardedMessage,
+    IInnerMessage
 } from "../../models/IStore/IChats.ts";
 import {RootState} from "../index.ts";
 
@@ -38,6 +50,9 @@ const connectSocket = createAsyncThunk<void, void, {state: RootState}>(
 
             socket?.on("message", (data) => {
                 thunkApi.dispatch(handleMessageSocket(data));
+            });
+            socket?.on("message:forwarded", (data) => {
+                thunkApi.dispatch(handleForwardedMessageSocket(data));
             });
             socket?.on("user:toggle-online", (data) => {
                 thunkApi.dispatch(handleUserToggleOnlineSocket(data));
@@ -83,6 +98,23 @@ const sendMessageSocket = createAsyncThunk<void, TSendMessage, {state: RootState
         }
     }
 );
+const forwardMessageSocket = createAsyncThunk<void, TForwardMessage, {state: RootState}>(
+    "chat/socket:forward-message",
+    (data, thunkAPI) => {
+        try {
+            const socket = thunkAPI.getState().chat.socket;
+            if (!socket) {
+                throw new Error("There is no socket");
+            }
+
+            socket.emit("message:forward", [data]);
+            return;
+        }
+        catch (error) {
+            thunkAPI.rejectWithValue(error);
+        }
+    }
+);
 
 const toggleUserTypingSocket = createAsyncThunk<void, TUserTyping, {state: RootState}>(
     "chat/socket:send-toggle-typing",
@@ -108,28 +140,81 @@ const getAll = createAsyncThunk(
         try {
             const response = await ChatService.getAll();
             const chatsHTTPResponse = response.data;
+            console.log("RESPONSE: ", chatsHTTPResponse);
             const chats: IChat[] = [];
             chatsHTTPResponse.forEach(chat => {
-                const messages: IMessage[] = chat.messages.map((message) => {
-                    const files = message.files.map<TFile>(file => {
-                        const u = new Uint8Array(file.buffer.data);
-                        const blob = new Blob([u], {type: file.mimeType});
-                        return {
-                            id: file.id,
-                            originalName: file.originalName,
-                            fileType: file.fileType,
-                            mimeType: file.mimeType,
-                            extension: file.extension,
-                            createdAt: file.createdAt,
-                            blob: blob
-                        };
-                    });
+                const messages = chat.messages.reduce<(Message | ForwardedMessage)[]>((previousValue, messageHTTP) => {
+                    let newMessage = {} as IMessage | IForwardedMessage;
+                    if (checkIsMessageHTTPResponse(messageHTTP)) {
+                        const files = messageHTTP.files.map<TFile>(file => {
+                            const u = new Uint8Array(file.buffer.data);
+                            const blob = new Blob([u], {type: file.mimeType});
+                            return {
+                                id: file.id,
+                                originalName: file.originalName,
+                                fileType: file.fileType,
+                                mimeType: file.mimeType,
+                                extension: file.extension,
+                                createdAt: file.createdAt,
+                                blob: blob
+                            };
+                        });
 
-                    return {
-                        ...message,
-                        files
-                    };
-                });
+                        newMessage = {
+                            ...messageHTTP,
+                            files,
+                        };
+
+                        if (messageHTTP.replyToMessage && checkIsInnerMessageHTTPResponse(messageHTTP.replyToMessage)) {
+                            console.log("messageHTTP: ", messageHTTP);
+                            const innerFiles = messageHTTP.replyToMessage.files.map<TFile>(file => {
+                                const u = new Uint8Array(file.buffer.data);
+                                const blob = new Blob([u], {type: file.mimeType});
+                                return {
+                                    id: file.id,
+                                    originalName: file.originalName,
+                                    fileType: file.fileType,
+                                    mimeType: file.mimeType,
+                                    extension: file.extension,
+                                    createdAt: file.createdAt,
+                                    blob: blob
+                                };
+                            });
+                            (newMessage.replyToMessage as IInnerMessage).files = innerFiles;
+                        }
+                    }
+                    else {
+                        newMessage = {
+                            ...messageHTTP
+                        };
+
+                        if (messageHTTP.forwardedMessage && checkIsInnerMessageHTTPResponse(messageHTTP.forwardedMessage)) {
+                            const innerFiles = messageHTTP.forwardedMessage.files.map<TFile>(file => {
+                                const u = new Uint8Array(file.buffer.data);
+                                const blob = new Blob([u], {type: file.mimeType});
+                                return {
+                                    id: file.id,
+                                    originalName: file.originalName,
+                                    fileType: file.fileType,
+                                    mimeType: file.mimeType,
+                                    extension: file.extension,
+                                    createdAt: file.createdAt,
+                                    blob: blob
+                                };
+                            });
+                            (newMessage.forwardedMessage as IInnerMessage).files = innerFiles;
+                        }
+                    }
+
+                    if (checkIsForwardedMessage(newMessage)) {
+                        previousValue.push(new ForwardedMessage(newMessage));
+                    }
+                    else {
+                        previousValue.push(new Message(newMessage));
+                    }
+
+                    return previousValue;
+                }, []);
 
                 chats.push({
                     ...chat,
@@ -148,8 +233,9 @@ const getAll = createAsyncThunk(
 export {
     getAll,
     createSocketInstance,
-    sendMessageSocket,
-    toggleUserTypingSocket,
+    disconnectSocket,
     connectSocket,
-    disconnectSocket
+    sendMessageSocket,
+    forwardMessageSocket,
+    toggleUserTypingSocket
 };

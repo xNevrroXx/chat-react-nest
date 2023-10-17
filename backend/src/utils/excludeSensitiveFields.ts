@@ -1,7 +1,3 @@
-import {Message, User} from "@prisma/client";
-
-type keys = keyof User | keyof Message;
-
 export function excludeSensitiveFields<Data, Key extends keyof Data>(
     obj: Data,
     keys: Key[]

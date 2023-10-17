@@ -1,6 +1,6 @@
 import {Injectable} from "@nestjs/common";
 import {DatabaseService} from "../database/database.service";
-import {type Message, Prisma, User} from "@prisma/client";
+import {type Message, Prisma} from "@prisma/client";
 
 @Injectable()
 export class MessageService {

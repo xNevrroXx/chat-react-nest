@@ -1,17 +1,21 @@
 import {Fragment, useEffect, useState} from "react";
+import {Modal} from "antd";
 // own modules
 import {ROUTES} from "../../router/routes.ts";
 import {useAppDispatch, useAppSelector} from "../../hooks/store.hook.ts";
 import {createRoute} from "../../router/createRoute.ts";
+import Users from "../../modules/Users/Users.tsx";
 import Dialogs from "../../modules/Dialogs/Dialogs.tsx";
 import ChatContent from "../../modules/ChatContent/ChatContent.tsx";
-// selectors
+// selectors & actions
 import {userDialogsSelector} from "../../store/selectors/userDialogs.ts";
+import {forwardMessageSocket} from "../../store/thunks/chat.ts";
 // own types
-import type {IChat} from "../../models/IStore/IChats.ts";
+import type {IChat, TForwardMessage} from "../../models/IStore/IChats.ts";
 import type {IUserDto} from "../../models/IStore/IAuthentication.ts";
 // styles
 import "./main.scss";
+import {TValueOf} from "../../models/TUtils.ts";
 
 export interface IActiveDialog {
     interlocutor: IUserDto,
@@ -21,8 +25,10 @@ export interface IActiveDialog {
 const Main = () => {
     const dispatch = useAppDispatch();
     const user = useAppSelector(state => state.authentication.user!);
-    const [userDialogs, firstUser] = useAppSelector(userDialogsSelector);
+    const [userDialogs, firstUser, users] = useAppSelector(userDialogsSelector);
     const [activeDialog, setActiveDialog] = useState<IActiveDialog | null>(null);
+    const [isOpenModalForForwardMessage, setIsOpenModalForForwardMessage] = useState<boolean>(false);
+    const [forwardedMessageId, setForwardedMessageId] = useState<TValueOf<Pick<TForwardMessage, "forwardedMessageId">> | null>(null);
 
     useEffect(() => {
         if (!user) {
@@ -58,6 +64,24 @@ const Main = () => {
         setActiveDialog(dialog);
     };
 
+    const onClickUser = (user: IUserDto) => {
+        setIsOpenModalForForwardMessage(false);
+        if (!forwardedMessageId) {
+            return;
+        }
+
+        void dispatch(
+            forwardMessageSocket({
+                interlocutorId: user.id,
+                forwardedMessageId: forwardedMessageId
+            })
+        );
+    };
+    const openUsersListForForwardMessage = (forwardedMessageId: TValueOf<Pick<TForwardMessage, "forwardedMessageId">>) => {
+        setForwardedMessageId(forwardedMessageId);
+        setIsOpenModalForForwardMessage(true);
+    };
+
     return (
         <Fragment>
             <div className="messenger">
@@ -72,9 +96,15 @@ const Main = () => {
                         <ChatContent
                             dialog={activeDialog}
                             user={user}
+                            onOpenUsersListForForwardMessage={openUsersListForForwardMessage}
                         />
                 }
             </div>
+            <Modal
+                open={isOpenModalForForwardMessage}
+            >
+                <Users users={users} onClick={onClickUser}/>
+            </Modal>
         </Fragment>
     );
 };

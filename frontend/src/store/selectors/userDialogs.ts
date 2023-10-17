@@ -10,7 +10,7 @@ export const userDialogsSelector = createSelector(
         (state: RootState) => state.users.users,
         (state: RootState) => state.chat.chats
     ],
-    (users, chats): [TUserDialogs, IUserDto] => {
+    (users, chats): [TUserDialogs, IUserDto, IUserDto[]] => {
         const userDialogs: TUserDialogs = new Map();
 
         users.forEach(user => {
@@ -19,6 +19,6 @@ export const userDialogsSelector = createSelector(
            userDialogs.set(user, foundChat || null);
         });
 
-        return [userDialogs, users[0]];
+        return [userDialogs, users[0], users];
     }
 );

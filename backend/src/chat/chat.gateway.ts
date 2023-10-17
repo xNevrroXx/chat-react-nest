@@ -17,7 +17,7 @@ import {AuthService} from "../auth/auth.service";
 import {MessageService} from "../message/message.service";
 // types
 import {IUserPayloadJWT} from "../user/IUser";
-import {TNewMessage, IUserIdToSocketId, TToggleUserTypingMessage} from "./IChat";
+import {TNewMessage, IUserIdToSocketId, TToggleUserTypingMessage, TNewForwardedMessage} from "./IChat";
 import {FileService} from "../file/file.service";
 import {generateFileName} from "../utils/generateFileName";
 import {excludeSensitiveFields} from "../utils/excludeSensitiveFields";
@@ -92,6 +92,67 @@ export class ChatGateway
                 userTargetId: typingUserId,
                 isTyping: typingInfo.isTyping
             });
+    }
+
+    @UseGuards(WsAuth)
+    @SubscribeMessage("message:forward")
+    async handleForwardMessage(@ConnectedSocket() client, @MessageBody() message: TNewForwardedMessage) {
+        const senderPayloadJWT: IUserPayloadJWT = client.user;
+
+        const sender = await this.userService.findOne({
+            id: senderPayloadJWT.id
+        });
+        const recipient = await this.userService.findOne({
+            id: message.interlocutorId
+        });
+        if (!sender || !recipient) {
+            throw ApiError.BadRequest("Не найден отправитель или получатель сообщения");
+        }
+
+        const forwardedMessage = await this.messageService.findOne({
+            id: message.forwardedMessageId
+        });
+        if (!forwardedMessage) {
+            throw ApiError.BadRequest("Пересылаемое сообщение не существует");
+        }
+
+        const newMessage = await this.messageService.create({
+            data: {
+                sender: {
+                    connect: {
+                        id: sender.id
+                    }
+                },
+                recipient: {
+                    connect: {
+                        id: recipient.id
+                    }
+                },
+                forwardedMessage: {
+                    connect: {
+                        id: message.forwardedMessageId
+                    }
+                },
+            },
+            include: {
+                forwardedMessage: {
+                    include: {
+                        files: true,
+                        replyToMessage: {
+                            include: {
+                                files: true
+                            }
+                        }
+                    }
+                }
+            }
+        }) as Prisma.MessageGetPayload<{include: {files: true, replyToMessage: true}}>;
+        
+        const newMessageExcludingFields =
+            excludeSensitiveFields(newMessage, ["text", "files", "replyToMessageId"]);
+
+        this.server
+            .emit("message:forwarded", newMessageExcludingFields);
     }
 
     @UseGuards(WsAuth)

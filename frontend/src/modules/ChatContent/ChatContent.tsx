@@ -2,13 +2,18 @@ import {MenuFoldOutlined, PhoneTwoTone} from "@ant-design/icons";
 import {Typography, Avatar, Spin} from "antd";
 import {type FC, useMemo, useRef, useState} from "react";
 // own modules
-import InputMessage from "../InputMessage/InputMessage.tsx";
 import Message from "../../HOC/Message/Message.tsx";
-import type {IMessage, TSendMessage} from "../../models/IStore/IChats.ts";
+import InputMessage from "../InputMessage/InputMessage.tsx";
 import type {IUserDto} from "../../models/IStore/IAuthentication.ts";
 import type {IActiveDialog} from "../../pages/Main/Main.tsx";
 import type {TValueOf} from "../../models/TUtils.ts";
-import {type IAttachment, TFileType} from "../../models/IStore/IChats.ts";
+import {
+    type TSendMessage,
+    type IAttachment,
+    TFileType,
+    Message as MessageClass,
+    ForwardedMessage as ForwardedMessageClass, TForwardMessage
+} from "../../models/IStore/IChats.ts";
 // actions
 import {useAppDispatch} from "../../hooks/store.hook.ts";
 import {sendMessageSocket, toggleUserTypingSocket} from "../../store/thunks/chat.ts";
@@ -18,16 +23,17 @@ import "./chat-content.scss";
 const {Title} = Typography;
 
 interface IActiveChatProps {
-    user: IUserDto
-    dialog: IActiveDialog
+    user: IUserDto;
+    dialog: IActiveDialog;
+    onOpenUsersListForForwardMessage: (forwardedMessageId: TValueOf<Pick<TForwardMessage, "forwardedMessageId">>) => void;
 }
 
-const ChatContent: FC<IActiveChatProps> = ({user, dialog}) => {
+const ChatContent: FC<IActiveChatProps> = ({user, dialog, onOpenUsersListForForwardMessage}) => {
     const dispatch = useAppDispatch();
     const typingTimoutRef = useRef<number | null>(null);
-    const [messageForReply, setMessageForReply] = useState<IMessage | null>(null);
+    const [messageForReply, setMessageForReply] = useState<MessageClass | ForwardedMessageClass | null>(null);
 
-    const chooseMessageForReply = (message: IMessage) => {
+    const chooseMessageForReply = (message: MessageClass | ForwardedMessageClass) => {
         setMessageForReply(message);
     };
     const removeMessageForReply = () => {
@@ -98,6 +104,8 @@ const ChatContent: FC<IActiveChatProps> = ({user, dialog}) => {
         onSendMessage(null, [attachment]);
     };
 
+    // const onForwardMessage = (messageId:)
+
     const isOnlineOrTyping = useMemo(() => {
         if (dialog.chat.isTyping) {
             return "Печатает...";
@@ -118,6 +126,7 @@ const ChatContent: FC<IActiveChatProps> = ({user, dialog}) => {
                     userId={user.id}
                     chooseMessageForReply={chooseMessageForReply}
                     message={message}
+                    onOpenUsersListForForwardMessage={() => onOpenUsersListForForwardMessage(message.id)}
                 />
             );
         });
