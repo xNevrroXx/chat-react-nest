@@ -71,13 +71,18 @@ async (_, thunkAPI) => {
         const response = await AuthService.refreshToken();
         localStorage.setItem("token", response.data.accessToken);
 
+
         const dispatch = thunkAPI.dispatch;
         void dispatch(setUserId(response.data.user.id));
         void dispatch(getAllUsers());
         void dispatch(getAllChats());
         await dispatch(createSocketInstance(response.data.accessToken));
         void dispatch(connectSocket());
-        void router.navigate(createRoute({path: ROUTES.MAIN}));
+
+        if (router.state.matches.at(-1)!.route.path === "*") {
+            void router.navigate(createRoute({path: ROUTES.MAIN}));
+        }
+
         return response.data;
     }
     catch (error) {

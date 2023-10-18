@@ -25,8 +25,8 @@ class ApiError extends Error {
         return new ApiError(403, "Нет доступа к этому ресурсу");
     }
 
-    static InternalServerError() {
-        return new ApiError(403, "Internal server error");
+    static InternalServerError(message?: string) {
+        return new ApiError(403, message || "Internal server error");
     }
 }
 

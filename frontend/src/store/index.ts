@@ -17,8 +17,16 @@ const store = configureStore({
         getDefaultMiddleware({
           serializableCheck: {
               ignoredActionPaths: ["authentication/login/rejected"],
-              ignoredActions: ["chat/socket:create-instance/fulfilled", "chat/get-all/fulfilled", "chat/socket:handle-message", "chat/socket:send-message/pending", "chat/socket:send-message/fulfilled"],
-              ignoredPaths: ["chat.socket", "chat.chats"]
+              ignoredActions: [
+                  "chat/socket:create-instance/fulfilled",
+                  "chat/get-all/fulfilled",
+                  "chat/socket:handle-message",
+                  "chat/socket:send-message/pending",
+                  "chat/socket:send-message/fulfilled",
+
+                  "users/get-all/fulfilled"
+              ],
+              ignoredPaths: ["chat.socket", "chat.chats", "users"]
           }
         }).concat(reduxThunk, loggerMiddleware),
     enhancers: [],

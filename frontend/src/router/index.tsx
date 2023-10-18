@@ -4,6 +4,7 @@ import {authenticationRouter} from "./routes/authentication.tsx";
 import {main} from "./routes/main.tsx";
 
 const IndexPage = lazy(() => import("../pages/Index"));
+const ErrorPage = lazy(() => import("../pages/404/ErrorPage"));
 
 const router = createBrowserRouter([
     {
@@ -11,7 +12,11 @@ const router = createBrowserRouter([
         path: "/",
         children: [
             authenticationRouter,
-            main
+            main,
+            {
+                path: "*",
+                element: <ErrorPage/>
+            }
         ]
     }
 ]);

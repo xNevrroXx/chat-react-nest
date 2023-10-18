@@ -11,7 +11,6 @@ import {Request, Response} from "express";
 import {isUserWithRefreshToken, IUserPayloadJWT} from "./IUser";
 
 @Controller("user")
-@UseFilters(new ExceptionsFilter())
 export class UserController {
     constructor(
         private readonly userService: UserService,
@@ -47,6 +46,7 @@ export class UserController {
         }
         const isPasswordEquals = await bcrypt.compare(password, targetUser.password);
         if (!isPasswordEquals) {
+            response.cookie("refreshToken", "", {maxAge: 0, httpOnly: true});
             throw ApiError.BadRequest("Пароль неверный");
         }
         const {accessToken, refreshToken} = await this.tokenService.generateTokens({
@@ -125,7 +125,7 @@ export class UserController {
         });
 
         return {
-            users: users.map(user => excludeSensitiveFields(user, ["password", "createdAt"]))
+            users: users.map(user => excludeSensitiveFields(user, ["password"]))
         };
     }
 }

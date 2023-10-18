@@ -3,47 +3,44 @@ import {createAsyncThunk} from "@reduxjs/toolkit";
 import {ChatService} from "../../services/Chat.service.ts";
 import {SocketIOService} from "../../services/SocketIO.service.ts";
 // actions
-import {
-    handleMessageSocket,
-    handleForwardedMessageSocket,
-    handleUserToggleTypingSocket
-} from "../actions/chat.ts";
+import {handleForwardedMessageSocket, handleMessageSocket, handleUserToggleTypingSocket} from "../actions/chat.ts";
 import {handleUserToggleOnlineSocket} from "../actions/users.ts";
 // types
 import {
+    checkIsInnerMessageHTTP,
+    checkIsMessageHTTP,
     IChat,
+    IForwardedMessage,
+    IMessage,
     TFile,
+    TForwardMessage,
     TSendMessage,
     TUserTyping,
-    TForwardMessage,
     Message,
     ForwardedMessage,
-    checkIsForwardedMessage,
-    checkIsMessageHTTPResponse,
-    checkIsInnerMessageHTTPResponse,
-    IMessage,
-    IForwardedMessage,
-    IInnerMessage
+    InnerMessage,
+    InnerForwardedMessage, Attachment
 } from "../../models/IStore/IChats.ts";
 import {RootState} from "../index.ts";
 
-const createSocketInstance = createAsyncThunk<InstanceType<typeof SocketIOService> | undefined, string, {state: RootState}>(
+const createSocketInstance = createAsyncThunk<SocketIOService, string, {
+    state: RootState
+}>(
     "chat/socket:create-instance",
     (token: string, thunkAPI) => {
         try {
             const socket = new SocketIOService(token);
             void thunkAPI.dispatch(connectSocket());
             return socket;
-        }
-        catch (error) {
-            thunkAPI.rejectWithValue(error);
+        } catch (error) {
+            return thunkAPI.rejectWithValue(error);
         }
     }
 );
 
-const connectSocket = createAsyncThunk<void, void, {state: RootState}>(
+const connectSocket = createAsyncThunk<void, void, { state: RootState }>(
     "chat/socket:connect",
-    async(_, thunkApi) => {
+    async (_, thunkApi) => {
         try {
             const socket = thunkApi.getState().chat.socket;
             await socket?.connect();
@@ -60,28 +57,26 @@ const connectSocket = createAsyncThunk<void, void, {state: RootState}>(
             socket?.on("user:toggle-typing", (data) => {
                 thunkApi.dispatch(handleUserToggleTypingSocket(data));
             });
-        }
-        catch (error) {
-            thunkApi.rejectWithValue(error);
+        } catch (error) {
+            return thunkApi.rejectWithValue(error);
         }
     }
 );
 
-const disconnectSocket = createAsyncThunk<void, void, {state: RootState}>(
+const disconnectSocket = createAsyncThunk<void, void, { state: RootState }>(
     "chat/socket:disconnect",
-    async(_, thunkApi) => {
+    async (_, thunkApi) => {
         try {
             const socket = thunkApi.getState().chat.socket;
             await socket?.disconnect();
             return;
-        }
-        catch (error) {
-            thunkApi.rejectWithValue(error);
+        } catch (error) {
+            return thunkApi.rejectWithValue(error);
         }
     }
 );
 
-const sendMessageSocket = createAsyncThunk<void, TSendMessage, {state: RootState}>(
+const sendMessageSocket = createAsyncThunk<void, TSendMessage, { state: RootState }>(
     "chat/socket:send-message",
     (data, thunkAPI) => {
         try {
@@ -92,13 +87,12 @@ const sendMessageSocket = createAsyncThunk<void, TSendMessage, {state: RootState
 
             socket.emit("message", [data]);
             return;
-        }
-        catch (error) {
-            thunkAPI.rejectWithValue(error);
+        } catch (error) {
+            return thunkAPI.rejectWithValue(error);
         }
     }
 );
-const forwardMessageSocket = createAsyncThunk<void, TForwardMessage, {state: RootState}>(
+const forwardMessageSocket = createAsyncThunk<void, TForwardMessage, { state: RootState }>(
     "chat/socket:forward-message",
     (data, thunkAPI) => {
         try {
@@ -109,14 +103,13 @@ const forwardMessageSocket = createAsyncThunk<void, TForwardMessage, {state: Roo
 
             socket.emit("message:forward", [data]);
             return;
-        }
-        catch (error) {
-            thunkAPI.rejectWithValue(error);
+        } catch (error) {
+            return thunkAPI.rejectWithValue(error);
         }
     }
 );
 
-const toggleUserTypingSocket = createAsyncThunk<void, TUserTyping, {state: RootState}>(
+const toggleUserTypingSocket = createAsyncThunk<void, TUserTyping, { state: RootState }>(
     "chat/socket:send-toggle-typing",
     (data, thunkAPI) => {
         try {
@@ -127,92 +120,126 @@ const toggleUserTypingSocket = createAsyncThunk<void, TUserTyping, {state: RootS
 
             socket.emit("user:toggle-typing", [data]);
             return;
-        }
-        catch (error) {
-            thunkAPI.rejectWithValue(error);
+        } catch (error) {
+            return thunkAPI.rejectWithValue(error);
         }
     }
 );
 
 const getAll = createAsyncThunk(
     "chat/get-all",
-    async(_, thunkAPI) => {
+    async (_, thunkAPI) => {
         try {
             const response = await ChatService.getAll();
             const chatsHTTPResponse = response.data;
-            console.log("RESPONSE: ", chatsHTTPResponse);
             const chats: IChat[] = [];
             chatsHTTPResponse.forEach(chat => {
                 const messages = chat.messages.reduce<(Message | ForwardedMessage)[]>((previousValue, messageHTTP) => {
+                    let message: Message | ForwardedMessage;
                     let newMessage = {} as IMessage | IForwardedMessage;
-                    if (checkIsMessageHTTPResponse(messageHTTP)) {
+                    let innerMessage: InnerMessage | InnerForwardedMessage | null;
+                    if (checkIsMessageHTTP(messageHTTP)) {
                         const files = messageHTTP.files.map<TFile>(file => {
                             const u = new Uint8Array(file.buffer.data);
                             const blob = new Blob([u], {type: file.mimeType});
-                            return {
+                            return new Attachment({
                                 id: file.id,
                                 originalName: file.originalName,
                                 fileType: file.fileType,
                                 mimeType: file.mimeType,
                                 extension: file.extension,
-                                createdAt: file.createdAt,
-                                blob: blob
-                            };
+                                blob: blob,
+
+                                createdAt: new Date(file.createdAt)
+                            });
                         });
 
                         newMessage = {
                             ...messageHTTP,
-                            files,
+                            files: files,
+                            replyToMessage: null, // temporarily
+                            createdAt: new Date(messageHTTP.createdAt),
+                            updatedAt: messageHTTP.updatedAt ? new Date(messageHTTP.updatedAt) : null,
                         };
 
-                        if (messageHTTP.replyToMessage && checkIsInnerMessageHTTPResponse(messageHTTP.replyToMessage)) {
-                            console.log("messageHTTP: ", messageHTTP);
-                            const innerFiles = messageHTTP.replyToMessage.files.map<TFile>(file => {
-                                const u = new Uint8Array(file.buffer.data);
-                                const blob = new Blob([u], {type: file.mimeType});
-                                return {
-                                    id: file.id,
-                                    originalName: file.originalName,
-                                    fileType: file.fileType,
-                                    mimeType: file.mimeType,
-                                    extension: file.extension,
-                                    createdAt: file.createdAt,
-                                    blob: blob
-                                };
-                            });
-                            (newMessage.replyToMessage as IInnerMessage).files = innerFiles;
+                        if (messageHTTP.replyToMessage) {
+                            if (checkIsInnerMessageHTTP(messageHTTP.replyToMessage)) {
+                                const innerFiles = messageHTTP.replyToMessage.files.map<TFile>(file => {
+                                    const u = new Uint8Array(file.buffer.data);
+                                    const blob = new Blob([u], {type: file.mimeType});
+                                    return new Attachment({
+                                        id: file.id,
+                                        originalName: file.originalName,
+                                        fileType: file.fileType,
+                                        mimeType: file.mimeType,
+                                        extension: file.extension,
+                                        blob: blob,
+
+                                        createdAt: new Date(file.createdAt)
+                                    });
+                                });
+
+                                innerMessage = new InnerMessage({
+                                    ...messageHTTP.replyToMessage,
+                                    files: innerFiles,
+                                    createdAt: new Date(messageHTTP.replyToMessage.createdAt),
+                                    updatedAt: messageHTTP.replyToMessage.updatedAt ? new Date(messageHTTP.replyToMessage.updatedAt) : null,
+                                });
+                            } else {
+                                innerMessage = new InnerForwardedMessage({
+                                    ...messageHTTP.replyToMessage,
+                                    createdAt: new Date(messageHTTP.replyToMessage.createdAt),
+                                    updatedAt: messageHTTP.replyToMessage.updatedAt ? new Date(messageHTTP.replyToMessage.updatedAt) : null,
+                                });
+                            }
+
+                            newMessage.replyToMessage = innerMessage;
                         }
-                    }
-                    else {
+                        message = new Message(newMessage);
+                    } else {
                         newMessage = {
-                            ...messageHTTP
+                            ...messageHTTP,
+                            forwardedMessage: null, // temporarily
+                            createdAt: new Date(messageHTTP.createdAt),
+                            updatedAt: messageHTTP.updatedAt ? new Date(messageHTTP.updatedAt) : null
                         };
 
-                        if (messageHTTP.forwardedMessage && checkIsInnerMessageHTTPResponse(messageHTTP.forwardedMessage)) {
-                            const innerFiles = messageHTTP.forwardedMessage.files.map<TFile>(file => {
-                                const u = new Uint8Array(file.buffer.data);
-                                const blob = new Blob([u], {type: file.mimeType});
-                                return {
-                                    id: file.id,
-                                    originalName: file.originalName,
-                                    fileType: file.fileType,
-                                    mimeType: file.mimeType,
-                                    extension: file.extension,
-                                    createdAt: file.createdAt,
-                                    blob: blob
-                                };
-                            });
-                            (newMessage.forwardedMessage as IInnerMessage).files = innerFiles;
+                        if (messageHTTP.forwardedMessage) {
+                            if (checkIsInnerMessageHTTP(messageHTTP.forwardedMessage)) {
+                                const innerFiles = messageHTTP.forwardedMessage.files.map<TFile>(file => {
+                                    const u = new Uint8Array(file.buffer.data);
+                                    const blob = new Blob([u], {type: file.mimeType});
+                                    return new Attachment({
+                                        id: file.id,
+                                        originalName: file.originalName,
+                                        fileType: file.fileType,
+                                        mimeType: file.mimeType,
+                                        extension: file.extension,
+                                        blob: blob,
+
+                                        createdAt: new Date(file.createdAt)
+                                    });
+                                });
+
+                                innerMessage = new InnerMessage({
+                                    ...messageHTTP.forwardedMessage,
+                                    files: innerFiles,
+                                    createdAt: new Date(messageHTTP.forwardedMessage.createdAt),
+                                    updatedAt: messageHTTP.forwardedMessage.updatedAt ? new Date(messageHTTP.forwardedMessage.updatedAt) : null,
+                                });
+                            } else {
+                                innerMessage = new InnerForwardedMessage({
+                                    ...messageHTTP.forwardedMessage,
+                                    createdAt: new Date(messageHTTP.forwardedMessage.createdAt),
+                                    updatedAt: messageHTTP.forwardedMessage.updatedAt ? new Date(messageHTTP.forwardedMessage.updatedAt) : null,
+                                });
+                            }
+                            newMessage.forwardedMessage = innerMessage;
                         }
+                        message = new ForwardedMessage(newMessage);
                     }
 
-                    if (checkIsForwardedMessage(newMessage)) {
-                        previousValue.push(new ForwardedMessage(newMessage));
-                    }
-                    else {
-                        previousValue.push(new Message(newMessage));
-                    }
-
+                    previousValue.push(message);
                     return previousValue;
                 }, []);
 
@@ -223,8 +250,7 @@ const getAll = createAsyncThunk(
             });
 
             return chats;
-        }
-        catch (error) {
+        } catch (error) {
             return thunkAPI.rejectWithValue(error);
         }
     }

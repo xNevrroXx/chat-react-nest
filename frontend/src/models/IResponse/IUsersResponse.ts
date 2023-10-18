@@ -1,3 +1,5 @@
-import type {IUsers} from "../IStore/IUsers.ts";
+import {IUserDtoHTTP} from "../IStore/IAuthentication.ts";
 
-export type TUsersResponse = IUsers;
+export type TUsersResponse = {
+    users: IUserDtoHTTP[]
+};

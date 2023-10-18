@@ -13,6 +13,7 @@ import ForwardOutlined from "../../icons/ForwardOutlined.tsx";
 // types
 import {
     IFileForRender,
+    IKnownAndUnknownFiles,
     Message as MessageClass,
     ForwardedMessage as ForwardedMessageClass
 } from "../../models/IStore/IChats.ts";
@@ -21,7 +22,7 @@ import "./message.scss";
 
 type TMessageProps = {
     side: "left" | "right",
-    files: IFileForRender[];
+    files: IKnownAndUnknownFiles;
     isVoice: boolean;
     isPreviewOpen: boolean;
     previewFile: IFileForRender | null;
@@ -61,6 +62,7 @@ const DumbMessage: FC<TMessageProps> = ({
         return (
             <Fragment>
                 <video
+                    tabIndex={-1}
                     controls={true}
                     src={fileInfo.blobUrl}
                 />
@@ -81,50 +83,60 @@ const DumbMessage: FC<TMessageProps> = ({
 
     const otherElem = useCallback((fileInfo: IFileForRender): JSX.Element => {
         return (
-            <div
-                onClick={() => handleDownload(fileInfo)}
-                className="message__attachment-unknown"
-            >
+            <Fragment>
                 <FileTwoTone/>
                 <span className="message__attachment-file-name">{fileInfo.originalName}</span>
                 <a style={{display: "none"}} ref={downloadLinkRef}/>
-            </div>
+            </Fragment>
         );
-    }, []);
+    }, [handleDownload]);
 
-    const attachments = useMemo(() => {
-        if (files.length === 0) {
+    const knownAttachments = useMemo(() => {
+        if (files.known.length === 0) {
             return null;
         }
 
-        return files.map((fileInfo: IFileForRender) => {
-            let fileType: "video" | "audio" | "image" | "unknown";
+        return files.known.map((fileInfo) => {
             let fileElem: JSX.Element;
-            if (fileInfo.mimeType.includes("video")) {
-                fileType = "video";
+            if (fileInfo.attachmentType === "video") {
                 fileElem = videoElem(fileInfo);
-            } else if (fileInfo.mimeType.includes("image")) {
-                fileType = "image";
+            } else if (fileInfo.attachmentType === "image") {
                 fileElem = imageElem(fileInfo);
-            } else if (fileInfo.mimeType.includes("audio")) {
-                fileType = "audio";
-                // fileElem = imageElem(fileInfo); // todo add audio element
-            } else {
-                fileType = "unknown";
-                fileElem = otherElem(fileInfo);
+            } else if (fileInfo.attachmentType === "audio") {
+                // fileElem = audioElem(fileInfo); // todo add an audio element
             }
 
             return (
                 <li
                     key={fileInfo.id}
                     className="message__attachment"
-                    onClick={fileType !== "unknown" ? (() => handlePreview(fileInfo)) : undefined}
+                    onClick={fileInfo.attachmentType !== "video" ? () => handlePreview(fileInfo) : undefined}
                 >
                     {fileElem!}
                 </li>
             );
         });
-    }, [files, imageElem, otherElem, videoElem]);
+    }, [files, handlePreview, imageElem, otherElem, videoElem]);
+
+    const unknownAttachments = useMemo(() => {
+        if (files.unknown.length === 0) {
+            return null;
+        }
+
+        return files.unknown.map((fileInfo: IFileForRender) => {
+                const fileElem = otherElem(fileInfo);
+
+                return (
+                    <li
+                        key={fileInfo.id}
+                        className="message__attachment-unknown"
+                        onClick={() => handleDownload(fileInfo)}
+                    >
+                        {fileElem}
+                    </li>
+                );
+            });
+    }, [files, otherElem]);
 
     const messageContent = useMemo(() => {
         if (!message) {
@@ -138,11 +150,11 @@ const DumbMessage: FC<TMessageProps> = ({
                         message.replyToMessage &&
                         <MessageReply message={message.replyToMessage}/>
                     }
-                    {isVoice && (files.length === 1) ?
+                    {isVoice && (files.known.length === 1) ?
                         <div className="message__audio-element-wrapper">
                             <AudioElement
-                                blob={files[0].blob}
-                                blobURL={files[0].blobUrl}
+                                blob={files.known[0].blob}
+                                blobURL={files.known[0].blobUrl}
                                 width={200}
                                 height={35}
                                 alignCenter={true}
@@ -150,9 +162,16 @@ const DumbMessage: FC<TMessageProps> = ({
                         </div>
                         :
                         <Fragment>
-                            <div className="message__attachment-wrapper">
-                                {attachments}
-                            </div>
+                            { knownAttachments &&
+                                <div className="message__attachments-wrapper">
+                                    {knownAttachments}
+                                </div>
+                            }
+                            { unknownAttachments &&
+                                <div className={classNames("message__attachments-unknown-wrapper", message.text && "message__attachments-unknown-wrapper_with-line")}>
+                                    {unknownAttachments}
+                                </div>
+                            }
                             { message.text &&
                                 <Interweave
                                     tagName="p"
@@ -181,10 +200,11 @@ const DumbMessage: FC<TMessageProps> = ({
         }
 
         return <ForwardedMessage message={message} side={side}/>;
-    }, [attachments, files, handleCancel, isPreviewOpen, isVoice, message, previewFile, side]);
+    }, [knownAttachments, files, handleCancel, isPreviewOpen, isVoice, message, previewFile, side]);
 
     return (
         <div
+            tabIndex={-1}
             id={message.id}
             data-message-id={message.id}
             className={

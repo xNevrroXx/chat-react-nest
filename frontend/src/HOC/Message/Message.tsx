@@ -6,7 +6,7 @@ import {
     IFileForRender,
     TFileType,
     Message as MessageClass,
-    ForwardedMessage as ForwardedMessageClass
+    ForwardedMessage as ForwardedMessageClass, IKnownAndUnknownFiles, TAttachmentType
 } from "../../models/IStore/IChats.ts";
 import {IUserDto} from "../../models/IStore/IAuthentication.ts";
 import {TValueOf} from "../../models/TUtils.ts";
@@ -20,7 +20,10 @@ type TMessageProps = {
 
 const Message: FC<TMessageProps> = ({userId, message, chooseMessageForReply, onOpenUsersListForForwardMessage}) => {
     const [isVoice, setIsVoice] = useState<boolean>(false);
-    const [filesWithBlobUrls, setFilesWithBlobUrls] = useState<IFileForRender[]>([]);
+    const [filesWithBlobUrls, setFilesWithBlobUrls] = useState<IKnownAndUnknownFiles>({
+        known: [],
+        unknown: []
+    });
     const [isPreviewOpen, setIsPreviewOpen] = useState<boolean>(false);
     const [previewFile, setPreviewFile] = useState<IFileForRender | null>(null);
 
@@ -37,18 +40,46 @@ const Message: FC<TMessageProps> = ({userId, message, chooseMessageForReply, onO
                     ...message.files[0],
                     blobUrl
                 };
-                setFilesWithBlobUrls([voiceInfo]);
+                setFilesWithBlobUrls({
+                    known: [{
+                        ...voiceInfo,
+                        attachmentType: "audio"
+                    }],
+                    unknown: []
+                });
                 setIsVoice(true);
             }
             else {
-                const filesWithBlobUrl: IFileForRender[] = [];
-                message.files.forEach(file => {
+                const filesWithBlobUrl = message.files.reduce<IKnownAndUnknownFiles>((previousValue, file) => {
+                    let attachmentType: TAttachmentType;
+                    if (file.mimeType.includes("video")) {
+                        attachmentType = "video";
+                    } else if (file.mimeType.includes("image")) {
+                        attachmentType = "image";
+                    } else if (file.mimeType.includes("audio")) {
+                        attachmentType = "audio";
+                    } else {
+                        attachmentType = "unknown";
+                    }
                     const blobUrl = URL.createObjectURL(file.blob);
-                    filesWithBlobUrl.push({
-                        ...file,
-                        blobUrl
-                    });
+
+                    attachmentType !== "unknown"
+                        ? previousValue.known.push({
+                            ...file,
+                            blobUrl,
+                            attachmentType
+                        })
+                        : previousValue.unknown.push({
+                            ...file,
+                            blobUrl,
+                            attachmentType
+                        });
+                    return previousValue;
+                }, {
+                    known: [],
+                    unknown: []
                 });
+
                 setFilesWithBlobUrls(filesWithBlobUrl);
             }
         }

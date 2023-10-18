@@ -149,7 +149,7 @@ export class ChatGateway
         }) as Prisma.MessageGetPayload<{include: {files: true, replyToMessage: true}}>;
         
         const newMessageExcludingFields =
-            excludeSensitiveFields(newMessage, ["text", "files", "replyToMessageId"]);
+            excludeSensitiveFields(newMessage, ["replyToMessageId"]); // files
 
         this.server
             .emit("message:forwarded", newMessageExcludingFields);
@@ -247,9 +247,13 @@ export class ChatGateway
             }
         }) as Prisma.MessageGetPayload<{include: {files: true, replyToMessage: true}}>;
         const files: TFileToClient[] = newMessage.files.map((file, index) => {
-            const f = excludeSensitiveFields(file, ["fileName", "messageId"]) as TFileToClient;
-            f.buffer = message.attachments[index].buffer;
-            return f;
+            const fileInfo = excludeSensitiveFields(file, ["fileName", "messageId"]) as TFileToClient;
+            const attachment = message.attachments.find(fileInfoMessage => fileInfoMessage.originalName === fileInfo.originalName);
+            if (!attachment) {
+                throw ApiError.InternalServerError("Не удалось сопоставить пришедший и отправляемый файлы");
+            }
+            fileInfo.buffer = attachment.buffer;
+            return fileInfo;
         });
         const messageExcludingFields = {
             ...newMessage,

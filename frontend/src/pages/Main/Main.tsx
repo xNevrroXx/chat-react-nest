@@ -16,6 +16,7 @@ import type {IUserDto} from "../../models/IStore/IAuthentication.ts";
 // styles
 import "./main.scss";
 import {TValueOf} from "../../models/TUtils.ts";
+import {useNavigate} from "react-router-dom";
 
 export interface IActiveDialog {
     interlocutor: IUserDto,
@@ -23,6 +24,7 @@ export interface IActiveDialog {
 }
 
 const Main = () => {
+    const navigate = useNavigate();
     const dispatch = useAppDispatch();
     const user = useAppSelector(state => state.authentication.user!);
     const [userDialogs, firstUser, users] = useAppSelector(userDialogsSelector);
@@ -32,7 +34,7 @@ const Main = () => {
 
     useEffect(() => {
         if (!user) {
-            createRoute({path: ROUTES.AUTH});
+            navigate(createRoute({path: ROUTES.AUTH}));
         }
     }, [user, dispatch]);
 
@@ -91,19 +93,18 @@ const Main = () => {
                     onChangeDialog={onChangeDialog}
                     activeChatId={activeDialog ? activeDialog.interlocutor.id : null}
                 />
-                {
-                    activeDialog &&
-                        <ChatContent
-                            dialog={activeDialog}
-                            user={user}
-                            onOpenUsersListForForwardMessage={openUsersListForForwardMessage}
-                        />
+                { activeDialog &&
+                    <ChatContent
+                        dialog={activeDialog}
+                        user={user}
+                        onOpenUsersListForForwardMessage={openUsersListForForwardMessage}
+                    />
                 }
             </div>
             <Modal
                 open={isOpenModalForForwardMessage}
             >
-                <Users users={users} onClick={onClickUser}/>
+                <Users users={users} onClickUser={onClickUser}/>
             </Modal>
         </Fragment>
     );

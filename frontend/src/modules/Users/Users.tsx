@@ -1,24 +1,23 @@
 import React, {FC, useMemo} from "react";
-import {IUserDto} from "../../models/IStore/IAuthentication.ts";
 import UserCard from "../../components/UserCard/UserCard.tsx";
+import {IUserDto} from "../../models/IStore/IAuthentication.ts";
 
 interface IUsersProps {
     users: IUserDto[];
-    onClick: (user: IUserDto) => void;
+    onClickUser: (user: IUserDto) => void;
 }
 
-const Users: FC<IUsersProps> = ({users, onClick}) => {
+const Users: FC<IUsersProps> = ({users, onClickUser}) => {
 
     const list = useMemo(() => {
         return users.map(user =>
             <UserCard
                 key={user.id}
-                id={user.id}
-                dialogName={user.name}
-                onClick={() => onClick(user)}
+                user={user}
+                onClick={() => onClickUser(user)}
             />
         );
-    }, [users, onClick]);
+    }, [users, onClickUser]);
 
     return (
         <ul className="users__list">

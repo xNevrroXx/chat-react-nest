@@ -53,13 +53,41 @@
   &__audio-element-wrapper {
     padding: 7px 12px;
   }
-  &__attachment-wrapper {
+  &__attachments-wrapper {
     display: flex;
     max-width: 100%;
     flex-wrap: wrap;
     gap: 2px;
   }
+  &__attachments-unknown-wrapper {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    position: relative;
+  }
+  &__attachments-unknown-wrapper_with-line {
+    &::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      display: block;
+      width: 70%;
+      height: 1px;
+      box-shadow: 0 0 1px 0 black inset;
+      transition: 125ms;
+    }
+  }
+  &__attachment-unknown {
+    flex: 1 50%;
+    cursor: pointer;
+    &:hover {
+      background: rgba(0, 0, 0, .1);
+    }
+  }
   &__attachment {
+    cursor: pointer;
     list-style-type: none;
     flex: 1 0 130px;
     &:hover {

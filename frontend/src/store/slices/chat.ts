@@ -1,20 +1,23 @@
 import {createSlice} from "@reduxjs/toolkit";
 // interfaces
 import type {IChats, TFile} from "../../models/IStore/IChats.ts";
+import {
+    Attachment,
+    checkIsInnerMessageFromSocket,
+    ForwardedMessage,
+    IMessage,
+    InnerForwardedMessage,
+    InnerMessage,
+    Message,
+} from "../../models/IStore/IChats.ts";
 // actions
 import {createSocketInstance, getAll} from "../thunks/chat.ts";
 import {
-    setUserId,
-    handleMessageSocket,
     handleForwardedMessageSocket,
-    handleUserToggleTypingSocket
+    handleMessageSocket,
+    handleUserToggleTypingSocket,
+    setUserId
 } from "../actions/chat.ts";
-import {
-    ForwardedMessage,
-    checkIsForwardedMessage,
-    Message,
-    checkIsInnerMessageHTTPResponse, IInnerMessage, checkIsInnerMessageFromSocket, IMessage, IForwardedMessage
-} from "../../models/IStore/IChats.ts";
 
 
 const initialState: IChats = {
@@ -41,41 +44,61 @@ const chat = createSlice({
 
                 const targetChat = state.chats.find(chat => chat.userId === interlocutorId);
                 const messageSocket = action.payload;
-                let newMessage = {} as IMessage;
-                const files: TFile[] = messageSocket.files.map(file => {
-                    const u = new Uint8Array(file.buffer);
+                const newMessage: IMessage = {
+                    ...messageSocket,
+                    files: [], // temporarily
+                    replyToMessage: null, // temporarily
+                    createdAt: new Date(messageSocket.createdAt),
+                    updatedAt: messageSocket.updatedAt ? new Date(messageSocket.updatedAt) : null,
+                };
+                let innerMessage: InnerMessage | InnerForwardedMessage | null;
+                newMessage.files = messageSocket.files.map<TFile>(file => {
+                    const u = new Uint8Array(file.buffer); // file.buffer.data
                     const blob = new Blob([u], {type: file.mimeType});
-                    return {
+                    return new Attachment({
                         id: file.id,
                         originalName: file.originalName,
                         fileType: file.fileType,
                         mimeType: file.mimeType,
                         extension: file.extension,
-                        createdAt: file.createdAt,
-                        blob: blob
-                    };
+                        blob: blob,
+
+                        createdAt: new Date(file.createdAt)
+                    });
                 });
 
-                newMessage = {
-                    ...messageSocket,
-                    files,
-                };
+                if (messageSocket.replyToMessage) {
+                    if (checkIsInnerMessageFromSocket(messageSocket.replyToMessage)) {
+                        const innerFiles = messageSocket.replyToMessage.files.map<TFile>(file => {
+                            const u = new Uint8Array(file.buffer); // file.buffer.data
+                            const blob = new Blob([u], {type: file.mimeType});
+                            return new Attachment({
+                                id: file.id,
+                                originalName: file.originalName,
+                                fileType: file.fileType,
+                                mimeType: file.mimeType,
+                                extension: file.extension,
+                                blob: blob,
 
-                if (messageSocket.replyToMessage && checkIsInnerMessageFromSocket(messageSocket.replyToMessage)) {
-                    const innerFiles = messageSocket.replyToMessage.files.map<TFile>(file => {
-                        const u = new Uint8Array(file.buffer);
-                        const blob = new Blob([u], {type: file.mimeType});
-                        return {
-                            id: file.id,
-                            originalName: file.originalName,
-                            fileType: file.fileType,
-                            mimeType: file.mimeType,
-                            extension: file.extension,
-                            createdAt: file.createdAt,
-                            blob: blob
-                        };
-                    });
-                    (newMessage.replyToMessage as IInnerMessage).files = innerFiles;
+                                createdAt: new Date(file.createdAt)
+                            });
+                        });
+
+                        innerMessage = new InnerMessage({
+                            ...messageSocket.replyToMessage,
+                            files: innerFiles,
+                            createdAt: new Date(messageSocket.replyToMessage.createdAt),
+                            updatedAt: messageSocket.replyToMessage.updatedAt ? new Date(messageSocket.replyToMessage.updatedAt) : null,
+                        });
+                    } else {
+                        innerMessage = new InnerForwardedMessage({
+                            ...messageSocket.replyToMessage,
+                            createdAt: new Date(messageSocket.replyToMessage.createdAt),
+                            updatedAt: messageSocket.replyToMessage.updatedAt ? new Date(messageSocket.replyToMessage.updatedAt) : null,
+                        });
+                    }
+
+                    newMessage.replyToMessage = innerMessage;
                 }
 
                 const message = new Message(newMessage);
@@ -86,34 +109,56 @@ const chat = createSlice({
                         messages: [message],
                         isTyping: false
                     });
-                    return;
                 }
-
-                targetChat.messages.push(message);
+                else {
+                    targetChat.messages.push(message);
+                }
             })
             .addCase(handleForwardedMessageSocket, (state, action) => {
                 const interlocutorId = state.userId === action.payload.senderId ? action.payload.recipientId : action.payload.senderId;
 
                 const targetChat = state.chats.find(chat => chat.userId === interlocutorId);
                 const messageSocket = action.payload;
+                let innerMessage: InnerMessage | InnerForwardedMessage | null;
 
-                let newMessage = {} as IForwardedMessage;
-                newMessage = {...messageSocket};
-                if (messageSocket.forwardedMessage && checkIsInnerMessageFromSocket(messageSocket.forwardedMessage)) {
-                    const innerFiles = messageSocket.forwardedMessage.files.map<TFile>(file => {
-                        const u = new Uint8Array(file.buffer);
-                        const blob = new Blob([u], {type: file.mimeType});
-                        return {
-                            id: file.id,
-                            originalName: file.originalName,
-                            fileType: file.fileType,
-                            mimeType: file.mimeType,
-                            extension: file.extension,
-                            createdAt: file.createdAt,
-                            blob: blob
-                        };
-                    });
-                    (newMessage.forwardedMessage as IInnerMessage).files = innerFiles;
+                const newMessage: ForwardedMessage = {
+                    ...messageSocket,
+                    forwardedMessage: null, // temporarily
+                    createdAt: new Date(messageSocket.createdAt),
+                    updatedAt: messageSocket.updatedAt ? new Date(messageSocket.updatedAt) : null
+                };
+
+                if (messageSocket.forwardedMessage) {
+                    if (checkIsInnerMessageFromSocket(messageSocket.forwardedMessage)) {
+                        const innerFiles = messageSocket.forwardedMessage.files.map<TFile>(file => {
+                            const u = new Uint8Array(file.buffer); // file.buffer.data
+                            const blob = new Blob([u], {type: file.mimeType});
+                            return new Attachment({
+                                id: file.id,
+                                originalName: file.originalName,
+                                fileType: file.fileType,
+                                mimeType: file.mimeType,
+                                extension: file.extension,
+                                blob: blob,
+
+                                createdAt: new Date(file.createdAt)
+                            });
+                        });
+
+                        innerMessage = new InnerMessage({
+                            ...messageSocket.forwardedMessage,
+                            files: innerFiles,
+                            createdAt: new Date(messageSocket.forwardedMessage.createdAt),
+                            updatedAt: messageSocket.forwardedMessage.updatedAt ? new Date(messageSocket.forwardedMessage.updatedAt) : null,
+                        });
+                    } else {
+                        innerMessage = new InnerForwardedMessage({
+                            ...messageSocket.forwardedMessage,
+                            createdAt: new Date(messageSocket.forwardedMessage.createdAt),
+                            updatedAt: messageSocket.forwardedMessage.updatedAt ? new Date(messageSocket.forwardedMessage.updatedAt) : null,
+                        });
+                    }
+                    newMessage.forwardedMessage = innerMessage;
                 }
                 const message = new ForwardedMessage(newMessage);
 
@@ -123,10 +168,10 @@ const chat = createSlice({
                         messages: [message],
                         isTyping: false
                     });
-                    return;
                 }
-
-                targetChat.messages.push(message);
+                else {
+                    targetChat.messages.push(message);
+                }
             })
             .addCase(getAll.fulfilled, (state, action) => {
                 state.chats = action.payload;

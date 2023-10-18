@@ -6,7 +6,7 @@ import {Interweave} from "interweave";
 import {messageOwnerSelector} from "../../store/selectors/messageOwner.ts";
 import {
     InnerMessage,
-    InnerForwardMessage
+    InnerForwardedMessage
 } from "../../models/IStore/IChats.ts";
 // selectors
 import {useAppSelector} from "../../hooks/store.hook.ts";
@@ -17,7 +17,7 @@ import {truncateTheText} from "../../utils/truncateTheText.ts";
 const {Text} = Typography;
 
 type TMessageReplyProps = {
-    message: InnerMessage | InnerForwardMessage;
+    message: InnerMessage | InnerForwardedMessage;
     isInput?: boolean;
 }
 const MessageReply: FC<TMessageReplyProps> = ({message, isInput}) => {

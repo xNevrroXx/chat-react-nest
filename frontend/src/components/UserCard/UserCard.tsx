@@ -1,30 +1,39 @@
 import React, {FC} from "react";
 import * as classNames from "classnames";
 import {Avatar, Typography} from "antd";
-import {TValueOf} from "../../models/TUtils.ts";
+// own modules
 import {IUserDto} from "../../models/IStore/IAuthentication.ts";
+// styles
+import "./user-card.scss";
 
-const {Title} = Typography;
+const {Title, Text} = Typography;
 
 interface IUserCardProps {
-    id: TValueOf<Pick<IUserDto, "id">>,
-    dialogName: string,
+    user: IUserDto;
     onClick: () => void
 }
 
-const UserCard:FC<IUserCardProps> = ({id, dialogName, onClick}) => {
+const UserCard:FC<IUserCardProps> = ({user, onClick}) => {
     return (
         <li
             tabIndex={0}
-            data-list-id={id}
-            className={classNames("dialog")}
+            data-list-id={user.id}
             onClick={onClick}
+            className={classNames("user-card")}
         >
-            <div className="dialog__left">
-                <Avatar size={48} className="dialog__photo"></Avatar>
+            <div className="user-card__left">
+                <Avatar size={48} className="user-card"></Avatar>
             </div>
-            <div className="dialog__right">
-                <Title level={5} style={{margin: 0}}>{dialogName}</Title>
+            <div className="user-card__right">
+                <Title level={5} style={{margin: 0}}>
+                    { user.name.concat(" ").concat(user.surname) }
+                </Title>
+                <Text>
+                    { user.userOnline.isOnline
+                        ? "В сети"
+                        : "Был в сети: "
+                    }
+                </Text>
             </div>
         </li>
     );

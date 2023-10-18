@@ -5,12 +5,12 @@ import {
     TForwardMessage,
     TForwardedMessageFromSocket
 } from "./IStore/IChats.ts";
-import {TUserOnline} from "./IStore/IUsers.ts";
+import {TUserOnlineHTTP} from "./IStore/IAuthentication.ts";
 
 export interface ServerToClientEvents {
     "message": (data: TMessageFromSocket) => void;
     "message:forwarded": (data: TForwardedMessageFromSocket) => void;
-    "user:toggle-online": (data: TUserOnline) => void;
+    "user:toggle-online": (data: TUserOnlineHTTP) => void;
     "user:toggle-typing": (data: TUserTyping) => void;
 }
 
