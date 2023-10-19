@@ -5,14 +5,15 @@ import {type FC, useMemo, useRef, useState} from "react";
 import Message from "../../HOC/Message/Message.tsx";
 import InputMessage from "../InputMessage/InputMessage.tsx";
 import type {IUserDto} from "../../models/IStore/IAuthentication.ts";
-import type {IActiveDialog} from "../../pages/Main/Main.tsx";
 import type {TValueOf} from "../../models/TUtils.ts";
 import {
-    type TSendMessage,
-    type IAttachment,
-    TFileType,
+    TSendMessage,
+    IAttachment,
+    TForwardMessage,
+    IRoom,
+    FileType,
     Message as MessageClass,
-    ForwardedMessage as ForwardedMessageClass, TForwardMessage
+    ForwardedMessage as ForwardedMessageClass
 } from "../../models/IStore/IChats.ts";
 // actions
 import {useAppDispatch} from "../../hooks/store.hook.ts";
@@ -24,11 +25,11 @@ const {Title} = Typography;
 
 interface IActiveChatProps {
     user: IUserDto;
-    dialog: IActiveDialog;
+    room: IRoom;
     onOpenUsersListForForwardMessage: (forwardedMessageId: TValueOf<Pick<TForwardMessage, "forwardedMessageId">>) => void;
 }
 
-const ChatContent: FC<IActiveChatProps> = ({user, dialog, onOpenUsersListForForwardMessage}) => {
+const ChatContent: FC<IActiveChatProps> = ({user, room, onOpenUsersListForForwardMessage}) => {
     const dispatch = useAppDispatch();
     const typingTimoutRef = useRef<number | null>(null);
     const [messageForReply, setMessageForReply] = useState<MessageClass | ForwardedMessageClass | null>(null);
@@ -48,7 +49,7 @@ const ChatContent: FC<IActiveChatProps> = ({user, dialog, onOpenUsersListForForw
             typingTimoutRef.current = setTimeout(() => {
                 void dispatch(
                     toggleUserTypingSocket({
-                        userTargetId: dialog.interlocutor.id,
+                        roomId: room.id,
                         isTyping: false
                     })
                 );
@@ -60,7 +61,7 @@ const ChatContent: FC<IActiveChatProps> = ({user, dialog, onOpenUsersListForForw
 
         void dispatch(
             toggleUserTypingSocket({
-                userTargetId: dialog.interlocutor.id,
+                roomId: room.id,
                 isTyping: true
             })
         );
@@ -68,7 +69,7 @@ const ChatContent: FC<IActiveChatProps> = ({user, dialog, onOpenUsersListForForw
         typingTimoutRef.current = setTimeout(() => {
             void dispatch(
                 toggleUserTypingSocket({
-                    userTargetId: dialog.interlocutor.id,
+                    roomId: room.id,
                     isTyping: false
                 })
             );
@@ -77,7 +78,7 @@ const ChatContent: FC<IActiveChatProps> = ({user, dialog, onOpenUsersListForForw
 
     const onSendMessage = (text: TValueOf<Pick<TSendMessage, "text">>, attachments: IAttachment[]) => {
         const message: TSendMessage = {
-            interlocutorId: dialog?.interlocutor.id,
+            roomId: room.id,
             text,
             attachments,
             replyToMessageId: messageForReply && messageForReply.id
@@ -95,7 +96,7 @@ const ChatContent: FC<IActiveChatProps> = ({user, dialog, onOpenUsersListForForw
         const buffer = await record.arrayBuffer();
         const attachment: IAttachment = {
             originalName: "",
-            fileType: TFileType.VOICE_RECORD,
+            fileType: FileType.VOICE_RECORD,
             mimeType: "audio/webm",
             extension: "webm",
             buffer: buffer
@@ -107,19 +108,21 @@ const ChatContent: FC<IActiveChatProps> = ({user, dialog, onOpenUsersListForForw
     // const onForwardMessage = (messageId:)
 
     const isOnlineOrTyping = useMemo(() => {
-        if (dialog.chat.isTyping) {
+        if (room.usersTyping.some(typingInfo => typingInfo.isTyping)) {
             return "Печатает...";
         }
 
-        return dialog.interlocutor.userOnline?.isOnline ? "В сети" : "Не в сети";
-    }, [dialog]);
+        return "НАВЕРНОЕ Не в сети";
+        // return room.userOnline?.isOnline ? "В сети" : "Не в сети";
+    }, [room]);
 
     const listMessages = useMemo(() => {
-        if (!dialog) {
+        console.log("dialog: ", room);
+        if (!room) {
             return null;
         }
 
-        return dialog.chat.messages.map(message => {
+        return room.messages.map(message => {
             return (
                 <Message
                     key={message.id}
@@ -130,10 +133,10 @@ const ChatContent: FC<IActiveChatProps> = ({user, dialog, onOpenUsersListForForw
                 />
             );
         });
-    }, [user, dialog]);
+    }, [user, room]);
 
     const content = (): JSX.Element => {
-        if (!dialog) {
+        if (!room) {
             return <Spin/>;
         }
 
@@ -147,7 +150,7 @@ const ChatContent: FC<IActiveChatProps> = ({user, dialog, onOpenUsersListForForw
                                 level={5}
                                 className="active-chat__name"
                             >
-                                {dialog.interlocutor.name.concat(" ", dialog.interlocutor.surname)}
+                                {room.name || "NOT FOUND NAME"}
                             </Title>
                             <p className="active-chat__status">{isOnlineOrTyping}</p>
                         </div>

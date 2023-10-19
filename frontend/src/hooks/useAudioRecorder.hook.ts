@@ -6,7 +6,7 @@ const mimeType = "audio/webm" as const;
 
 const useAudioRecorder = () => {
     const mediaRecorder = useRef<MediaRecorder | null>(null);
-    const [permission, setPermission] = useState<boolean>(false);
+    const [permission, setPermission] = useState<boolean>(true);
     const [isRecording, setIsRecording] = useState<boolean>(false);
     const [stream, setStream] = useState<MediaStream | null>(null);
     const [audio, setAudio] = useState<Blob | null>(null);

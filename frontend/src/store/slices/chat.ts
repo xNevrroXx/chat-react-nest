@@ -8,7 +8,7 @@ import {
     IMessage,
     InnerForwardedMessage,
     InnerMessage,
-    Message,
+    Message, RoomType,
 } from "../../models/IStore/IChats.ts";
 // actions
 import {createSocketInstance, getAll} from "../thunks/chat.ts";
@@ -40,9 +40,8 @@ const chat = createSlice({
                 state.socket = action.payload;
             })
             .addCase(handleMessageSocket, (state, action) => {
-                const interlocutorId = state.userId === action.payload.senderId ? action.payload.recipientId : action.payload.senderId;
-
-                const targetChat = state.chats.find(chat => chat.userId === interlocutorId);
+                console.log("payload message: ", action.payload);
+                const targetChat = state.chats.find(chat => chat.id === action.payload.roomId);
                 const messageSocket = action.payload;
                 const newMessage: IMessage = {
                     ...messageSocket,
@@ -105,9 +104,12 @@ const chat = createSlice({
 
                 if (!targetChat) {
                     state.chats.push({
-                        userId: interlocutorId,
+                        id: message.roomId,
+                        roomType: RoomType.PRIVATE,
                         messages: [message],
-                        isTyping: false
+                        usersTyping: [],
+                        createdAt: new Date(),
+                        updatedAt: undefined
                     });
                 }
                 else {
@@ -115,9 +117,7 @@ const chat = createSlice({
                 }
             })
             .addCase(handleForwardedMessageSocket, (state, action) => {
-                const interlocutorId = state.userId === action.payload.senderId ? action.payload.recipientId : action.payload.senderId;
-
-                const targetChat = state.chats.find(chat => chat.userId === interlocutorId);
+                const targetChat = state.chats.find(chat => chat.id === action.payload.roomId);
                 const messageSocket = action.payload;
                 let innerMessage: InnerMessage | InnerForwardedMessage | null;
 
@@ -164,9 +164,12 @@ const chat = createSlice({
 
                 if (!targetChat) {
                     state.chats.push({
-                        userId: interlocutorId,
+                        id: message.roomId,
+                        roomType: RoomType.PRIVATE,
                         messages: [message],
-                        isTyping: false
+                        usersTyping: [],
+                        createdAt: new Date(),
+                        updatedAt: undefined
                     });
                 }
                 else {
@@ -177,12 +180,12 @@ const chat = createSlice({
                 state.chats = action.payload;
             })
             .addCase(handleUserToggleTypingSocket, (state, action) => {
-                const targetChat = state.chats.find(chat => chat.userId === action.payload.userTargetId);
+                const targetChat = state.chats.find(chat => chat.id === action.payload.roomId);
                 if (!targetChat) {
                     return;
                 }
 
-                targetChat.isTyping = action.payload.isTyping;
+                targetChat.usersTyping = [...targetChat.usersTyping, action.payload];
             });
     }
 });

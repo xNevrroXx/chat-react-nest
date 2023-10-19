@@ -9,6 +9,7 @@ import {TokenService} from "./token/token.service";
 import {DatabaseModule} from "./database/database.module";
 import {AuthService} from "./auth/auth.service";
 import {AppConstantsService} from "./app.constants.service";
+import { RoomModule } from './room/room.module';
 
 
 @Module({
@@ -17,7 +18,8 @@ import {AppConstantsService} from "./app.constants.service";
         DatabaseModule,
         UserModule,
         MessageModule,
-        ChatModule
+        ChatModule,
+        RoomModule
     ],
     controllers: [AppController],
     providers: [AppService, TokenService, AuthService, AppConstantsService]

@@ -1,5 +1,5 @@
-import React, {FC, Fragment} from "react";
-import {Button, Col, Flex} from "antd";
+import React, {FC} from "react";
+import {Button, Flex} from "antd";
 import {CloseCircleOutlined, SendOutlined} from "@ant-design/icons";
 // @ts-ignore
 import {LiveAudioVisualizer} from "react-audio-visualize";
@@ -42,7 +42,7 @@ const InputDuringAudio: FC<IInputDuringAudioProps> = ({
             <div className="input-message__btn-wrapper">
                 <Button
                     type={"text"}
-                    onClick={cleanAudio}
+                    onClick={cleanAudio} 
                     icon={<CloseCircleOutlined/>}
                 />
             </div>

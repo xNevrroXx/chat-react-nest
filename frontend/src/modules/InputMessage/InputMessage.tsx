@@ -10,7 +10,7 @@ import MessageReply from "../../components/MessageReply/MessageReply.tsx";
 import {
     IAttachment,
     TSendMessage,
-    TFileType,
+    FileType,
     Message as MessageClass,
     ForwardedMessage as ForwardedMessageClass
 } from "../../models/IStore/IChats.ts";
@@ -76,7 +76,7 @@ const InputMessage: FC<IInputMessage> = ({onSendMessage, sendVoiceMessage, onTyp
 
             prev.push({
                 originalName: currentValue.name,
-                fileType: TFileType.ATTACHMENT,
+                fileType: FileType.ATTACHMENT,
                 mimeType: currentValue.type,
                 extension: extension,
                 buffer: await currentValue.arrayBuffer()

@@ -71,7 +71,6 @@ async (_, thunkAPI) => {
         const response = await AuthService.refreshToken();
         localStorage.setItem("token", response.data.accessToken);
 
-
         const dispatch = thunkAPI.dispatch;
         void dispatch(setUserId(response.data.user.id));
         void dispatch(getAllUsers());

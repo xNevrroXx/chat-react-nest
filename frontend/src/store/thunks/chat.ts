@@ -9,17 +9,17 @@ import {handleUserToggleOnlineSocket} from "../actions/users.ts";
 import {
     checkIsInnerMessageHTTP,
     checkIsMessageHTTP,
-    IChat,
+    IRoom,
     IForwardedMessage,
     IMessage,
     TFile,
     TForwardMessage,
     TSendMessage,
-    TUserTyping,
+    IUserTyping,
     Message,
     ForwardedMessage,
     InnerMessage,
-    InnerForwardedMessage, Attachment
+    InnerForwardedMessage, Attachment, TSendUserTyping
 } from "../../models/IStore/IChats.ts";
 import {RootState} from "../index.ts";
 
@@ -109,7 +109,7 @@ const forwardMessageSocket = createAsyncThunk<void, TForwardMessage, { state: Ro
     }
 );
 
-const toggleUserTypingSocket = createAsyncThunk<void, TUserTyping, { state: RootState }>(
+const toggleUserTypingSocket = createAsyncThunk<void, TSendUserTyping, { state: RootState }>(
     "chat/socket:send-toggle-typing",
     (data, thunkAPI) => {
         try {
@@ -131,8 +131,9 @@ const getAll = createAsyncThunk(
     async (_, thunkAPI) => {
         try {
             const response = await ChatService.getAll();
+            console.log("response ALL: ", response);
             const chatsHTTPResponse = response.data;
-            const chats: IChat[] = [];
+            const chats: IRoom[] = [];
             chatsHTTPResponse.forEach(chat => {
                 const messages = chat.messages.reduce<(Message | ForwardedMessage)[]>((previousValue, messageHTTP) => {
                     let message: Message | ForwardedMessage;

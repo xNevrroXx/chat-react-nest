@@ -1,5 +1,5 @@
 import {Injectable} from "@nestjs/common";
-import {type User, Prisma, UserOnline, UserTyping} from "@prisma/client";
+import {type User, Prisma, UserOnline, UserTyping, Room} from "@prisma/client";
 import {DatabaseService} from "../database/database.service";
 import ApiError from "../exceptions/api-error";
 import {TValueOf} from "../models/TUtils";
@@ -116,10 +116,10 @@ export class UserService {
 
     async updateTypingStatus(params: {
         userId: TValueOf<Pick<IUserPayloadJWT, "id">>,
-        userTargetId: TValueOf<Pick<IUserPayloadJWT, "id">>,
+        roomId: TValueOf<Pick<Room, "id">>,
         isTyping: TValueOf<Pick<UserTyping, "isTyping">>
     }): Promise<UserTyping> {
-        const {userId, userTargetId, isTyping} = params;
+        const {userId, roomId, isTyping} = params;
         const isExistAlready = await this.prisma.userTyping.findUnique({
             where: {userId: userId}
         });
@@ -129,7 +129,7 @@ export class UserService {
             userTyping = await this.prisma.userTyping.create({
                 data: {
                     userId,
-                    userTargetId,
+                    roomId,
                     isTyping
                 }
             });
@@ -138,7 +138,7 @@ export class UserService {
             userTyping = await this.prisma.userTyping.update({
                 where: {userId: userId},
                 data: {
-                    userTargetId,
+                    roomId,
                     isTyping
                 }
             });

@@ -1,23 +1,24 @@
 import React, {FC, useMemo} from "react";
-import UserCard from "../../components/UserCard/UserCard.tsx";
-import {IUserDto} from "../../models/IStore/IAuthentication.ts";
+// own modules
+import RoomCard from "../../components/RoomCard/RoomCard.tsx";
+import {IRoom} from "../../models/IStore/IChats.ts";
 
 interface IUsersProps {
-    users: IUserDto[];
-    onClickUser: (user: IUserDto) => void;
+    rooms: IRoom[];
+    onClickRoom: (room: IRoom) => void;
 }
 
-const Users: FC<IUsersProps> = ({users, onClickUser}) => {
+const Users: FC<IUsersProps> = ({rooms, onClickRoom}) => {
 
     const list = useMemo(() => {
-        return users.map(user =>
-            <UserCard
-                key={user.id}
-                user={user}
-                onClick={() => onClickUser(user)}
+        return rooms.map(room =>
+            <RoomCard
+                key={room.id}
+                room={room}
+                onClick={() => onClickRoom(room)}
             />
         );
-    }, [users, onClickUser]);
+    }, [rooms, onClickRoom]);
 
     return (
         <ul className="users__list">

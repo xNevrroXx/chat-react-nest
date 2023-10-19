@@ -2,18 +2,18 @@ import {TUserDto} from "../user/IUser";
 import {TValueOf} from "../models/TUtils";
 import {Prisma} from "@prisma/client";
 import {TFileToClient} from "../file/IFile";
-
-export type TChats = IChat[];
+import {IRoom} from "../room/IRooms";
 
 export interface IChat {
     userId: TValueOf<Pick<TUserDto, "id">>;
-    isTyping: boolean;
-    messages: TMessages;
+    rooms: IRoom[];
 }
 
-export type TMessages = ( TMessage | TForwardMessage )[];
+export type IMessage = ( TMessage | TForwardMessage );
+export type TMessage = Omit<TMessageWithoutFileBlobs, "forwardedMessageId"> & { files: TFileToClient[] };
+export type TForwardMessage = Omit<TForwardMessageWithoutFileBlobs, "replyToMessageId">;
 
-export type TMessage = Omit<Prisma.MessageGetPayload<{
+export type TMessageWithoutFileBlobs = Prisma.MessageGetPayload<{
     include: {
         files: true,
         replyToMessage: {
@@ -22,9 +22,9 @@ export type TMessage = Omit<Prisma.MessageGetPayload<{
             }
         }
     }
-}>, "forwardedMessageId"> & { files: TFileToClient[] };
+}>;
 
-export type TForwardMessage = Omit<Prisma.MessageGetPayload<{
+export type TForwardMessageWithoutFileBlobs = Prisma.MessageGetPayload<{
     include: {
         forwardedMessage: {
             include: {
@@ -37,8 +37,8 @@ export type TForwardMessage = Omit<Prisma.MessageGetPayload<{
             }
         }
     }
-}>, "replyToMessageId">;
+}>;
 
-export function isForwardedMessage(obj: TMessage | TForwardMessage): obj is TForwardMessage {
-    return (obj as TForwardMessage).forwardedMessage && (obj as TForwardMessage).forwardedMessage !== null;
+export function isForwardedMessage(obj: TMessageWithoutFileBlobs | TForwardMessageWithoutFileBlobs): obj is TForwardMessageWithoutFileBlobs {
+    return (obj as TForwardMessageWithoutFileBlobs).forwardedMessage && (obj as TForwardMessageWithoutFileBlobs).forwardedMessage !== null;
 }

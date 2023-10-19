@@ -14,8 +14,8 @@ export interface IUserAuth extends IUser {
 
 export interface IUserDto extends IUser {
     id: string,
-    updatedAt: Date,
     createdAt: Date,
+    updatedAt: Date | undefined,
     userOnline: UserOnline
 }
 
@@ -23,7 +23,7 @@ export type TUserOnline = {
     id: string
     userId: TValueOf<Pick<IUserDto, "id">>
     isOnline: boolean
-    updatedAt: Date
+    updatedAt: Date | undefined
 }
 
 export interface IAuthentication {
@@ -32,22 +32,18 @@ export interface IAuthentication {
 }
 
 // http
-export interface IUserDtoHTTP extends IUser {
-    id: string,
+export type TUserDtoHTTP = Omit<IUserDto, "createdAt" | "updatedAt" | "userOnline"> & {
     updatedAt: string,
     createdAt: string,
     userOnline: TUserOnlineHTTP
 }
 
-export type TUserOnlineHTTP = {
-    id: string
-    userId: TValueOf<Pick<IUserDto, "id">>
-    isOnline: boolean
-    updatedAt: string
+export type TUserOnlineHTTP = Omit<TUserOnline, "updatedAt"> & {
+    updatedAt: string,
 }
 
 export interface IAuthenticationHTTP {
-    user: IUserDtoHTTP | null,
+    user: TUserDtoHTTP | null,
     isAuthenticated: boolean
 }
 
@@ -58,10 +54,10 @@ export class UserDto implements IUserDto {
     surname: string;
     age: number;
     sex: "MALE" | "FEMALE";
-    userOnline: TUserOnline;
+    userOnline: UserOnline;
 
     createdAt: Date;
-    updatedAt: Date;
+    updatedAt: Date | undefined;
 
     constructor({id, email, name, surname, age, sex, userOnline, createdAt, updatedAt}: IUserDto) {
         this.id = id;
@@ -79,7 +75,7 @@ export class UserDto implements IUserDto {
 export class UserOnline implements TUserOnline {
     id: string;
     isOnline: boolean;
-    updatedAt: Date;
+    updatedAt: Date | undefined;
     userId: TValueOf<Pick<IUserDto, "id">>;
 
     constructor({id, userId, isOnline, updatedAt}: TUserOnline) {

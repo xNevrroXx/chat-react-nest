@@ -23,31 +23,32 @@ model User {
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime? @map("updated_at")
 
-  senderMessages    Message[]     @relation("sender")
-  recipientMessages Message[]     @relation("recipient")
-  friendshipUser1   Friendship[]  @relation("user1")
-  friendshipUser2   Friendship[]  @relation("user2")
-  refreshToken      RefreshToken? @relation("refresh_token")
-  userOnline        UserOnline?   @relation("user_online")
-  userTyping        UserTyping[]  @relation("user_typing")
-  userTypingTarget  UserTyping[]  @relation("user_typing_target")
+  userOnline      UserOnline?   @relation("user_online")
+  userTyping      UserTyping?   @relation("user_typing")
+  refreshToken    RefreshToken? @relation("refresh_token")
+  room            Room[]        @relation("room")
+  messages        Message[]     @relation("messages")
+  friendshipUser1 Friendship[]  @relation("user1")
+  friendshipUser2 Friendship[]  @relation("user2")
+  participant     Participant[] @relation("participant")
 
   @@unique([email])
   @@map("user")
 }
 
 model UserTyping {
-  id           String  @id @default(uuid())
-  userId       String  @map("user_id")
-  userTargetId String? @map("user_target_id")
-  isTyping     Boolean @default(false) @map("is_typing")
+  id       String  @id @default(uuid())
+  userId   String  @map("user_id")
+  roomId   String  @map("room_id")
+  isTyping Boolean @default(false) @map("is_typing")
 
   updatedAt DateTime @default(now()) @map("updated_at")
 
-  user       User  @relation("user_typing", fields: [userId], references: [id])
-  userTarget User? @relation("user_typing_target", fields: [userTargetId], references: [id])
+  user User @relation("user_typing", fields: [userId], references: [id])
+  room Room @relation("users_typing", fields: [roomId], references: [id])
 
   @@unique([userId])
+  @@map("user_typing")
 }
 
 model UserOnline {
@@ -60,6 +61,7 @@ model UserOnline {
   user User @relation("user_online", fields: [userId], references: [id])
 
   @@unique([userId])
+  @@map("user_online")
 }
 
 model Friendship {
@@ -88,11 +90,40 @@ model RefreshToken {
   @@map("refresh_token")
 }
 
+model Room {
+  id            String   @id @default(uuid())
+  creatorUserId String?  @map("user_id")
+  roomType      RoomType @map("room_type")
+  name          String?
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @map("updated_at")
+
+  creatorUser  User?         @relation("room", fields: [creatorUserId], references: [id])
+  messages     Message[]     @relation("room")
+  usersTyping  UserTyping[]  @relation("users_typing")
+  participants Participant[] @relation("participant")
+
+  @@map("room")
+}
+
+model Participant {
+  id     String @id @default(uuid())
+  userId String @map("user_id")
+  roomId String @map("room_id")
+
+  user User @relation("participant", fields: [userId], references: [id])
+  room Room @relation("participant", fields: [roomId], references: [id])
+
+  @@unique([userId, roomId])
+  @@map("participant")
+}
+
 model Message {
   id                 String  @id @default(uuid())
-  text               String? @db.Text()
   senderId           String  @map("sender_id")
-  recipientId        String  @map("recipient_id")
+  roomId             String  @map("room_id")
+  text               String? @db.Text()
   hasRead            Boolean @default(false) @map("has_read")
   replyToMessageId   String? @map("reply_to_message_id")
   forwardedMessageId String? @map("forwarded_message_id")
@@ -100,9 +131,9 @@ model Message {
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime? @map("updated_at")
 
+  sender             User      @relation("messages", fields: [senderId], references: [id])
+  room               Room      @relation("room", fields: [roomId], references: [id])
   files              File[]    @relation("files")
-  sender             User      @relation("sender", fields: [senderId], references: [id])
-  recipient          User      @relation("recipient", fields: [recipientId], references: [id])
   replyToMessage     Message?  @relation("reply_to_message", fields: [replyToMessageId], references: [id])
   repliesThisMessage Message[] @relation("reply_to_message")
   forwardedMessage   Message?  @relation("forwarded_message", fields: [forwardedMessageId], references: [id])
@@ -137,4 +168,9 @@ enum FileType {
   VOICE_RECORD
   VIDEO_RECORD
   ATTACHMENT
+}
+
+enum RoomType {
+  PRIVATE
+  GROUP
 }

@@ -1,6 +1,6 @@
 import {TUserDto} from "../user/IUser";
 import {TValueOf} from "../models/TUtils";
-import {Message, File, UserTyping} from "@prisma/client";
+import {Message, File, UserTyping, Room} from "@prisma/client";
 
 export interface INewVoiceMessage {
     interlocutorId: TValueOf<Pick<TUserDto, "id">>;
@@ -8,13 +8,13 @@ export interface INewVoiceMessage {
 }
 
 export type TNewMessage = {
-    interlocutorId: TValueOf<Pick<TUserDto, "id">>;
+    roomId?: TValueOf<Pick<Room, "id">>;
     text: TValueOf<Pick<Message, "text">>;
     replyToMessageId: TValueOf<Pick<Message, "id">> | null
 } & IGetAttachments
 
 export type TNewForwardedMessage = {
-    interlocutorId: TValueOf<Pick<TUserDto, "id">>;
+    roomId?: TValueOf<Pick<Room, "id">>;
     forwardedMessageId: TValueOf<Pick<Message, "id">>;
 }
 
@@ -26,7 +26,7 @@ export interface IAttachment extends Omit<File, "id" | "messageId" | "createdAt"
     buffer: ArrayBuffer;
 }
 
-export type TToggleUserTypingMessage = Pick<UserTyping, "userTargetId" | "isTyping">;
+export type TToggleUserTyping = Pick<UserTyping, "userId" | "roomId" | "isTyping">;
 
 export interface IUserIdToSocketId {
     [userId: string]: string

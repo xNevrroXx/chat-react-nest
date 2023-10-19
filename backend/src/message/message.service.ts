@@ -1,10 +1,17 @@
 import {Injectable} from "@nestjs/common";
 import {DatabaseService} from "../database/database.service";
 import {type Message, Prisma} from "@prisma/client";
+import {IMessage, isForwardedMessage, TForwardMessageWithoutFileBlobs, TMessageWithoutFileBlobs} from "./IMessage";
+import {TFileToClient} from "../file/IFile";
+import {excludeSensitiveFields} from "../utils/excludeSensitiveFields";
+import {FileService} from "../file/file.service";
 
 @Injectable()
 export class MessageService {
-    constructor(private prisma: DatabaseService) {
+    constructor(
+        private readonly prisma: DatabaseService,
+        private readonly fileService: FileService
+    ) {
     }
 
     async findOne(
@@ -24,7 +31,7 @@ export class MessageService {
             orderBy?: Prisma.MessageOrderByWithRelationInput;
             include?: T;
         }
-    ): Promise<Prisma.MessageGetPayload<{include: T}>[] | Message[]> {
+    ): Promise<Prisma.MessageGetPayload<{ include: T }>[] | Message[]> {
         const {skip, take, cursor, where, orderBy, include} = params;
 
         return this.prisma.message.findMany({
@@ -42,7 +49,7 @@ export class MessageService {
             data: Prisma.MessageCreateInput,
             include?: T
         }
-    ): Promise<Prisma.MessageGetPayload<{include: T}> | Message | null> {
+    ): Promise<Prisma.MessageGetPayload<{ include: T }> | Message | null> {
         return this.prisma.message.create(params);
     }
 
@@ -62,5 +69,84 @@ export class MessageService {
         return this.prisma.message.delete({
             where
         });
+    }
+
+    async normalizeMessage(message:
+        Prisma.MessageGetPayload<{
+            include: {
+                files: true,
+                replyToMessage: {
+                    include: {
+                        files: true
+                    }
+                },
+                forwardedMessage: {
+                    include: {
+                        files: true,
+                        replyToMessage: {
+                            include: {
+                                files: true
+                            }
+                        }
+                    }
+                }
+            }
+        }>
+    ): Promise<IMessage> {
+        let normalizedMessage;
+        if (!isForwardedMessage(message)) {
+            normalizedMessage = excludeSensitiveFields(message, ["forwardedMessageId", "forwardedMessage"]);
+
+            if (normalizedMessage.replyToMessage) {
+                if (normalizedMessage.replyToMessage.forwardedMessageId) {
+                    normalizedMessage = {
+                        ...normalizedMessage,
+                        replyToMessage: excludeSensitiveFields(normalizedMessage.replyToMessage, ["replyToMessageId", "files"])
+                    };
+                } else {
+                    normalizedMessage = {
+                        ...normalizedMessage,
+                        replyToMessage: excludeSensitiveFields(normalizedMessage.replyToMessage, ["forwardedMessageId"])
+                    };
+                }
+            }
+            const hasFiles = normalizedMessage.files.length > 0;
+            let files: TFileToClient[] = [];
+            if (hasFiles) {
+                files = await this.fileService.addBlobToFiles(normalizedMessage.files);
+            }
+            normalizedMessage = {
+                ...normalizedMessage,
+                files
+            };
+            if (
+                normalizedMessage.replyToMessage
+                && normalizedMessage.replyToMessage.files
+                && normalizedMessage.replyToMessage.files.length > 0
+            ) {
+                normalizedMessage.replyToMessage.files = await this.fileService.addBlobToFiles(normalizedMessage.replyToMessage.files);
+            }
+        }
+        else {
+            normalizedMessage = excludeSensitiveFields(message, ["files", "replyToMessage", "replyToMessageId"]);
+
+            if (normalizedMessage.forwardedMessage.forwardedMessageId) {
+                normalizedMessage = {
+                    ...normalizedMessage,
+                    forwardedMessage: excludeSensitiveFields(normalizedMessage.forwardedMessage, ["files", "replyToMessageId", "replyToMessage"])
+                };
+            } else {
+                normalizedMessage = {
+                    ...normalizedMessage,
+                    forwardedMessage: excludeSensitiveFields(normalizedMessage.forwardedMessage, ["forwardedMessageId"])
+                };
+            }
+
+            if (normalizedMessage.forwardedMessage.files && normalizedMessage.forwardedMessage.files.length > 0) {
+                normalizedMessage.forwardedMessage.files = await this.fileService.addBlobToFiles(normalizedMessage.forwardedMessage.files);
+            }
+        }
+
+        return normalizedMessage as Promise<IMessage>;
     }
 }

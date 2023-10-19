@@ -3,11 +3,9 @@ import {Input, Typography} from "antd";
 // own modules
 import DialogCard from "../../components/DialogCard/DialogCard.tsx";
 // types
-import {IChat, Message} from "../../models/IStore/IChats.ts";
+import {IRoom, Message} from "../../models/IStore/IChats.ts";
 import {TValueOf} from "../../models/TUtils.ts";
-import {TUserDialogs} from "../../store/selectors/userDialogs.ts";
 import {IUserDto} from "../../models/IStore/IAuthentication.ts";
-import {IActiveDialog} from "../../pages/Main/Main.tsx";
 // styles
 import "./dialogs.scss";
 
@@ -15,57 +13,31 @@ const {Title} = Typography;
 
 interface IDialogsProps {
     user: IUserDto,
-    userDialogs: TUserDialogs,
-    activeChatId: TValueOf<Pick<IChat, "userId">> | null,
-    onChangeDialog: (dialog: IActiveDialog) => void,
+    rooms: IRoom[],
+    activeChatId: TValueOf<Pick<IRoom, "id">> | null,
+    onChangeDialog: (room: IRoom) => void,
 }
 
-const Dialogs: FC<IDialogsProps> = ({user, userDialogs, onChangeDialog, activeChatId}) => {
+const Dialogs: FC<IDialogsProps> = ({user, rooms, onChangeDialog, activeChatId}) => {
     const list = useMemo(() => {
-        const elems: JSX.Element[] = [];
-        for (const [interlocutor, chat] of userDialogs.entries()) {
-            if (!chat) {
-                elems.push(
-                    <DialogCard
-                        key={interlocutor.id.toString() + "dialog"}
-                        id={interlocutor.id}
-                        onClick={() => onChangeDialog({
-                            interlocutor,
-                            chat: {
-                                isTyping: false,
-                                userId: interlocutor.id,
-                                messages: []
-                            }
-                        })}
-                        dialogName={interlocutor.name + " " + interlocutor.surname}
-                        sender={""}
-                        hasRead={true}
-                        text={""}
-                        isActive={activeChatId === interlocutor.id}
-                    />
-                );
+        return rooms.map(room => {
+            const lastMessageSender = room.messages.at(-1)!.senderId === user.id ? "Вы" : (room.name || "participants!!!");
+            const lastMessage = room.messages.at(-1);
 
-                continue;
-            }
-
-            const lastMessageSender = chat.messages.at(-1)!.senderId === user.id ? "Вы" : interlocutor.name;
-            const lastMessage = chat.messages.at(-1);
-            elems.push(
+            return (
                 <DialogCard
-                    key={interlocutor.id.toString() + "dialog"}
-                    id={interlocutor.id}
-                    onClick={() => onChangeDialog({interlocutor, chat})}
-                    dialogName={interlocutor.name + " " + interlocutor.surname}
+                    key={room.id.toString() + "dialog card"}
+                    id={room.id}
+                    onClick={() => onChangeDialog(room)}
+                    dialogName={room.name || "NOT FOUND NAME"}
                     sender={lastMessageSender}
                     hasRead={lastMessage!.hasRead}
                     text={lastMessage instanceof Message && lastMessage.text || ""}
-                    isActive={activeChatId === interlocutor.id}
+                    isActive={activeChatId === room.id}
                 />
             );
-        }
-
-        return elems;
-    }, [user, userDialogs, onChangeDialog, activeChatId]);
+        });
+    }, [user, rooms, onChangeDialog, activeChatId]);
 
     return (
         <div className="dialogs">

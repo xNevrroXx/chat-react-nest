@@ -4,7 +4,7 @@ import DumbMessage from "../../components/Message/DumbMessage.tsx";
 // types
 import {
     IFileForRender,
-    TFileType,
+    FileType,
     Message as MessageClass,
     ForwardedMessage as ForwardedMessageClass, IKnownAndUnknownFiles, TAttachmentType
 } from "../../models/IStore/IChats.ts";
@@ -29,11 +29,12 @@ const Message: FC<TMessageProps> = ({userId, message, chooseMessageForReply, onO
 
     useEffect(() => {
         if (message instanceof MessageClass) {
+            console.log("message: ", message);
             if (!message.files || message.files.length === 0) {
                 return;
             }
 
-            if (message.files[0].fileType === TFileType[TFileType.VOICE_RECORD]) {
+            if (message.files[0].fileType === FileType[FileType.VOICE_RECORD]) {
                 const blob = message.files[0].blob;
                 const blobUrl = URL.createObjectURL(blob);
                 const voiceInfo = {

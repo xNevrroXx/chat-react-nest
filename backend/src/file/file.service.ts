@@ -5,6 +5,8 @@ import {AppConstantsService} from "../app.constants.service";
 import {type File, Prisma} from "@prisma/client";
 import ApiError from "../exceptions/api-error";
 import * as path from "path";
+import {TFileToClient} from "./IFile";
+import {excludeSensitiveFields} from "../utils/excludeSensitiveFields";
 
 @Injectable()
 export class FileService {
@@ -74,5 +76,18 @@ export class FileService {
         return this.prisma.file.delete({
             where
         });
+    }
+
+    async addBlobToFiles(filesWithoutBlob: File[]): Promise<TFileToClient[]> {
+        const filePromises: Promise<TFileToClient>[] = filesWithoutBlob.map(file => {
+            const f: TFileToClient = excludeSensitiveFields(file, ["fileName"]) as TFileToClient;
+            return this.findOnDisk(file.fileName)
+                .then((buffer) => {
+                    f.buffer = buffer;
+                    return f;
+                });
+        });
+
+        return await Promise.all(filePromises);
     }
 }

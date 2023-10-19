@@ -17,14 +17,15 @@ import {AuthService} from "../auth/auth.service";
 import {MessageService} from "../message/message.service";
 // types
 import {IUserPayloadJWT} from "../user/IUser";
-import {TNewMessage, IUserIdToSocketId, TToggleUserTypingMessage, TNewForwardedMessage} from "./IChat";
+import {TNewMessage, IUserIdToSocketId, TToggleUserTyping, TNewForwardedMessage} from "./IChat";
 import {FileService} from "../file/file.service";
 import {generateFileName} from "../utils/generateFileName";
 import {excludeSensitiveFields} from "../utils/excludeSensitiveFields";
-import {Prisma, File} from "@prisma/client";
+import {Prisma, File, Room, RoomType} from "@prisma/client";
 import {TFileToClient} from "../file/IFile";
 import * as mime from "mime-types";
 import {isFulfilledPromise} from "../utils/isFulfilledPromise";
+import {RoomService} from "../room/room.service";
 
 @WebSocketGateway({
     namespace: "api/chat",
@@ -36,6 +37,7 @@ export class ChatGateway
         implements OnGatewayConnection, OnGatewayDisconnect
 {
     constructor(
+        private readonly roomService: RoomService,
         private readonly messageService: MessageService,
         private readonly userService: UserService,
         private readonly authService: AuthService,
@@ -69,29 +71,32 @@ export class ChatGateway
 
     @UseGuards(WsAuth)
     @SubscribeMessage("user:toggle-typing")
-    async handleTyping(@ConnectedSocket() client, @MessageBody() typingInfo: TToggleUserTypingMessage) {
-        const userData = client.user;
-        void this.toggleTypingStatus(client, userData.id, typingInfo);
+    async handleTyping(@ConnectedSocket() client, @MessageBody() typingInfo: Omit<TToggleUserTyping, "userId">) {
+        const userPayload: IUserPayloadJWT = client.user;
+        void this.toggleTypingStatus(client, {
+            userId: userPayload.id,
+            ...typingInfo
+        });
     }
 
-    async toggleTypingStatus(client, typingUserId: string, typingInfo: TToggleUserTypingMessage) {
+    async toggleTypingStatus(client, {userId, roomId, isTyping}: TToggleUserTyping) {
         await this.userService.updateTypingStatus({
-            userId: typingUserId,
-            userTargetId: typingInfo.userTargetId,
-            isTyping: typingInfo.isTyping
+            userId,
+            isTyping,
+            roomId
         });
         const interlocutorSocket = Object.entries(this.socketToUserId)
-            .find(([, value]) => value === typingInfo.userTargetId);
+            .find(([, value]) => value === userId);
 
         if (!interlocutorSocket) {
             return;
         }
-        client.broadcast
-            .to(interlocutorSocket[0])
-            .emit("user:toggle-typing", {
-                userTargetId: typingUserId,
-                isTyping: typingInfo.isTyping
-            });
+        // client.broadcast
+        //     .to(interlocutorSocket[0])
+        //     .emit("user:toggle-typing", {
+        //         userTargetId: typingUserId,
+        //         isTyping: typingInfo.isTyping
+        //     });
     }
 
     @UseGuards(WsAuth)
@@ -102,11 +107,21 @@ export class ChatGateway
         const sender = await this.userService.findOne({
             id: senderPayloadJWT.id
         });
-        const recipient = await this.userService.findOne({
-            id: message.interlocutorId
-        });
-        if (!sender || !recipient) {
-            throw ApiError.BadRequest("Не найден отправитель или получатель сообщения");
+        if (!sender) {
+            throw ApiError.BadRequest("Не найден отправитель сообщения");
+        }
+        let room: Room;
+        if (!message.roomId) {
+            room = await this.roomService.create({
+                data: {
+                    roomType: RoomType.PRIVATE
+                }
+            });
+        }
+        else {
+            room = await this.roomService.findOne({
+                id: message.roomId
+            });
         }
 
         const forwardedMessage = await this.messageService.findOne({
@@ -123,9 +138,9 @@ export class ChatGateway
                         id: sender.id
                     }
                 },
-                recipient: {
+                room: {
                     connect: {
-                        id: recipient.id
+                        id: room.id
                     }
                 },
                 forwardedMessage: {
@@ -137,6 +152,7 @@ export class ChatGateway
             include: {
                 forwardedMessage: {
                     include: {
+                        room: true,
                         files: true,
                         replyToMessage: {
                             include: {
@@ -146,7 +162,7 @@ export class ChatGateway
                     }
                 }
             }
-        }) as Prisma.MessageGetPayload<{include: {files: true, replyToMessage: true}}>;
+        }) as Prisma.MessageGetPayload<{include: {room: true, files: true, replyToMessage: true}}>;
         
         const newMessageExcludingFields =
             excludeSensitiveFields(newMessage, ["replyToMessageId"]); // files
@@ -160,18 +176,30 @@ export class ChatGateway
     async handleMessage(@ConnectedSocket() client, @MessageBody() message: TNewMessage) {
         const senderPayloadJWT: IUserPayloadJWT = client.user;
 
+        console.log("new message: ", message);
         const sender = await this.userService.findOne({
             id: senderPayloadJWT.id
         });
-        const recipient = await this.userService.findOne({
-            id: message.interlocutorId
-        });
-
-        if (!sender || !recipient) {
-            throw ApiError.BadRequest("Не найден отправитель или получатель сообщения");
+        if (!sender) {
+            throw ApiError.BadRequest("Не найден отправитель сообщения");
         }
-        void this.toggleTypingStatus(client, sender.id, {
-            userTargetId: recipient.id,
+
+        let room: Room;
+        if (!message.roomId) {
+            room = await this.roomService.create({
+                data: {
+                    roomType: RoomType.PRIVATE
+                }
+            });
+        }
+        else {
+            room = await this.roomService.findOne({
+                id: message.roomId
+            });
+        }
+        void this.toggleTypingStatus(client, {
+            userId: sender.id,
+            roomId: room.id,
             isTyping: false
         });
 
@@ -198,6 +226,7 @@ export class ChatGateway
                         });
                     })
                     .catch(error => {
+                        console.log("ERROR WRITING: ", error);
                         reject(error);
                     });
             });
@@ -226,9 +255,9 @@ export class ChatGateway
                         id: sender.id
                     }
                 },
-                recipient: {
+                room: {
                     connect: {
-                        id: recipient.id
+                        id: room.id
                     }
                 },
                 ...replyConnect,
@@ -238,6 +267,7 @@ export class ChatGateway
                 },
             },
             include: {
+                room: true,
                 files: true,
                 replyToMessage: {
                     include: {
@@ -246,7 +276,7 @@ export class ChatGateway
                 }
             }
         }) as Prisma.MessageGetPayload<{include: {files: true, replyToMessage: true}}>;
-        const files: TFileToClient[] = newMessage.files.map((file, index) => {
+        const files: TFileToClient[] = newMessage.files.map((file) => {
             const fileInfo = excludeSensitiveFields(file, ["fileName", "messageId"]) as TFileToClient;
             const attachment = message.attachments.find(fileInfoMessage => fileInfoMessage.originalName === fileInfo.originalName);
             if (!attachment) {
@@ -259,6 +289,7 @@ export class ChatGateway
             ...newMessage,
             files: files
         };
+        console.log("messageExcludingFields: ", messageExcludingFields);
         this.server
             .emit("message", messageExcludingFields);
     }
