@@ -176,7 +176,6 @@ export class ChatGateway
     async handleMessage(@ConnectedSocket() client, @MessageBody() message: TNewMessage) {
         const senderPayloadJWT: IUserPayloadJWT = client.user;
 
-        console.log("new message: ", message);
         const sender = await this.userService.findOne({
             id: senderPayloadJWT.id
         });
@@ -289,7 +288,6 @@ export class ChatGateway
             ...newMessage,
             files: files
         };
-        console.log("messageExcludingFields: ", messageExcludingFields);
         this.server
             .emit("message", messageExcludingFields);
     }

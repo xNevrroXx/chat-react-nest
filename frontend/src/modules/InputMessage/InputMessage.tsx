@@ -1,4 +1,4 @@
-import {FC, useState} from "react";
+import {FC, useRef, useState} from "react";
 import {Button, Flex} from "antd";
 import {DeleteOutlined} from "@ant-design/icons";
 import useFileUpload from "react-use-file-upload";
@@ -30,25 +30,22 @@ const InputMessage: FC<IInputMessage> = ({onSendMessage, sendVoiceMessage, onTyp
     const [message, setMessage] = useState<string | null>(null);
     const {
         files,
-        // handleDragDropEvent,
         clearAllFiles,
-        // createFormData,
         setFiles,
         removeFile
     } = useFileUpload();
     const {
         mediaRecorder,
-        permission,
         isRecording,
         audio,
         audioURL,
-        getMicrophonePermission,
         startRecording,
         stopRecording,
         cleanAudio
     } = useAudioRecorder();
 
     const onChangeMessage = (str: string) => {
+        console.log("str: ", str);
         setMessage(str);
     };
 
@@ -69,7 +66,7 @@ const InputMessage: FC<IInputMessage> = ({onSendMessage, sendVoiceMessage, onTyp
 
     const sendMessage = async () => {
         const trimmedMessage = message ? message.trim() : null;
-        const attachments = files.reduce<Promise<IAttachment[]>>(async (previousValue, currentValue) => {
+        const attachments = await files.reduce<Promise<IAttachment[]>>(async (previousValue, currentValue) => {
             const prev = await previousValue;
             const extensionInfo = currentValue.name.match(/(?<=\.)\D+$/) || [];
             const extension = extensionInfo.length === 1 ? extensionInfo[0] : "";
@@ -84,11 +81,10 @@ const InputMessage: FC<IInputMessage> = ({onSendMessage, sendVoiceMessage, onTyp
             return prev;
         }, Promise.all([]));
 
-        onSendMessage(trimmedMessage, await attachments);
+        onSendMessage(trimmedMessage, attachments);
         setMessage("");
         clearAllFiles();
     };
-
 
     return (
         <>
@@ -123,9 +119,7 @@ const InputMessage: FC<IInputMessage> = ({onSendMessage, sendVoiceMessage, onTyp
                         sendMessage={sendMessage}
                         onChange={onChangeMessage}
                         onKeyDown={onKeyDown}
-                        permission={permission}
                         isRecording={isRecording}
-                        getMicrophonePermission={getMicrophonePermission}
                         startRecording={startRecording}
                         stopRecording={stopRecording}
                         files={files}

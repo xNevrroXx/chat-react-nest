@@ -3,7 +3,7 @@ import {Flex, Typography} from "antd";
 import * as classNames from "classnames";
 import {Interweave} from "interweave";
 // own modules
-import {messageOwnerSelector} from "../../store/selectors/messageOwner.ts";
+import {messageOwnerSelector} from "../../store/selectors/messageOwnerSelector.ts";
 import {
     InnerMessage,
     InnerForwardedMessage

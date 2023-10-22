@@ -71,7 +71,7 @@ export class MessageService {
         });
     }
 
-    async normalizeMessage(message:
+    async normalize(message:
         Prisma.MessageGetPayload<{
             include: {
                 files: true,

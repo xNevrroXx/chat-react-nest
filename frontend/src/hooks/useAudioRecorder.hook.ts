@@ -6,7 +6,6 @@ const mimeType = "audio/webm" as const;
 
 const useAudioRecorder = () => {
     const mediaRecorder = useRef<MediaRecorder | null>(null);
-    const [permission, setPermission] = useState<boolean>(true);
     const [isRecording, setIsRecording] = useState<boolean>(false);
     const [stream, setStream] = useState<MediaStream | null>(null);
     const [audio, setAudio] = useState<Blob | null>(null);
@@ -14,34 +13,36 @@ const useAudioRecorder = () => {
     const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
 
     const getMicrophonePermission = async () => {
+        let streamData: MediaStream | null = null;
         if ("MediaRecorder" in window) {
             try {
-                const streamData = await navigator.mediaDevices.getUserMedia({
+                streamData = await navigator.mediaDevices.getUserMedia({
                     audio: true,
                     video: false,
                 });
-                setPermission(true);
                 setStream(streamData);
             } catch (err) {
                 if (err instanceof Error) {
                     alert(err.message);
-                    return;
                 }
                 console.warn(err);
             }
         } else {
             alert("The MediaRecorder API is not supported in your browser.");
         }
+
+        return streamData;
     };
 
-    const startRecording = () => {
+    const startRecording = async () => {
+        const stream = await getMicrophonePermission();
         if (!stream) {
             return;
         }
 
         setIsRecording(true);
         //create new Media recorder instance using the stream
-        const media = new MediaRecorder(stream, { mimeType });
+        const media = new MediaRecorder(stream, {mimeType});
         //set the MediaRecorder instance to the mediaRecorder ref
         mediaRecorder.current = media;
         //invokes the start method to start the recording process
@@ -79,15 +80,15 @@ const useAudioRecorder = () => {
         setIsRecording(false);
         setAudio(null);
         setAudioURL(null);
+        setStream(null);
     };
 
     return {
+        stream,
         mediaRecorder,
-        permission,
         isRecording,
         audio,
         audioURL,
-        getMicrophonePermission,
         startRecording,
         stopRecording,
         cleanAudio

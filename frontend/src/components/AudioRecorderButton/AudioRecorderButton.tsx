@@ -5,30 +5,18 @@ import {TValueOf} from "../../models/TUtils.ts";
 import {Button} from "antd";
 
 interface IAudioRecorderProps {
-    permission: TValueOf<Pick<IUseAudioRecorderReturnType, "permission">>;
     isRecording: TValueOf<Pick<IUseAudioRecorderReturnType, "isRecording">>;
-    getMicrophonePermission: TValueOf<Pick<IUseAudioRecorderReturnType, "getMicrophonePermission">>;
     startRecording: TValueOf<Pick<IUseAudioRecorderReturnType, "startRecording">>;
     stopRecording: TValueOf<Pick<IUseAudioRecorderReturnType, "stopRecording">>;
 }
 
 const AudioRecorderButton: FC<IAudioRecorderProps> = ({
-                                                    permission,
                                                     isRecording,
-                                                    getMicrophonePermission,
                                                     startRecording,
                                                     stopRecording
                                                 }) => {
     const content = useMemo(() => {
-        if (!permission) {
-            return (
-                <Button
-                    type="text"
-                    icon={<AudioTwoTone/>}
-                    onClick={getMicrophonePermission}
-                />
-            );
-        } else if (!isRecording) {
+        if (!isRecording) {
             return (
                 <Button
                     type="text"
@@ -45,7 +33,7 @@ const AudioRecorderButton: FC<IAudioRecorderProps> = ({
                 onClick={stopRecording}
             />
         );
-    }, [permission, isRecording, getMicrophonePermission, startRecording, stopRecording]);
+    }, [isRecording, startRecording, stopRecording]);
 
     return (
         <Fragment>

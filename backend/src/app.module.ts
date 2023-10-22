@@ -9,7 +9,8 @@ import {TokenService} from "./token/token.service";
 import {DatabaseModule} from "./database/database.module";
 import {AuthService} from "./auth/auth.service";
 import {AppConstantsService} from "./app.constants.service";
-import { RoomModule } from './room/room.module';
+import {RoomModule} from "./room/room.module";
+import {ParticipantService} from "./participant/participant.service";
 
 
 @Module({
@@ -22,7 +23,7 @@ import { RoomModule } from './room/room.module';
         RoomModule
     ],
     controllers: [AppController],
-    providers: [AppService, TokenService, AuthService, AppConstantsService]
+    providers: [AppService, TokenService, AuthService, AppConstantsService, ParticipantService]
 })
 export class AppModule {
 }

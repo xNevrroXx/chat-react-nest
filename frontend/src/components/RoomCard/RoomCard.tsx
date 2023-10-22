@@ -2,7 +2,7 @@ import React, {FC} from "react";
 import * as classNames from "classnames";
 import {Avatar, Typography} from "antd";
 // own modules
-import {IRoom} from "../../models/IStore/IChats.ts";
+import {IRoom, RoomType} from "../../models/IStore/IChats.ts";
 // styles
 import "./room-card.scss";
 
@@ -17,23 +17,27 @@ const RoomCard:FC<IUserCardProps> = ({room, onClick}) => {
     return (
         <li
             tabIndex={0}
-            data-list-id={room.id}
             onClick={onClick}
             className={classNames("room-card")}
         >
             <div className="room-card__left">
-                <Avatar size={48} className="room-card"></Avatar>
+                <Avatar size={48} className="room-card__photo">
+                    { room.roomType === RoomType.PRIVATE
+                        ? room.name[0] + room.name.split(" ")[1][0]
+                        : room.name.slice(0, 1)
+                    }
+                </Avatar>
             </div>
             <div className="room-card__right">
                 <Title level={5} style={{margin: 0}}>
-                    { room.name || "NAME NOT FOUND" }
+                    { room.name}
                 </Title>
                 <Text>
-                    {"НАВЕРНОЕ Был в сети недавно"}
-                    {/*{ room.userOnline.isOnline*/}
-                    {/*    ? "В сети"*/}
-                    {/*    : "Был в сети: "*/}
-                    {/*}*/}
+                    { room.roomType === RoomType.GROUP
+                        ? "Группа"
+                        : room.participants[0].isOnline
+                            ? "В сети" : "Не в сети"
+                    }
                 </Text>
             </div>
         </li>

@@ -1,4 +1,4 @@
-import React, {FC, Fragment, useRef} from "react";
+import React, {FC, Fragment, RefObject, useRef} from "react";
 import * as classNames from "classnames";
 import {Button, Flex} from "antd";
 import {PlusCircleTwoTone, SendOutlined} from "@ant-design/icons";
@@ -14,9 +14,7 @@ interface IInputDuringMessageProps {
     sendMessage: () => void;
     onChange: (str: string) => void;
     onKeyDown: (event: KeyboardEvent) => void;
-    permission: TValueOf<Pick<IUseAudioRecorderReturnType, "permission">>
     isRecording: TValueOf<Pick<IUseAudioRecorderReturnType, "isRecording">>
-    getMicrophonePermission: TValueOf<Pick<IUseAudioRecorderReturnType, "getMicrophonePermission">>
     startRecording: TValueOf<Pick<IUseAudioRecorderReturnType, "startRecording">>
     stopRecording: TValueOf<Pick<IUseAudioRecorderReturnType, "stopRecording">>
     files: TValueOf<Pick<useFileUploadHook, "files">>,
@@ -29,9 +27,7 @@ const InputDuringMessage: FC<IInputDuringMessageProps> = ({
                                                               sendMessage,
                                                               onChange,
                                                               onKeyDown,
-                                                              permission,
                                                               isRecording,
-                                                              getMicrophonePermission,
                                                               startRecording,
                                                               stopRecording,
                                                               files,
@@ -47,7 +43,6 @@ const InputDuringMessage: FC<IInputDuringMessageProps> = ({
         }
         inputFilesRef.current.click();
     };
-
     return (
         <Fragment>
             <Flex vertical={false} style={{width: "100%"}} align="self-end" gap="middle">
@@ -99,9 +94,7 @@ const InputDuringMessage: FC<IInputDuringMessageProps> = ({
                             />
                             :
                             <AudioRecorderButton
-                                permission={permission}
                                 isRecording={isRecording}
-                                getMicrophonePermission={getMicrophonePermission}
                                 startRecording={startRecording}
                                 stopRecording={stopRecording}
                             />

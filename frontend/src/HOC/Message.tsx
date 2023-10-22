@@ -1,15 +1,15 @@
 import React, {FC, useCallback, useEffect, useMemo, useState} from "react";
 // own modules
-import DumbMessage from "../../components/Message/DumbMessage.tsx";
+import DumbMessage from "../components/Message/DumbMessage.tsx";
 // types
 import {
     IFileForRender,
     FileType,
     Message as MessageClass,
     ForwardedMessage as ForwardedMessageClass, IKnownAndUnknownFiles, TAttachmentType
-} from "../../models/IStore/IChats.ts";
-import {IUserDto} from "../../models/IStore/IAuthentication.ts";
-import {TValueOf} from "../../models/TUtils.ts";
+} from "../models/IStore/IChats.ts";
+import {IUserDto} from "../models/IStore/IAuthentication.ts";
+import {TValueOf} from "../models/TUtils.ts";
 
 type TMessageProps = {
     userId: TValueOf<Pick<IUserDto, "id">>;
@@ -29,7 +29,6 @@ const Message: FC<TMessageProps> = ({userId, message, chooseMessageForReply, onO
 
     useEffect(() => {
         if (message instanceof MessageClass) {
-            console.log("message: ", message);
             if (!message.files || message.files.length === 0) {
                 return;
             }

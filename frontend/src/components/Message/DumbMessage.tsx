@@ -89,7 +89,7 @@ const DumbMessage: FC<TMessageProps> = ({
                 <a style={{display: "none"}} ref={downloadLinkRef}/>
             </Fragment>
         );
-    }, [handleDownload]);
+    }, []);
 
     const knownAttachments = useMemo(() => {
         if (files.known.length === 0) {
@@ -116,7 +116,7 @@ const DumbMessage: FC<TMessageProps> = ({
                 </li>
             );
         });
-    }, [files, handlePreview, imageElem, otherElem, videoElem]);
+    }, [files, handlePreview, imageElem, videoElem]);
 
     const unknownAttachments = useMemo(() => {
         if (files.unknown.length === 0) {

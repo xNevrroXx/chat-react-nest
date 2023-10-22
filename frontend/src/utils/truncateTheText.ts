@@ -9,16 +9,25 @@ export const truncateTheText = ({text, maxLength}: ICutTheTextParams): string =>
     }
 
     let result = text.slice(0, maxLength);
-    for (let i = result.length - 1; i > 0; i--) {
-        const regexIsLastSpace = result.match(/\s$/);
+    const regexLastLetterBeforeSpace = /.(?=\s)/g;
+    let m: RegExpExecArray | null = null;
+    let lastMatch: RegExpExecArray | null = null;
+    do {
+        const pastMatch = m;
+        m = regexLastLetterBeforeSpace.exec(result);
 
-        if (!regexIsLastSpace) {
-            result = result.concat("...");
+        if (!m) {
+            lastMatch = pastMatch;
             break;
         }
+    } while(m);
 
-        result = result.slice(0, -1);
+
+    if (!lastMatch) {
+        return result;
     }
+
+    result = result.slice(0, lastMatch.index + 1).concat("...");
 
     return result;
 };

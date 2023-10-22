@@ -1,4 +1,4 @@
-import {FC, useMemo} from "react";
+import {FC, useCallback, useMemo} from "react";
 import {Input, Typography} from "antd";
 // own modules
 import DialogCard from "../../components/DialogCard/DialogCard.tsx";
@@ -6,6 +6,7 @@ import DialogCard from "../../components/DialogCard/DialogCard.tsx";
 import {IRoom, Message} from "../../models/IStore/IChats.ts";
 import {TValueOf} from "../../models/TUtils.ts";
 import {IUserDto} from "../../models/IStore/IAuthentication.ts";
+import {ILastMessageInfo} from "../../models/IChat.ts";
 // styles
 import "./dialogs.scss";
 
@@ -15,29 +16,54 @@ interface IDialogsProps {
     user: IUserDto,
     rooms: IRoom[],
     activeChatId: TValueOf<Pick<IRoom, "id">> | null,
-    onChangeDialog: (room: IRoom) => void,
+    onChangeDialog: (roomId: TValueOf<Pick<IRoom, "id">>) => void,
 }
 
 const Dialogs: FC<IDialogsProps> = ({user, rooms, onChangeDialog, activeChatId}) => {
+    const findLastMessageInfo = useCallback((room: IRoom): ILastMessageInfo | null => {
+        const lastMessage = room.messages.at(-1);
+        if (!lastMessage) {
+            return null;
+        }
+
+        const sender = lastMessage.senderId === user.id
+            ? "Вы"
+            : room.participants.find(participant => participant.userId === lastMessage.senderId)!.nickname;
+        let text: string;
+        if (!lastMessage.text) {
+            if (lastMessage instanceof Message) {
+                text = "вложения - " + lastMessage.files.length.toString();
+            }
+            text = "пересланное сообщение";
+        }
+        else {
+            text = lastMessage.text;
+        }
+
+        return {
+            text,
+            sender,
+            hasRead: lastMessage.hasRead
+        };
+    }, [user]);
+
     const list = useMemo(() => {
         return rooms.map(room => {
-            const lastMessageSender = room.messages.at(-1)!.senderId === user.id ? "Вы" : (room.name || "participants!!!");
-            const lastMessage = room.messages.at(-1);
+            const lastMessageInfo = findLastMessageInfo(room);
 
             return (
                 <DialogCard
                     key={room.id.toString() + "dialog card"}
                     id={room.id}
-                    onClick={() => onChangeDialog(room)}
-                    dialogName={room.name || "NOT FOUND NAME"}
-                    sender={lastMessageSender}
-                    hasRead={lastMessage!.hasRead}
-                    text={lastMessage instanceof Message && lastMessage.text || ""}
+                    onClick={() => onChangeDialog(room.id)}
+                    dialogName={room.name}
                     isActive={activeChatId === room.id}
+                    lastMessageInfo={lastMessageInfo}
+                    roomType={room.roomType}
                 />
             );
         });
-    }, [user, rooms, onChangeDialog, activeChatId]);
+    }, [rooms, activeChatId, onChangeDialog, findLastMessageInfo]);
 
     return (
         <div className="dialogs">

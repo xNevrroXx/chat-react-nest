@@ -8,10 +8,21 @@ import {UserService} from "../user/user.service";
 import {FileService} from "../file/file.service";
 import {AppConstantsService} from "../app.constants.service";
 import {MessageService} from "../message/message.service";
+import {ParticipantService} from "../participant/participant.service";
 
 @Module({
     controllers: [RoomController],
-    providers: [RoomService, DatabaseService, AuthService, TokenService, UserService, FileService, AppConstantsService, MessageService]
+    providers: [
+        RoomService,
+        DatabaseService,
+        AuthService,
+        TokenService,
+        UserService,
+        FileService,
+        AppConstantsService,
+        MessageService,
+        ParticipantService
+    ]
 })
 export class RoomModule {
 }

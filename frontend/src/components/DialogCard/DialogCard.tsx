@@ -7,6 +7,8 @@ import {Markup} from "interweave";
 import {truncateTheText} from "../../utils/truncateTheText.ts";
 import {IUserDto} from "../../models/IStore/IAuthentication.ts";
 import {TValueOf} from "../../models/TUtils.ts";
+import {IRoom, RoomType} from "../../models/IStore/IChats.ts";
+import {ILastMessageInfo} from "../../models/IChat.ts";
 // styles
 import "./dialog.scss";
 
@@ -15,14 +17,13 @@ const {Title} = Typography;
 interface IDialogCardProps {
     id: TValueOf<Pick<IUserDto, "id">>,
     dialogName: string,
-    sender: "Вы" | string,
-    text: string,
-    hasRead: boolean,
     onClick: () => void,
-    isActive: boolean
+    isActive: boolean,
+    lastMessageInfo: ILastMessageInfo | null,
+    roomType: TValueOf<Pick<IRoom, "roomType">>
 }
 
-const DialogCard: FC<IDialogCardProps> = ({id, dialogName, sender, text, hasRead, onClick, isActive}) => {
+const DialogCard: FC<IDialogCardProps> = ({id, dialogName, lastMessageInfo, onClick, isActive, roomType}) => {
     return (
         <li
             tabIndex={0}
@@ -35,22 +36,30 @@ const DialogCard: FC<IDialogCardProps> = ({id, dialogName, sender, text, hasRead
             </div>
             <div className="dialog__right">
                 <Title level={5} style={{margin: 0}}>{dialogName}</Title>
-                <p className="dialog__message">
-                    {sender && <span>{sender + ": "}</span>}
-                    <Markup content={
-                        truncateTheText({
-                            text: text,
-                            maxLength: 35
-                        })
-                    } />
-                </p>
-            </div>
-            <div className="dialog__message-status">
-                { hasRead ?
-                    <div className="dialog__read"><CheckOutlined/></div> :
-                    <div className="dialog__not-read"></div>
+                {lastMessageInfo &&
+                    (
+                        <p className="dialog__message">
+                            {roomType === RoomType.GROUP && <span>{lastMessageInfo.sender + ": "}</span>}
+                            <Markup content={
+                                truncateTheText({
+                                    text: lastMessageInfo.text,
+                                    maxLength: 35
+                                })
+                            } />
+                        </p>
+                    )
                 }
             </div>
+            {lastMessageInfo && lastMessageInfo.sender !== "Вы" &&
+                (
+                    <div className="dialog__message-status">
+                        { lastMessageInfo.hasRead ?
+                            <div className="dialog__read"><CheckOutlined/></div> :
+                            <div className="dialog__not-read"></div>
+                        }
+                    </div>
+                )
+            }
         </li>
     );
 };

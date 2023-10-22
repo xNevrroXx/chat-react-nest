@@ -131,7 +131,6 @@ const getAll = createAsyncThunk(
     async (_, thunkAPI) => {
         try {
             const response = await ChatService.getAll();
-            console.log("response ALL: ", response);
             const chatsHTTPResponse = response.data;
             const chats: IRoom[] = [];
             chatsHTTPResponse.forEach(chat => {

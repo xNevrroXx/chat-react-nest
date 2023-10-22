@@ -1,17 +1,17 @@
 import {Controller, Get, Req, UseGuards} from "@nestjs/common";
-import {UserService} from "../user/user.service";
-import {MessageService} from "../message/message.service";
-import {FileService} from "../file/file.service";
-import {AuthGuard} from "../auth/auth.guard";
 import {Request} from "express";
-import {Prisma} from "@prisma/client";
-import {IChat, IMessage} from "../message/IMessage";
+import {AuthGuard} from "../auth/auth.guard";
 import {RoomService} from "./room.service";
+import {MessageService} from "../message/message.service";
+import {ParticipantService} from "../participant/participant.service";
+import {Prisma, RoomType} from "@prisma/client";
 import {IRoom} from "./IRooms";
+import {IMessage} from "../message/IMessage";
 
 @Controller("room")
 export class RoomController {
     constructor(
+        private readonly participantService: ParticipantService,
         private readonly messageService: MessageService,
         private readonly roomService: RoomService
     ) {
@@ -37,7 +37,12 @@ export class RoomController {
             include: {
                 participants: {
                     include: {
-                        user: true
+                        user: {
+                            include: {
+                                userOnline: true,
+                                userTyping: true,
+                            }
+                        }
                     }
                 },
                 usersTyping: true,
@@ -68,7 +73,16 @@ export class RoomController {
             },
         }) as Prisma.RoomGetPayload<{
             include: {
-                participants: true,
+                participants: {
+                    include: {
+                        user: {
+                            include: {
+                                userOnline: true,
+                                userTyping: true,
+                            }
+                        }
+                    }
+                },
                 usersTyping: true,
                 creatorUser: true,
                 messages: {
@@ -95,17 +109,31 @@ export class RoomController {
         }>[];
 
         const normalizedRoomPromises: Promise<IRoom>[] = unnormalizedRooms.map(async unnormalizedRoom => {
-            const messages = await unnormalizedRoom.messages.reduce<Promise<IMessage[]>>(async (prevPromise, unnormalizedMessage) => {
+            const normalizedMessages = await unnormalizedRoom.messages.reduce<Promise<IMessage[]>>(async (prevPromise, unnormalizedMessage) => {
                 const prev = await prevPromise;
-                const messages = await this.messageService.normalizeMessage(unnormalizedMessage);
+                const messages = await this.messageService.normalize(unnormalizedMessage);
 
                 prev.push(messages);
                 return prev;
             }, Promise.resolve([]));
 
+            const normalizedParticipants = unnormalizedRoom.participants
+                .filter(participant => participant.userId !== userPayload.id)
+                .map(this.participantService.normalize);
+
+            let roomName: string;
+            if (unnormalizedRoom.roomType === RoomType.GROUP) {
+                roomName = unnormalizedRoom.name;
+            }
+            else {
+                roomName = normalizedParticipants[0].nickname;
+            }
+
             return {
                 ...unnormalizedRoom,
-                messages: messages
+                name: roomName,
+                participants: normalizedParticipants,
+                messages: normalizedMessages
             };
         });
 

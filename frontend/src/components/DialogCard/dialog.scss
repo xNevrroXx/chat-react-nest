@@ -14,7 +14,10 @@
 
     &:hover {
       background: rgb(1, 153, 253) !important;
-      //background: rgb(87 188 255) !important;
+    }
+
+    &::after {
+      content: none !important;
     }
   }
 

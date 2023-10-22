@@ -40,7 +40,6 @@ const chat = createSlice({
                 state.socket = action.payload;
             })
             .addCase(handleMessageSocket, (state, action) => {
-                console.log("payload message: ", action.payload);
                 const targetChat = state.chats.find(chat => chat.id === action.payload.roomId);
                 const messageSocket = action.payload;
                 const newMessage: IMessage = {

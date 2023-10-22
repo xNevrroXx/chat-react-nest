@@ -24,7 +24,7 @@ const useLongPress = ({
                           options = {shouldPreventDefault: true, delay: 300}
                       }: IUseLongPressParams): IUseLongPressReturnValues => {
     const [longPressTriggered, setLongPressTriggered] = useState(false);
-    const timeout = useRef<NodeJS.Timeout | null>(null);
+    const timeout = useRef<number | null>(null);
     const target = useRef<HTMLElement | null>();
 
     const start = useCallback((event: React.TouchEvent | React.MouseEvent) => {

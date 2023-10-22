@@ -3,7 +3,7 @@ import {Flex, Typography} from "antd";
 import {useAppSelector} from "../../hooks/store.hook.ts";
 import * as classNames from "classnames";
 // own modules
-import {messageOwnerSelector} from "../../store/selectors/messageOwner.ts";
+import {messageOwnerSelector} from "../../store/selectors/messageOwnerSelector.ts";
 import {ForwardedMessage as ForwardedMessageClass} from "../../models/IStore/IChats.ts";
 // styles
 import "./forwarded-message.scss";

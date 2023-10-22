@@ -3,12 +3,12 @@ import React, {FC, useMemo} from "react";
 import RoomCard from "../../components/RoomCard/RoomCard.tsx";
 import {IRoom} from "../../models/IStore/IChats.ts";
 
-interface IUsersProps {
+interface IRoomsProps {
     rooms: IRoom[];
     onClickRoom: (room: IRoom) => void;
 }
 
-const Users: FC<IUsersProps> = ({rooms, onClickRoom}) => {
+const Rooms: FC<IRoomsProps> = ({rooms, onClickRoom}) => {
 
     const list = useMemo(() => {
         return rooms.map(room =>
@@ -21,10 +21,10 @@ const Users: FC<IUsersProps> = ({rooms, onClickRoom}) => {
     }, [rooms, onClickRoom]);
 
     return (
-        <ul className="users__list">
+        <ul className="rooms__list">
             {list}
         </ul>
     );
 };
 
-export default Users;
+export default Rooms;

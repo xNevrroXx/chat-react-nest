@@ -5,14 +5,14 @@ import {useNavigate} from "react-router-dom";
 import {ROUTES} from "../../router/routes.ts";
 import {useAppDispatch, useAppSelector} from "../../hooks/store.hook.ts";
 import {createRoute} from "../../router/createRoute.ts";
-import Rooms from "../../modules/Users/Users.tsx";
+import Rooms from "../../modules/Rooms/Rooms.tsx";
 import Dialogs from "../../modules/Dialogs/Dialogs.tsx";
 import ChatContent from "../../modules/ChatContent/ChatContent.tsx";
 // selectors & actions
 import {forwardMessageSocket} from "../../store/thunks/chat.ts";
 // own types
 import type {IRoom, TForwardMessage} from "../../models/IStore/IChats.ts";
-import {TValueOf} from "../../models/TUtils.ts";
+import type {TValueOf} from "../../models/TUtils.ts";
 // styles
 import "./main.scss";
 
@@ -25,12 +25,11 @@ const Main = () => {
     const [isOpenModalForForwardMessage, setIsOpenModalForForwardMessage] = useState<boolean>(false);
     const [forwardedMessageId, setForwardedMessageId] = useState<TValueOf<Pick<TForwardMessage, "forwardedMessageId">> | null>(null);
 
-    console.log("userDialogs: ", rooms);
     useEffect(() => {
         if (!user) {
             navigate(createRoute({path: ROUTES.AUTH}));
         }
-    }, [user, dispatch]);
+    }, [user, navigate]);
 
     useEffect(() => {
         // set the first found chat as an active one
@@ -41,8 +40,9 @@ const Main = () => {
         setActiveRoom(rooms[0]);
     }, [rooms]);
 
-    const onChangeDialog = (dialog: IRoom) => {
-        setActiveRoom(dialog);
+    const onChangeDialog = (roomId: TValueOf<Pick<IRoom, "id">>) => {
+        const targetRoom = rooms.find(room => room.id === roomId)!;
+        setActiveRoom(targetRoom);
     };
 
     const onClickRoom = (room: IRoom) => {
@@ -63,6 +63,10 @@ const Main = () => {
         setIsOpenModalForForwardMessage(true);
     };
 
+    const onCloseForwardModal = () => {
+        setIsOpenModalForForwardMessage(false);
+    };
+
     return (
         <Fragment>
             <div className="messenger">
@@ -81,7 +85,11 @@ const Main = () => {
                 }
             </div>
             <Modal
+                title="Переслать сообщение"
                 open={isOpenModalForForwardMessage}
+                onCancel={onCloseForwardModal}
+                okButtonProps={{ style: {display: "none"} }}
+                cancelButtonProps={{ style: {display: "none"} }}
             >
                 <Rooms rooms={rooms} onClickRoom={onClickRoom}/>
             </Modal>

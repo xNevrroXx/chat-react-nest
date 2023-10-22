@@ -1,19 +1,20 @@
 import {MenuFoldOutlined, PhoneTwoTone} from "@ant-design/icons";
-import {Typography, Avatar, Spin} from "antd";
+import {Avatar, Spin, Typography} from "antd";
 import {type FC, useMemo, useRef, useState} from "react";
 // own modules
-import Message from "../../HOC/Message/Message.tsx";
+import Message from "../../HOC/Message.tsx";
 import InputMessage from "../InputMessage/InputMessage.tsx";
 import type {IUserDto} from "../../models/IStore/IAuthentication.ts";
 import type {TValueOf} from "../../models/TUtils.ts";
 import {
+    TForwardMessage,
     TSendMessage,
     IAttachment,
-    TForwardMessage,
     IRoom,
     FileType,
+    ForwardedMessage as ForwardedMessageClass,
     Message as MessageClass,
-    ForwardedMessage as ForwardedMessageClass
+    RoomType
 } from "../../models/IStore/IChats.ts";
 // actions
 import {useAppDispatch} from "../../hooks/store.hook.ts";
@@ -25,7 +26,7 @@ const {Title} = Typography;
 
 interface IActiveChatProps {
     user: IUserDto;
-    room: IRoom;
+    room: IRoom
     onOpenUsersListForForwardMessage: (forwardedMessageId: TValueOf<Pick<TForwardMessage, "forwardedMessageId">>) => void;
 }
 
@@ -105,19 +106,26 @@ const ChatContent: FC<IActiveChatProps> = ({user, room, onOpenUsersListForForwar
         onSendMessage(null, [attachment]);
     };
 
-    // const onForwardMessage = (messageId:)
-
-    const isOnlineOrTyping = useMemo(() => {
-        if (room.usersTyping.some(typingInfo => typingInfo.isTyping)) {
-            return "Печатает...";
+    const userStatuses = useMemo(() => {
+        if (!room.participants || room.participants.length === 0) {
+            return;
         }
 
-        return "НАВЕРНОЕ Не в сети";
-        // return room.userOnline?.isOnline ? "В сети" : "Не в сети";
+        switch (room.roomType) {
+            case RoomType.PRIVATE:
+                if (room.participants[0].isOnline) {
+                    if (room.participants[0].isTyping) {
+                        return "Печатает...";
+                    }
+                    return "В сети";
+                }
+                return "Не в сети";
+            case RoomType.GROUP:
+                return room.participants.map(participant => participant.nickname + "печатает...");
+        }
     }, [room]);
 
     const listMessages = useMemo(() => {
-        console.log("dialog: ", room);
         if (!room) {
             return null;
         }
@@ -133,7 +141,7 @@ const ChatContent: FC<IActiveChatProps> = ({user, room, onOpenUsersListForForwar
                 />
             );
         });
-    }, [user, room]);
+    }, [room, user, onOpenUsersListForForwardMessage]);
 
     const content = (): JSX.Element => {
         if (!room) {
@@ -150,9 +158,9 @@ const ChatContent: FC<IActiveChatProps> = ({user, room, onOpenUsersListForForwar
                                 level={5}
                                 className="active-chat__name"
                             >
-                                {room.name || "NOT FOUND NAME"}
+                                {room.name}
                             </Title>
-                            <p className="active-chat__status">{isOnlineOrTyping}</p>
+                            <p className="active-chat__status">{userStatuses}</p>
                         </div>
                     </div>
                     <div className="active-chat__space"></div>

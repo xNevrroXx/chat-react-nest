@@ -22,15 +22,25 @@ export interface IChats {
 }
 export interface IRoom {
     id: string
-    name?: string,
-    userId?: TValueOf<Pick<IUserDto, "id">>, // user creator
+    name: string,
+    userId: TValueOf<Pick<IUserDto, "id">>,
     roomType: RoomType,
     creatorUser?: TValueOf<Pick<IUserDto, "id">>,
     usersTyping: IUserTyping[],
     messages: (Message | ForwardedMessage)[],
+    participants: IParticipant[]
 
     createdAt: Date,
     updatedAt: Date | undefined
+}
+
+export interface IParticipant {
+    id: string,
+    roomId: TValueOf<Pick<IRoom, "id">>,
+    userId: TValueOf<Pick<IUserDto, "id">>,
+    nickname: string,
+    isOnline: boolean,
+    isTyping: boolean
 }
 
 export interface IUserTyping {
