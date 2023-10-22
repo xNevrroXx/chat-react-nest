@@ -1,4 +1,4 @@
-import {FC, useRef, useState} from "react";
+import {ClipboardEventHandler, FC, KeyboardEventHandler, useEffect, useRef, useState} from "react";
 import {Button, Flex} from "antd";
 import {DeleteOutlined} from "@ant-design/icons";
 import useFileUpload from "react-use-file-upload";
@@ -26,8 +26,14 @@ interface IInputMessage {
     removeMessageForReply: () => void;
 }
 
-const InputMessage: FC<IInputMessage> = ({onSendMessage, sendVoiceMessage, onTyping, messageForReply, removeMessageForReply}) => {
-    const [message, setMessage] = useState<string | null>(null);
+const InputMessage: FC<IInputMessage> = ({
+                                             onSendMessage,
+                                             sendVoiceMessage,
+                                             onTyping,
+                                             messageForReply,
+                                             removeMessageForReply
+                                         }) => {
+    const [message, setMessage] = useState<string>("");
     const {
         files,
         clearAllFiles,
@@ -45,7 +51,6 @@ const InputMessage: FC<IInputMessage> = ({onSendMessage, sendVoiceMessage, onTyp
     } = useAudioRecorder();
 
     const onChangeMessage = (str: string) => {
-        console.log("str: ", str);
         setMessage(str);
     };
 
@@ -61,7 +66,7 @@ const InputMessage: FC<IInputMessage> = ({onSendMessage, sendVoiceMessage, onTyp
         }
 
         void sendMessage();
-        setMessage(event.target.innerHTML);
+        setMessage("");
     };
 
     const sendMessage = async () => {
@@ -103,7 +108,7 @@ const InputMessage: FC<IInputMessage> = ({onSendMessage, sendVoiceMessage, onTyp
                         />
                     </Flex>
                 }
-                { mediaRecorder.current && (isRecording || audioURL) ?
+                {mediaRecorder.current && (isRecording || audioURL) ?
                     <InputDuringAudio
                         audio={audio}
                         mediaRecorder={mediaRecorder.current}
@@ -115,9 +120,8 @@ const InputMessage: FC<IInputMessage> = ({onSendMessage, sendVoiceMessage, onTyp
                     />
                     :
                     <InputDuringMessage
-                        message={message || ""}
+                        message={message}
                         sendMessage={sendMessage}
-                        onChange={onChangeMessage}
                         onKeyDown={onKeyDown}
                         isRecording={isRecording}
                         startRecording={startRecording}
@@ -125,6 +129,7 @@ const InputMessage: FC<IInputMessage> = ({onSendMessage, sendVoiceMessage, onTyp
                         files={files}
                         setFiles={setFiles}
                         removeFile={removeFile}
+                        onChange={onChangeMessage}
                     />
                 }
             </Flex>

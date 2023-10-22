@@ -10,6 +10,7 @@ import ForwardedMessage from "../ForwardedMessage/ForwardedMessage.tsx";
 import ReplyOutlined from "../../icons/ReplyOutlined.tsx";
 import PinOutlined from "../../icons/PinOutlined.tsx";
 import ForwardOutlined from "../../icons/ForwardOutlined.tsx";
+import emojiParser from "universal-emoji-parser";
 // types
 import {
     IFileForRender,
@@ -34,17 +35,17 @@ type TMessageProps = {
 }
 
 const DumbMessage: FC<TMessageProps> = ({
-                                        message,
-                                        side,
-                                        isVoice,
-                                        files,
-                                        isPreviewOpen,
-                                        previewFile,
-                                        handlePreview,
-                                        handleCancel,
-                                        onChooseMessageForReply,
-                                        onChooseMessageForForward
-                                    }) => {
+                                            message,
+                                            side,
+                                            isVoice,
+                                            files,
+                                            isPreviewOpen,
+                                            previewFile,
+                                            handlePreview,
+                                            handleCancel,
+                                            onChooseMessageForReply,
+                                            onChooseMessageForForward
+                                        }) => {
     const downloadLinkRef = useRef<HTMLAnchorElement | null>(null);
 
     const handleDownload = useCallback((fileInfo: IFileForRender) => {
@@ -124,18 +125,18 @@ const DumbMessage: FC<TMessageProps> = ({
         }
 
         return files.unknown.map((fileInfo: IFileForRender) => {
-                const fileElem = otherElem(fileInfo);
+            const fileElem = otherElem(fileInfo);
 
-                return (
-                    <li
-                        key={fileInfo.id}
-                        className="message__attachment-unknown"
-                        onClick={() => handleDownload(fileInfo)}
-                    >
-                        {fileElem}
-                    </li>
-                );
-            });
+            return (
+                <li
+                    key={fileInfo.id}
+                    className="message__attachment-unknown"
+                    onClick={() => handleDownload(fileInfo)}
+                >
+                    {fileElem}
+                </li>
+            );
+        });
     }, [files, otherElem]);
 
     const messageContent = useMemo(() => {
@@ -162,21 +163,22 @@ const DumbMessage: FC<TMessageProps> = ({
                         </div>
                         :
                         <Fragment>
-                            { knownAttachments &&
+                            {knownAttachments &&
                                 <div className="message__attachments-wrapper">
                                     {knownAttachments}
                                 </div>
                             }
-                            { unknownAttachments &&
-                                <div className={classNames("message__attachments-unknown-wrapper", message.text && "message__attachments-unknown-wrapper_with-line")}>
+                            {unknownAttachments &&
+                                <div
+                                    className={classNames("message__attachments-unknown-wrapper", message.text && "message__attachments-unknown-wrapper_with-line")}>
                                     {unknownAttachments}
                                 </div>
                             }
-                            { message.text &&
+                            {message.text &&
                                 <Interweave
                                     tagName="p"
                                     className="message__text"
-                                    content={message.text}
+                                    content={emojiParser.parse(message.text)}
                                 />
                             }
                             <Modal

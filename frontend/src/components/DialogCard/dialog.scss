@@ -54,6 +54,17 @@
     width: 100%;
   }
 
+  &__message {
+    img {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      margin-left: 1px;
+      margin-right: 1px;
+      vertical-align: bottom;
+    }
+  }
+
   &__message-status {
     position: absolute;
     width: 25px;

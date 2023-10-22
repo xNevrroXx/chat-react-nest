@@ -39,7 +39,6 @@ const UploadFiles: FC<IUploadFilesProps> = ({attachments, removeAttachment}) => 
                             } as never as UploadFile); // get an uid automatically
                         })
                         .catch(error => {
-                            console.warn(error);
                             reject(error);
                         });
                 });

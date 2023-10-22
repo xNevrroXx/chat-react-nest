@@ -3,6 +3,7 @@ import {Avatar, Typography} from "antd";
 import {CheckOutlined} from "@ant-design/icons";
 import * as classNames from "classnames";
 import {Markup} from "interweave";
+import emojiParser from "universal-emoji-parser";
 // own modules
 import {truncateTheText} from "../../utils/truncateTheText.ts";
 import {IUserDto} from "../../models/IStore/IAuthentication.ts";
@@ -40,12 +41,7 @@ const DialogCard: FC<IDialogCardProps> = ({id, dialogName, lastMessageInfo, onCl
                     (
                         <p className="dialog__message">
                             {roomType === RoomType.GROUP && <span>{lastMessageInfo.sender + ": "}</span>}
-                            <Markup content={
-                                truncateTheText({
-                                    text: lastMessageInfo.text,
-                                    maxLength: 35
-                                })
-                            } />
+                            <Markup content={emojiParser.parse(lastMessageInfo.text)} />
                         </p>
                     )
                 }

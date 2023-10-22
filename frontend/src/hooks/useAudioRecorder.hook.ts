@@ -25,7 +25,6 @@ const useAudioRecorder = () => {
                 if (err instanceof Error) {
                     alert(err.message);
                 }
-                console.warn(err);
             }
         } else {
             alert("The MediaRecorder API is not supported in your browser.");

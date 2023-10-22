@@ -225,7 +225,6 @@ export class ChatGateway
                         });
                     })
                     .catch(error => {
-                        console.log("ERROR WRITING: ", error);
                         reject(error);
                     });
             });

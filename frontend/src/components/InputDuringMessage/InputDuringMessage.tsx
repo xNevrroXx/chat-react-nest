@@ -1,13 +1,14 @@
-import React, {FC, Fragment, RefObject, useRef} from "react";
-import * as classNames from "classnames";
-import {Button, Flex} from "antd";
+import React, {FC, Fragment, useRef} from "react";
 import {PlusCircleTwoTone, SendOutlined} from "@ant-design/icons";
-import InputEmojiWithRef from "react-input-emoji";
+import {Button, Flex} from "antd";
+import * as classNames from "classnames";
+import InputEmoji from "react-input-emoji";
+// own modules
 import AudioRecorderButton from "../AudioRecorderButton/AudioRecorderButton.tsx";
 import UploadFiles from "../UploadFiles/UploadFiles.tsx";
 import {IUseAudioRecorderReturnType} from "../../hooks/useAudioRecorder.hook.ts";
-import {TValueOf} from "../../models/TUtils.ts";
 import {useFileUploadHook} from "react-use-file-upload/dist/lib/types";
+import {TValueOf} from "../../models/TUtils.ts";
 
 interface IInputDuringMessageProps {
     message: string;
@@ -19,20 +20,21 @@ interface IInputDuringMessageProps {
     stopRecording: TValueOf<Pick<IUseAudioRecorderReturnType, "stopRecording">>
     files: TValueOf<Pick<useFileUploadHook, "files">>,
     setFiles: TValueOf<Pick<useFileUploadHook, "setFiles">>,
-    removeFile: TValueOf<Pick<useFileUploadHook, "removeFile">>
+    removeFile: TValueOf<Pick<useFileUploadHook, "removeFile">>,
+
 }
 
 const InputDuringMessage: FC<IInputDuringMessageProps> = ({
                                                               message,
                                                               sendMessage,
-                                                              onChange,
                                                               onKeyDown,
                                                               isRecording,
                                                               startRecording,
                                                               stopRecording,
                                                               files,
                                                               setFiles,
-                                                              removeFile
+                                                              removeFile,
+                                                              onChange
                                                           }) => {
     const inputFilesRef = useRef<HTMLInputElement | null>(null);
     const buttonAddFilesRef = useRef<HTMLButtonElement | null>(null);
@@ -43,6 +45,7 @@ const InputDuringMessage: FC<IInputDuringMessageProps> = ({
         }
         inputFilesRef.current.click();
     };
+
     return (
         <Fragment>
             <Flex vertical={false} style={{width: "100%"}} align="self-end" gap="middle">
@@ -59,29 +62,31 @@ const InputDuringMessage: FC<IInputDuringMessageProps> = ({
                         multiple
                         style={{display: "none"}}
                         onChange={(e) => {
-                            setFiles(e, "a");
-                            if (!inputFilesRef.current || inputFilesRef.current.type !== "file") {
-                                return;
+                                setFiles(e, "a");
+                                if (!inputFilesRef.current || inputFilesRef.current.type !== "file") {
+                                    return;
+                                }
+                                inputFilesRef.current.value = "";
                             }
-                            inputFilesRef.current.value = "";
-                        }
                         }
                     />
                 </div>
                 <div className="input-message__field" style={{flexGrow: 1}}>
-                    <InputEmojiWithRef
-                        inputClass={classNames("input-message__textbox")}
+                    <InputEmoji
+                        set="twitter"
+                        value={message}
+                        onChange={onChange}
+                        onKeyDown={onKeyDown}
+                        cleanOnEnter={true}
+                        shouldReturn={true}
+                        keepOpened={true}
+                        placeholder={"Ваше сообщение"}
+
                         tabIndex={0}
+                        inputClass={classNames("input-message__textbox")}
                         borderRadius={5}
                         borderColor={"rgb(207 222 243)"}
                         fontFamily={"Roboto, sans-serif"}
-
-                        value={message}
-                        onChange={onChange}
-                        shouldReturn={true}
-                        cleanOnEnter={true}
-                        onKeyDown={onKeyDown}
-                        placeholder={"Ваше сообщение"}
                     />
                 </div>
                 <div className="input-message__btn-wrapper">
