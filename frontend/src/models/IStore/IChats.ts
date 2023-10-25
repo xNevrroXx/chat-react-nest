@@ -55,7 +55,7 @@ export interface IMessage extends IInnerMessage {
 }
 
 export interface IForwardedMessage extends IInnerForwardedMessage {
-    forwardedMessage: InnerMessage | InnerForwardedMessage | null;
+    forwardedMessage: InnerMessage | InnerForwardedMessage;
 }
 
 
@@ -253,7 +253,7 @@ export class Message extends InnerMessage
 export class ForwardedMessage extends InnerForwardedMessage
     implements IForwardedMessage
 {
-    forwardedMessage: InnerMessage | InnerForwardedMessage | null;
+    forwardedMessage: InnerMessage | InnerForwardedMessage;
 
     constructor({forwardedMessage, ...args}: IForwardedMessage) {
         super(args);

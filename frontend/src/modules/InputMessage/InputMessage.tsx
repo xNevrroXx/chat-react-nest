@@ -1,4 +1,4 @@
-import {ClipboardEventHandler, FC, KeyboardEventHandler, useEffect, useRef, useState} from "react";
+import {FC, useState} from "react";
 import {Button, Flex} from "antd";
 import {DeleteOutlined} from "@ant-design/icons";
 import useFileUpload from "react-use-file-upload";

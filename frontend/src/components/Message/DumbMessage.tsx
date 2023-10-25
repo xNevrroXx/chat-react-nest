@@ -22,7 +22,7 @@ import {
 import "./message.scss";
 
 type TMessageProps = {
-    side: "left" | "right",
+    isMine: boolean,
     files: IKnownAndUnknownFiles;
     isVoice: boolean;
     isPreviewOpen: boolean;
@@ -36,7 +36,7 @@ type TMessageProps = {
 
 const DumbMessage: FC<TMessageProps> = ({
                                             message,
-                                            side,
+                                            isMine,
                                             isVoice,
                                             files,
                                             isPreviewOpen,
@@ -201,8 +201,8 @@ const DumbMessage: FC<TMessageProps> = ({
             );
         }
 
-        return <ForwardedMessage message={message} side={side}/>;
-    }, [knownAttachments, files, handleCancel, isPreviewOpen, isVoice, message, previewFile, side]);
+        return <ForwardedMessage message={message} isMine={isMine}/>;
+    }, [knownAttachments, files, handleCancel, isPreviewOpen, isVoice, message, previewFile, isMine]);
 
     return (
         <div
@@ -210,7 +210,7 @@ const DumbMessage: FC<TMessageProps> = ({
             id={message.id}
             data-message-id={message.id}
             className={
-                classNames("message", "message__" + side)
+                classNames("message", isMine && "message__mine")
             }
         >
             <div className="message__actions">

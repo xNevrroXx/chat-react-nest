@@ -1,4 +1,4 @@
-.active-chat {
+.active-room {
   padding: 10px 15px 25px 15px;
   width: 60%;
   height: 100%;
@@ -37,19 +37,7 @@
     display: flex;
     gap: 25px;
   }
-  &__content-wrapper {
-    display: block;
-    overflow-y: auto;
-    padding-right: 5px;
-    height: 100%;
-  }
-  &__content {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    gap: 5px;
-    min-height: 100%;
-  }
   &__footer {
+    position: relative;
   }
 }

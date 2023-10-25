@@ -13,12 +13,12 @@ import {TValueOf} from "../models/TUtils.ts";
 
 type TMessageProps = {
     userId: TValueOf<Pick<IUserDto, "id">>;
-    chooseMessageForReply: (message: MessageClass | ForwardedMessageClass) => void;
+    onChooseMessageForReply: (message: MessageClass | ForwardedMessageClass) => void;
     message: MessageClass | ForwardedMessageClass;
     onOpenUsersListForForwardMessage: () => void;
 };
 
-const Message: FC<TMessageProps> = ({userId, message, chooseMessageForReply, onOpenUsersListForForwardMessage}) => {
+const Message: FC<TMessageProps> = ({userId, message, onChooseMessageForReply, onOpenUsersListForForwardMessage}) => {
     const [isVoice, setIsVoice] = useState<boolean>(false);
     const [filesWithBlobUrls, setFilesWithBlobUrls] = useState<IKnownAndUnknownFiles>({
         known: [],
@@ -86,11 +86,11 @@ const Message: FC<TMessageProps> = ({userId, message, chooseMessageForReply, onO
     }, [message]);
 
     const onClickMessageForReply = useCallback(() => {
-        chooseMessageForReply(message);
-    }, [chooseMessageForReply, message]);
+        onChooseMessageForReply(message);
+    }, [onChooseMessageForReply, message]);
 
-    const side = useMemo((): "right" | "left" => {
-        return userId === message.senderId ? "right" : "left";
+    const isMine = useMemo((): boolean => {
+        return userId === message.senderId;
     }, [message.senderId, userId]);
 
     const handlePreview = useCallback((file: IFileForRender) => {
@@ -105,7 +105,7 @@ const Message: FC<TMessageProps> = ({userId, message, chooseMessageForReply, onO
 
     return (
         <DumbMessage
-            side={side}
+            isMine={isMine}
             isVoice={isVoice}
             files={filesWithBlobUrls}
             isPreviewOpen={isPreviewOpen}

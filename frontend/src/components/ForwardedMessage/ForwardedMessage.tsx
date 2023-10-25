@@ -12,15 +12,15 @@ const {Text} = Typography;
 
 type TMessageReplyProps = {
     message: ForwardedMessageClass;
-    side: "left" | "right";
+    isMine: boolean;
 }
-const ForwardedMessage: FC<TMessageReplyProps> = ({message, side}) => {
+const ForwardedMessage: FC<TMessageReplyProps> = ({message, isMine}) => {
     const ownerMessage = useAppSelector(state => messageOwnerSelector(state, message.forwardedMessage));
 
     return (
         <Flex
             vertical
-            className={classNames("forwarded-message", side === "right" && "forwarded-message_right")}
+            className={classNames("forwarded-message", isMine && "forwarded-message_mine")}
             data-forwarded-message-id={message.id}
         >
             {ownerMessage &&

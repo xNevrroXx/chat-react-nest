@@ -3,11 +3,11 @@ import {PlusCircleTwoTone, SendOutlined} from "@ant-design/icons";
 import {Button, Flex} from "antd";
 import * as classNames from "classnames";
 import InputEmoji from "react-input-emoji";
+import {useFileUploadHook} from "react-use-file-upload/dist/lib/types";
 // own modules
 import AudioRecorderButton from "../AudioRecorderButton/AudioRecorderButton.tsx";
 import UploadFiles from "../UploadFiles/UploadFiles.tsx";
 import {IUseAudioRecorderReturnType} from "../../hooks/useAudioRecorder.hook.ts";
-import {useFileUploadHook} from "react-use-file-upload/dist/lib/types";
 import {TValueOf} from "../../models/TUtils.ts";
 
 interface IInputDuringMessageProps {
@@ -55,6 +55,7 @@ const InputDuringMessage: FC<IInputDuringMessageProps> = ({
                         type="text"
                         icon={<PlusCircleTwoTone/>}
                         onClick={onClickButtonFiles}
+                        size="large"
                     />
                     <input
                         ref={inputFilesRef}

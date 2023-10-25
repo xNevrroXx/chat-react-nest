@@ -26,13 +26,11 @@
     }
   }
   &__textbox {
+    max-width: 100%;
+    word-break: break-word;
     font-size: 14px;
-    outline: none;
-    text-align: left;
-    padding: 9px 49px 10px 13px;
-    max-height: 15vh;
-    overflow-y: auto;
-    overflow-x: hidden;
+    min-height: 40px !important;
+    max-height: 15vh !important;
     &:focus-visible {
       outline: 1px solid #91caff;
       outline-offset: 1px;

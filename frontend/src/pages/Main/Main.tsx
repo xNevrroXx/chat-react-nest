@@ -7,7 +7,7 @@ import {useAppDispatch, useAppSelector} from "../../hooks/store.hook.ts";
 import {createRoute} from "../../router/createRoute.ts";
 import Rooms from "../../modules/Rooms/Rooms.tsx";
 import Dialogs from "../../modules/Dialogs/Dialogs.tsx";
-import ChatContent from "../../modules/ChatContent/ChatContent.tsx";
+import ActiveRoom from "../../modules/ActiveRoom/ActiveRoom.tsx";
 // selectors & actions
 import {forwardMessageSocket} from "../../store/thunks/chat.ts";
 // own types
@@ -77,7 +77,7 @@ const Main = () => {
                     activeChatId={activeRoom ? activeRoom.id : null}
                 />
                 { activeRoom &&
-                    <ChatContent
+                    <ActiveRoom
                         room={activeRoom}
                         user={user}
                         onOpenUsersListForForwardMessage={openUsersListForForwardMessage}

@@ -16,19 +16,15 @@
       visibility: visible;
     }
   }
-  &__left {
-    align-self: self-start;
-    .message__content {
-      border-bottom-left-radius: 3px;
-      background-color: rgba(238, 238, 238, 100);
-    }
-    .message__actions {
-      order: 1;
-      flex-direction: row-reverse;
-    }
+  .message__content {
+    border-bottom-left-radius: 3px;
+    background-color: rgba(238, 238, 238, 100);
   }
-  &__right {
-    align-self: self-end;
+  .message__actions {
+    order: 1;
+    flex-direction: row-reverse;
+  }
+  &__mine {
     .message__content {
       border-bottom-right-radius: 3px;
       background-color: rgba(1, 153, 253, 100);
