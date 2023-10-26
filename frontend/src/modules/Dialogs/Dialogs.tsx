@@ -3,7 +3,7 @@ import {Input, Typography} from "antd";
 // own modules
 import DialogCard from "../../components/DialogCard/DialogCard.tsx";
 // types
-import {IRoom, Message} from "../../models/IStore/IChats.ts";
+import {checkIsMessage, IRoom} from "../../models/IStore/IChats.ts";
 import {TValueOf} from "../../models/TUtils.ts";
 import {IUserDto} from "../../models/IStore/IAuthentication.ts";
 import {ILastMessageInfo} from "../../models/IChat.ts";
@@ -31,7 +31,7 @@ const Dialogs: FC<IDialogsProps> = ({user, rooms, onChangeDialog, activeChatId})
             : room.participants.find(participant => participant.userId === lastMessage.senderId)!.nickname;
         let text: string;
         if (!lastMessage.text) {
-            if (lastMessage instanceof Message) {
+            if (checkIsMessage(lastMessage)) {
                 text = "вложения - " + lastMessage.files.length.toString();
             }
             text = "пересланное сообщение";

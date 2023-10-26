@@ -4,7 +4,6 @@ import {getAll} from "../thunks/users.ts";
 // types
 import type {IUsers} from "../../models/IStore/IUsers.ts";
 import {handleUserToggleOnlineSocket} from "../actions/users.ts";
-import {UserOnline} from "../../models/IStore/IAuthentication.ts";
 
 
 const initialState: IUsers = {
@@ -18,18 +17,12 @@ const users = createSlice({
     extraReducers: builder => {
         builder
             .addCase(getAll.fulfilled, (state, action) => {
-                state.users = action.payload;
+                state.users = action.payload.users;
             })
             .addCase(handleUserToggleOnlineSocket, (state, action) => {
                 const targetUser = state.users.find(user => user.id === action.payload.userId);
-                if (!targetUser) {
-                    return;
-                }
-
-                targetUser.userOnline = new UserOnline({
-                    ...action.payload,
-                    updatedAt: new Date(action.payload.updatedAt)
-                });
+                if (!targetUser) return;
+                targetUser.userOnline = action.payload;
             });
     }
 });

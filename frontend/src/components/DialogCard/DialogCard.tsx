@@ -5,7 +5,6 @@ import * as classNames from "classnames";
 import {Markup} from "interweave";
 import emojiParser from "universal-emoji-parser";
 // own modules
-import {truncateTheText} from "../../utils/truncateTheText.ts";
 import {IUserDto} from "../../models/IStore/IAuthentication.ts";
 import {TValueOf} from "../../models/TUtils.ts";
 import {IRoom, RoomType} from "../../models/IStore/IChats.ts";
@@ -13,7 +12,7 @@ import {ILastMessageInfo} from "../../models/IChat.ts";
 // styles
 import "./dialog.scss";
 
-const {Title} = Typography;
+const {Title, Text} = Typography;
 
 interface IDialogCardProps {
     id: TValueOf<Pick<IUserDto, "id">>,
@@ -40,7 +39,7 @@ const DialogCard: FC<IDialogCardProps> = ({id, dialogName, lastMessageInfo, onCl
                 {lastMessageInfo &&
                     (
                         <p className="dialog__message">
-                            {roomType === RoomType.GROUP && <span>{lastMessageInfo.sender + ": "}</span>}
+                            {roomType === RoomType.GROUP && <Text strong className="dialog__sender-message">{lastMessageInfo.sender + ": "}</Text>}
                             <Markup content={emojiParser.parse(lastMessageInfo.text)} />
                         </p>
                     )

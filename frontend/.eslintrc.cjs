@@ -21,6 +21,7 @@ module.exports = {
     semi: ["error", "always"],
     quotes: ["error", "double"],
     "no-unused-vars": "off",
+    "@typescript-eslint/ban-ts-comment": "off",
     "@typescript-eslint/no-unused-vars": "error",
     "@typescript-eslint/no-floating-promises": "error",
     "@typescript-eslint/no-misused-promises": ["error", { checksVoidReturn: false }]

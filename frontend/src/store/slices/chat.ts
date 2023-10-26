@@ -1,14 +1,16 @@
 import {createSlice} from "@reduxjs/toolkit";
 // interfaces
-import type {IChats, IInnerMessage, TFile} from "../../models/IStore/IChats.ts";
+import type {
+    IChats,
+    IInnerMessage,
+    IFile,
+    IInnerForwardedMessage,
+    IForwardedMessage
+} from "../../models/IStore/IChats.ts";
 import {
-    Attachment,
-    checkIsInnerMessageFromSocket,
-    ForwardedMessage,
+    checkIsInnerMessageSocket,
     IMessage,
-    InnerForwardedMessage,
-    InnerMessage,
-    Message, RoomType,
+    RoomType,
 } from "../../models/IStore/IChats.ts";
 // actions
 import {createSocketInstance, getAll} from "../thunks/chat.ts";
@@ -47,14 +49,12 @@ const chat = createSlice({
                     ...messageSocket,
                     files: [], // temporarily
                     replyToMessage: null, // temporarily
-                    createdAt: new Date(messageSocket.createdAt),
-                    updatedAt: messageSocket.updatedAt ? new Date(messageSocket.updatedAt) : null,
                 };
-                let innerMessage: InnerMessage | InnerForwardedMessage | null;
-                newMessage.files = messageSocket.files.map<TFile>(file => {
+                let innerMessage: IInnerMessage | IInnerForwardedMessage | null;
+                newMessage.files = messageSocket.files.map<IFile>(file => {
                     const u = new Uint8Array(file.buffer); // file.buffer.data
                     const blob = new Blob([u], {type: file.mimeType});
-                    return new Attachment({
+                    return {
                         id: file.id,
                         originalName: file.originalName,
                         fileType: file.fileType,
@@ -62,16 +62,16 @@ const chat = createSlice({
                         extension: file.extension,
                         blob: blob,
 
-                        createdAt: new Date(file.createdAt)
-                    });
+                        createdAt: file.createdAt
+                    };
                 });
 
                 if (messageSocket.replyToMessage) {
-                    if (checkIsInnerMessageFromSocket(messageSocket.replyToMessage)) {
-                        const innerFiles = messageSocket.replyToMessage.files.map<TFile>(file => {
+                    if (checkIsInnerMessageSocket(messageSocket.replyToMessage)) {
+                        const innerFiles = messageSocket.replyToMessage.files.map<IFile>(file => {
                             const u = new Uint8Array(file.buffer); // file.buffer.data
                             const blob = new Blob([u], {type: file.mimeType});
-                            return new Attachment({
+                            return {
                                 id: file.id,
                                 originalName: file.originalName,
                                 fileType: file.fileType,
@@ -79,28 +79,23 @@ const chat = createSlice({
                                 extension: file.extension,
                                 blob: blob,
 
-                                createdAt: new Date(file.createdAt)
-                            });
+                                createdAt: file.createdAt
+                            };
                         });
 
-                        innerMessage = new InnerMessage({
+                        innerMessage = {
                             ...messageSocket.replyToMessage,
-                            files: innerFiles,
-                            createdAt: new Date(messageSocket.replyToMessage.createdAt),
-                            updatedAt: messageSocket.replyToMessage.updatedAt ? new Date(messageSocket.replyToMessage.updatedAt) : null,
-                        });
-                    } else {
-                        innerMessage = new InnerForwardedMessage({
-                            ...messageSocket.replyToMessage,
-                            createdAt: new Date(messageSocket.replyToMessage.createdAt),
-                            updatedAt: messageSocket.replyToMessage.updatedAt ? new Date(messageSocket.replyToMessage.updatedAt) : null,
-                        });
+                            files: innerFiles
+                        };
+                    }
+                    else {
+                        innerMessage = messageSocket.replyToMessage;
                     }
 
                     newMessage.replyToMessage = innerMessage;
                 }
 
-                const message = new Message(newMessage);
+                const message = newMessage;
 
                 if (!targetChat) {
                     state.chats.push({ // todo repair of the getting first message in the unrecognized room
@@ -110,7 +105,7 @@ const chat = createSlice({
                         participants: [],
                         roomType: RoomType.PRIVATE,
                         messages: [message],
-                        createdAt: new Date(),
+                        createdAt: "",
                         updatedAt: undefined
                     });
                 }
@@ -121,21 +116,19 @@ const chat = createSlice({
             .addCase(handleForwardedMessageSocket, (state, action) => {
                 const targetChat = state.chats.find(chat => chat.id === action.payload.roomId);
                 const messageSocket = action.payload;
-                let innerMessage: InnerMessage | InnerForwardedMessage | null;
+                let innerMessage: IInnerMessage | IInnerForwardedMessage | null;
 
-                const newMessage: ForwardedMessage = {
+                const newMessage: IForwardedMessage = {
                     ...messageSocket,
                     forwardedMessage: null as unknown as IInnerMessage, // temporarily
-                    createdAt: new Date(messageSocket.createdAt),
-                    updatedAt: messageSocket.updatedAt ? new Date(messageSocket.updatedAt) : null
                 };
 
                 if (messageSocket.forwardedMessage) {
-                    if (checkIsInnerMessageFromSocket(messageSocket.forwardedMessage)) {
-                        const innerFiles = messageSocket.forwardedMessage.files.map<TFile>(file => {
+                    if (checkIsInnerMessageSocket(messageSocket.forwardedMessage)) {
+                        const innerFiles = messageSocket.forwardedMessage.files.map<IFile>(file => {
                             const u = new Uint8Array(file.buffer); // file.buffer.data
                             const blob = new Blob([u], {type: file.mimeType});
-                            return new Attachment({
+                            return {
                                 id: file.id,
                                 originalName: file.originalName,
                                 fileType: file.fileType,
@@ -143,26 +136,24 @@ const chat = createSlice({
                                 extension: file.extension,
                                 blob: blob,
 
-                                createdAt: new Date(file.createdAt)
-                            });
+                                createdAt: file.createdAt
+                            };
                         });
 
-                        innerMessage = new InnerMessage({
+                        innerMessage = {
                             ...messageSocket.forwardedMessage,
-                            files: innerFiles,
-                            createdAt: new Date(messageSocket.forwardedMessage.createdAt),
-                            updatedAt: messageSocket.forwardedMessage.updatedAt ? new Date(messageSocket.forwardedMessage.updatedAt) : null,
-                        });
+                            files: innerFiles
+                        };
                     } else {
-                        innerMessage = new InnerForwardedMessage({
+                        innerMessage = {
                             ...messageSocket.forwardedMessage,
-                            createdAt: new Date(messageSocket.forwardedMessage.createdAt),
-                            updatedAt: messageSocket.forwardedMessage.updatedAt ? new Date(messageSocket.forwardedMessage.updatedAt) : null,
-                        });
+                            createdAt: messageSocket.forwardedMessage.createdAt,
+                            updatedAt: messageSocket.forwardedMessage.updatedAt,
+                        };
                     }
                     newMessage.forwardedMessage = innerMessage;
                 }
-                const message = new ForwardedMessage(newMessage);
+                const message = newMessage;
 
                 if (!targetChat) {
                     state.chats.push({ // todo repair of the getting first message in the unrecognized room
@@ -172,7 +163,7 @@ const chat = createSlice({
                         participants: [],
                         roomType: RoomType.PRIVATE,
                         messages: [message],
-                        createdAt: new Date(),
+                        createdAt: "",
                         updatedAt: undefined
                     });
                 }

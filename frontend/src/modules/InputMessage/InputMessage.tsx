@@ -1,4 +1,4 @@
-import {FC, useState} from "react";
+import {FC, useEffect, useRef, useState} from "react";
 import {Button, Flex} from "antd";
 import {DeleteOutlined} from "@ant-design/icons";
 import useFileUpload from "react-use-file-upload";
@@ -8,11 +8,10 @@ import InputDuringAudio from "../../components/InputDuringAudio/InputDuringAudio
 import {useAudioRecorder} from "../../hooks/useAudioRecorder.hook.ts";
 import MessageReply from "../../components/MessageReply/MessageReply.tsx";
 import {
+    FileType,
     IAttachment,
     TSendMessage,
-    FileType,
-    Message as MessageClass,
-    ForwardedMessage as ForwardedMessageClass, IEditMessage
+    IEditMessage, IMessage, IForwardedMessage
 } from "../../models/IStore/IChats.ts";
 import {TValueOf} from "../../models/TUtils.ts";
 // styles
@@ -23,8 +22,8 @@ interface IInputMessage {
     onSendVoiceMessage: (record: Blob) => void;
     onSendEditedMessage: (text: TValueOf<Pick<IEditMessage, "text">>) => void;
     onTyping: () => void;
-    messageForReply: MessageClass | ForwardedMessageClass | null;
-    messageForEdit: MessageClass | null;
+    messageForReply: IMessage | IForwardedMessage | null;
+    messageForEdit: IMessage | null;
     removeMessageForEdit: () => void;
     removeMessageForReply: () => void;
 }
@@ -39,6 +38,7 @@ const InputMessage: FC<IInputMessage> = ({
                                              removeMessageForEdit,
                                              removeMessageForReply
                                          }) => {
+    const inputRef = useRef<HTMLDivElement | null>(null);
     const [message, setMessage] = useState<string>("");
     const {
         files,
@@ -55,6 +55,12 @@ const InputMessage: FC<IInputMessage> = ({
         stopRecording,
         cleanAudio
     } = useAudioRecorder();
+
+    useEffect(() => {
+        if (!inputRef.current) return;
+
+        inputRef.current?.focus();
+    }, [messageForEdit, messageForReply]);
 
     const onChangeMessage = (str: string) => {
         setMessage(str);
@@ -146,6 +152,7 @@ const InputMessage: FC<IInputMessage> = ({
                     />
                     :
                     <InputDuringMessage
+                        ref={inputRef}
                         message={message}
                         sendMessage={sendMessage}
                         onKeyDown={onKeyDown}

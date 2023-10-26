@@ -9,14 +9,15 @@ import ScrollDownButton from "../../components/ScrollDownButton/ScrollDownButton
 import type {IUserDto} from "../../models/IStore/IAuthentication.ts";
 import type {TValueOf} from "../../models/TUtils.ts";
 import {
+    FileType,
+    RoomType,
     TForwardMessage,
     TSendMessage,
     IAttachment,
     IRoom,
-    FileType,
-    ForwardedMessage as ForwardedMessageClass,
-    Message as MessageClass,
-    RoomType, IEditMessage
+    IEditMessage,
+    IMessage,
+    IForwardedMessage
 } from "../../models/IStore/IChats.ts";
 // actions
 import {useAppDispatch} from "../../hooks/store.hook.ts";
@@ -34,8 +35,8 @@ interface IActiveChatProps {
 
 const ActiveRoom: FC<IActiveChatProps> = ({user, room, onOpenUsersListForForwardMessage}) => {
     const dispatch = useAppDispatch();
-    const [messageForReply, setMessageForReply] = useState<MessageClass | ForwardedMessageClass | null>(null);
-    const [messageForEdit, setMessageForEdit] = useState<MessageClass | null>(null);
+    const [messageForReply, setMessageForReply] = useState<IMessage | IForwardedMessage | null>(null);
+    const [messageForEdit, setMessageForEdit] = useState<IMessage | null>(null);
     const [isVisibleScrollButton, setIsVisibleScrollButton] = useState<boolean>(true);
     const typingTimoutRef = useRef<number | null>(null);
     const refChatContent = useScrollTrigger({
@@ -52,7 +53,7 @@ const ActiveRoom: FC<IActiveChatProps> = ({user, room, onOpenUsersListForForward
         refChatContent.current.scrollTo(0, refChatContent.current?.scrollHeight);
     };
 
-    const onChooseMessageForReply = (message: MessageClass | ForwardedMessageClass) => {
+    const onChooseMessageForReply = (message: IMessage | IForwardedMessage) => {
         setMessageForReply(message);
     };
 
@@ -60,7 +61,7 @@ const ActiveRoom: FC<IActiveChatProps> = ({user, room, onOpenUsersListForForward
         setMessageForReply(null);
     };
 
-    const onChooseMessageForEdit = (message: MessageClass) => {
+    const onChooseMessageForEdit = (message: IMessage) => {
         setMessageForEdit(message);
     };
 

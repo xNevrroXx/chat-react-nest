@@ -1,18 +1,20 @@
 import {
     TSendMessage,
-    TMessageFromSocket,
+    IMessageSocket,
     TForwardMessage,
-    TForwardedMessageFromSocket,
+    IForwardedMessageSocket,
     TSendUserTyping,
-    IParticipant, IEditMessage, IEditedMessageFromSocket
+    IParticipant,
+    IEditMessage,
+    IEditedMessageSocket
 } from "./IStore/IChats.ts";
-import {TUserOnlineHTTP} from "./IStore/IAuthentication.ts";
+import {TUserOnline} from "./IStore/IAuthentication.ts";
 
 export interface ServerToClientEvents {
-    "message": (data: TMessageFromSocket) => void;
-    "message:edited": (data: IEditedMessageFromSocket) => void;
-    "message:forwarded": (data: TForwardedMessageFromSocket) => void;
-    "user:toggle-online": (data: TUserOnlineHTTP) => void;
+    "message": (data: IMessageSocket) => void;
+    "message:edited": (data: IEditedMessageSocket) => void;
+    "message:forwarded": (data: IForwardedMessageSocket) => void;
+    "user:toggle-online": (data: TUserOnline) => void;
     "room:toggle-typing": (data: IParticipant[]) => void;
 }
 

@@ -4,10 +4,10 @@ import * as classNames from "classnames";
 import Message from "../../HOC/Message.tsx";
 import {IUserDto} from "../../models/IStore/IAuthentication.ts";
 import {
+    IForwardedMessage,
+    IMessage,
     IRoom,
-    TForwardMessage,
-    ForwardedMessage as ForwardedMessageClass,
-    Message as MessageClass
+    TForwardMessage
 } from "../../models/IStore/IChats.ts";
 import {TValueOf} from "../../models/TUtils.ts";
 // styles
@@ -19,8 +19,8 @@ interface IChatContentProps {
     user: IUserDto;
     room: IRoom,
     isNeedScrollToLastMessage: boolean,
-    onChooseMessageForEdit: (message: MessageClass) => void,
-    onChooseMessageForReply: (message: MessageClass | ForwardedMessageClass) => void,
+    onChooseMessageForEdit: (message: IMessage) => void,
+    onChooseMessageForReply: (message: IMessage | IForwardedMessage) => void,
     onOpenUsersListForForwardMessage: (forwardedMessageId: TValueOf<Pick<TForwardMessage, "forwardedMessageId">>) => void
 }
 
@@ -54,7 +54,7 @@ const ChatContent = forwardRef<HTMLDivElement, IChatContentProps>(({
                 />
             );
         });
-    }, [room, user, onChooseMessageForReply, onOpenUsersListForForwardMessage]);
+    }, [room, user.id, onChooseMessageForEdit, onChooseMessageForReply, onOpenUsersListForForwardMessage]);
 
     useEffect(() => {
         if (!innerRef.current || !isNeedScrollToLastMessage) return;

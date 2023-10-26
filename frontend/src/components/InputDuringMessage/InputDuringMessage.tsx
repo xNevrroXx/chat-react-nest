@@ -1,4 +1,4 @@
-import React, {FC, Fragment, useRef} from "react";
+import React, {forwardRef, Fragment, useRef} from "react";
 import {PlusCircleTwoTone, SendOutlined} from "@ant-design/icons";
 import {Button, Flex} from "antd";
 import * as classNames from "classnames";
@@ -24,18 +24,18 @@ interface IInputDuringMessageProps {
 
 }
 
-const InputDuringMessage: FC<IInputDuringMessageProps> = ({
-                                                              message,
-                                                              sendMessage,
-                                                              onKeyDown,
-                                                              isRecording,
-                                                              startRecording,
-                                                              stopRecording,
-                                                              files,
-                                                              setFiles,
-                                                              removeFile,
-                                                              onChange
-                                                          }) => {
+const InputDuringMessage = forwardRef<HTMLDivElement, IInputDuringMessageProps>(({
+                                           message,
+                                           sendMessage,
+                                           onKeyDown,
+                                           isRecording,
+                                           startRecording,
+                                           stopRecording,
+                                           files,
+                                           setFiles,
+                                           removeFile,
+                                           onChange
+                                       }, ref) => {
     const inputFilesRef = useRef<HTMLInputElement | null>(null);
     const buttonAddFilesRef = useRef<HTMLButtonElement | null>(null);
 
@@ -63,17 +63,18 @@ const InputDuringMessage: FC<IInputDuringMessageProps> = ({
                         multiple
                         style={{display: "none"}}
                         onChange={(e) => {
-                                setFiles(e, "a");
-                                if (!inputFilesRef.current || inputFilesRef.current.type !== "file") {
-                                    return;
-                                }
-                                inputFilesRef.current.value = "";
+                            setFiles(e, "a");
+                            if (!inputFilesRef.current || inputFilesRef.current.type !== "file") {
+                                return;
                             }
+                            inputFilesRef.current.value = "";
+                        }
                         }
                     />
                 </div>
                 <div className="input-message__field" style={{flexGrow: 1}}>
                     <InputEmoji
+                        ref={ref}
                         set="twitter"
                         value={message}
                         onChange={onChange}
@@ -114,6 +115,6 @@ const InputDuringMessage: FC<IInputDuringMessageProps> = ({
             />
         </Fragment>
     );
-};
+});
 
 export default InputDuringMessage;

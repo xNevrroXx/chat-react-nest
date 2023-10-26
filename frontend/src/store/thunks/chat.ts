@@ -14,22 +14,20 @@ import {handleUserToggleOnlineSocket} from "../actions/users.ts";
 import {
     checkIsInnerMessageHTTP,
     checkIsMessageHTTP,
+    IFile,
     IRoom,
-    IForwardedMessage,
     IMessage,
-    TFile,
-    TForwardMessage,
+    IEditMessage,
     TSendMessage,
-    Message,
-    ForwardedMessage,
-    InnerMessage,
-    InnerForwardedMessage, Attachment, TSendUserTyping, IEditMessage
+    TSendUserTyping,
+    TForwardMessage,
+    IForwardedMessage,
+    IInnerMessage,
+    IInnerForwardedMessage
 } from "../../models/IStore/IChats.ts";
 import {RootState} from "../index.ts";
 
-const createSocketInstance = createAsyncThunk<SocketIOService, string, {
-    state: RootState
-}>(
+const createSocketInstance = createAsyncThunk<SocketIOService, string, { state: RootState }>(
     "chat/socket:create-instance",
     (token: string, thunkAPI) => {
         try {
@@ -159,15 +157,15 @@ const getAll = createAsyncThunk(
             const chatsHTTPResponse = response.data;
             const chats: IRoom[] = [];
             chatsHTTPResponse.forEach(chat => {
-                const messages = chat.messages.reduce<(Message | ForwardedMessage)[]>((previousValue, messageHTTP) => {
-                    let message: Message | ForwardedMessage;
-                    let newMessage = {} as IMessage | IForwardedMessage;
-                    let innerMessage: InnerMessage | InnerForwardedMessage | null;
+                const messages = chat.messages.reduce<(IMessage | IForwardedMessage)[]>((previousValue, messageHTTP) => {
+                    let message: IMessage | IForwardedMessage;
+                    let newMessage = {} as (IMessage | IForwardedMessage);
+                    let innerMessage: IInnerMessage | IInnerForwardedMessage | null;
                     if (checkIsMessageHTTP(messageHTTP)) {
-                        const files = messageHTTP.files.map<TFile>(file => {
+                        const files = messageHTTP.files.map<IFile>(file => {
                             const u = new Uint8Array(file.buffer.data);
                             const blob = new Blob([u], {type: file.mimeType});
-                            return new Attachment({
+                            return {
                                 id: file.id,
                                 originalName: file.originalName,
                                 fileType: file.fileType,
@@ -175,24 +173,24 @@ const getAll = createAsyncThunk(
                                 extension: file.extension,
                                 blob: blob,
 
-                                createdAt: new Date(file.createdAt)
-                            });
+                                createdAt: file.createdAt
+                            };
                         });
 
                         newMessage = {
                             ...messageHTTP,
                             files: files,
-                            replyToMessage: null, // temporarily
-                            createdAt: new Date(messageHTTP.createdAt),
-                            updatedAt: messageHTTP.updatedAt ? new Date(messageHTTP.updatedAt) : null,
-                        };
+                            replyToMessage: undefined, // temporarily
+                            createdAt: messageHTTP.createdAt,
+                            updatedAt: messageHTTP.updatedAt,
+                        } as IMessage;
 
                         if (messageHTTP.replyToMessage) {
                             if (checkIsInnerMessageHTTP(messageHTTP.replyToMessage)) {
-                                const innerFiles = messageHTTP.replyToMessage.files.map<TFile>(file => {
+                                const innerFiles = messageHTTP.replyToMessage.files.map<IFile>(file => {
                                     const u = new Uint8Array(file.buffer.data);
                                     const blob = new Blob([u], {type: file.mimeType});
-                                    return new Attachment({
+                                    return {
                                         id: file.id,
                                         originalName: file.originalName,
                                         fileType: file.fileType,
@@ -200,41 +198,41 @@ const getAll = createAsyncThunk(
                                         extension: file.extension,
                                         blob: blob,
 
-                                        createdAt: new Date(file.createdAt)
-                                    });
+                                        createdAt: file.createdAt
+                                    };
                                 });
 
-                                innerMessage = new InnerMessage({
+                                innerMessage = {
                                     ...messageHTTP.replyToMessage,
                                     files: innerFiles,
-                                    createdAt: new Date(messageHTTP.replyToMessage.createdAt),
-                                    updatedAt: messageHTTP.replyToMessage.updatedAt ? new Date(messageHTTP.replyToMessage.updatedAt) : null,
-                                });
-                            } else {
-                                innerMessage = new InnerForwardedMessage({
-                                    ...messageHTTP.replyToMessage,
-                                    createdAt: new Date(messageHTTP.replyToMessage.createdAt),
-                                    updatedAt: messageHTTP.replyToMessage.updatedAt ? new Date(messageHTTP.replyToMessage.updatedAt) : null,
-                                });
+                                    createdAt: messageHTTP.replyToMessage.createdAt,
+                                    updatedAt: messageHTTP.replyToMessage.updatedAt,
+                                };
                             }
-
+                            else {
+                                innerMessage = {
+                                    ...messageHTTP.replyToMessage,
+                                    createdAt: messageHTTP.replyToMessage.createdAt,
+                                    updatedAt: messageHTTP.replyToMessage.updatedAt,
+                                };
+                            }
                             newMessage.replyToMessage = innerMessage;
                         }
-                        message = new Message(newMessage);
-                    } else {
+
+                        message = newMessage;
+                    }
+                    else {
                         newMessage = {
                             ...messageHTTP,
-                            forwardedMessage: null as unknown as InnerMessage, // temporarily
-                            createdAt: new Date(messageHTTP.createdAt),
-                            updatedAt: messageHTTP.updatedAt ? new Date(messageHTTP.updatedAt) : null
-                        };
+                            forwardedMessage: null as unknown as IInnerMessage, // temporarily
+                        } as IForwardedMessage;
 
                         if (messageHTTP.forwardedMessage) {
                             if (checkIsInnerMessageHTTP(messageHTTP.forwardedMessage)) {
-                                const innerFiles = messageHTTP.forwardedMessage.files.map<TFile>(file => {
+                                const innerFiles = messageHTTP.forwardedMessage.files.map<IFile>(file => {
                                     const u = new Uint8Array(file.buffer.data);
                                     const blob = new Blob([u], {type: file.mimeType});
-                                    return new Attachment({
+                                    return {
                                         id: file.id,
                                         originalName: file.originalName,
                                         fileType: file.fileType,
@@ -242,26 +240,26 @@ const getAll = createAsyncThunk(
                                         extension: file.extension,
                                         blob: blob,
 
-                                        createdAt: new Date(file.createdAt)
-                                    });
+                                        createdAt: file.createdAt
+                                    };
                                 });
 
-                                innerMessage = new InnerMessage({
+                                innerMessage = {
                                     ...messageHTTP.forwardedMessage,
                                     files: innerFiles,
-                                    createdAt: new Date(messageHTTP.forwardedMessage.createdAt),
-                                    updatedAt: messageHTTP.forwardedMessage.updatedAt ? new Date(messageHTTP.forwardedMessage.updatedAt) : null,
-                                });
+                                    createdAt: messageHTTP.forwardedMessage.createdAt,
+                                    updatedAt: messageHTTP.forwardedMessage.updatedAt,
+                                };
                             } else {
-                                innerMessage = new InnerForwardedMessage({
+                                innerMessage = {
                                     ...messageHTTP.forwardedMessage,
-                                    createdAt: new Date(messageHTTP.forwardedMessage.createdAt),
-                                    updatedAt: messageHTTP.forwardedMessage.updatedAt ? new Date(messageHTTP.forwardedMessage.updatedAt) : null,
-                                });
+                                    createdAt: messageHTTP.forwardedMessage.createdAt,
+                                    updatedAt: messageHTTP.forwardedMessage.updatedAt,
+                                };
                             }
                             newMessage.forwardedMessage = innerMessage;
                         }
-                        message = new ForwardedMessage(newMessage);
+                        message = newMessage;
                     }
 
                     previousValue.push(message);

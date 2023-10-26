@@ -11,7 +11,6 @@
   },
   "dependencies": {
     "@emoji-mart/react": "^1.1.1",
-    "universal-emoji-parser": "^1.0.114",
     "@reduxjs/toolkit": "^1.9.5",
     "antd": "^5.10.1",
     "axios": "^1.4.0",
@@ -28,6 +27,7 @@
     "redux": "^4.2.1",
     "redux-thunk": "^2.4.2",
     "socket.io-client": "^4.7.2",
+    "universal-emoji-parser": "^1.0.114",
     "wavesurfer.js": "^7.3.3",
     "zod": "^3.21.4",
     "zod-formik-adapter": "^1.2.0"
@@ -45,6 +45,7 @@
     "json-server": "^0.17.3",
     "sass": "^1.63.6",
     "typescript": "^5.0.2",
-    "vite": "^4.4.0"
+    "vite": "^4.4.0",
+    "vite-plugin-checker": "^0.6.2"
   }
 }

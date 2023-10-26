@@ -11,7 +11,7 @@ const isAxiosRequestConfigExtra = (_config: AxiosRequestConfig): _config is Axio
 };
 
 
-export const API_URL = import.meta.env.VITE_BACKEND_BASE_URL as string;
+export const API_URL = import.meta.env.VITE_BACKEND_BASE_URL;
 
 const $api = axios.create({
     withCredentials: true,

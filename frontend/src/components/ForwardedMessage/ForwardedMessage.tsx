@@ -4,14 +4,14 @@ import {useAppSelector} from "../../hooks/store.hook.ts";
 import * as classNames from "classnames";
 // own modules
 import {messageOwnerSelector} from "../../store/selectors/messageOwnerSelector.ts";
-import {ForwardedMessage as ForwardedMessageClass} from "../../models/IStore/IChats.ts";
+import {IForwardedMessage} from "../../models/IStore/IChats.ts";
 // styles
 import "./forwarded-message.scss";
 
 const {Text} = Typography;
 
 type TMessageReplyProps = {
-    message: ForwardedMessageClass;
+    message: IForwardedMessage;
     isMine: boolean;
 }
 const ForwardedMessage: FC<TMessageReplyProps> = ({message, isMine}) => {

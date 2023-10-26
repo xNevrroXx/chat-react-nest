@@ -91,7 +91,6 @@ async (_, thunkAPI) => {
         void router.navigate(createRoute({path: ROUTES.AUTH}));
         return thunkAPI.rejectWithValue(error);
     }
-
 });
 
 export {login, logout, registration, checkAuthentication};

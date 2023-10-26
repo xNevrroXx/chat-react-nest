@@ -26,12 +26,11 @@ export interface IRoom {
     userId: TValueOf<Pick<IUserDto, "id">>,
     roomType: RoomType,
     creatorUser?: TValueOf<Pick<IUserDto, "id">>,
-    // usersTyping: IUserTyping[],
-    messages: (Message | ForwardedMessage)[],
+    messages: (IMessage | IForwardedMessage)[],
     participants: IParticipant[]
 
-    createdAt: Date,
-    updatedAt: Date | undefined
+    createdAt: string,
+    updatedAt: string | undefined | null
 }
 
 export interface IParticipant {
@@ -51,21 +50,21 @@ export interface IUserTyping {
 }
 
 export interface IMessage extends IInnerMessage {
-    replyToMessage: InnerMessage | InnerForwardedMessage | null;
+    replyToMessage: IInnerMessage | IInnerForwardedMessage | undefined | null;
 }
 
 export interface IForwardedMessage extends IInnerForwardedMessage {
-    forwardedMessage: InnerMessage | InnerForwardedMessage;
+    forwardedMessage: IInnerMessage | IInnerForwardedMessage;
 }
 
 
 export interface IInnerMessage extends IOriginalMessage {
-    files: Attachment[];
-    replyToMessageId: TValueOf<Pick<IMessage, "id">> | null;
+    files: IFile[];
+    replyToMessageId: TValueOf<Pick<IMessage, "id">> | undefined | null;
 }
 
 export interface IInnerForwardedMessage extends IOriginalMessage {
-    forwardedMessageId: TValueOf<Pick<IMessage, "id">> | null;
+    forwardedMessageId: TValueOf<Pick<IMessage, "id">>;
 }
 
 export interface IOriginalMessage {
@@ -73,13 +72,13 @@ export interface IOriginalMessage {
     roomId: TValueOf<Pick<IRoom, "id">>
     senderId: TValueOf<Pick<IUserDto, "id">>;
     hasRead: boolean;
-    text: string | null;
+    text: string | undefined | null;
 
-    createdAt: Date;
-    updatedAt: Date | null;
+    createdAt: string;
+    updatedAt: string | undefined | null;
 }
 
-export type TFile = {
+export interface IFile {
     id: string,
     originalName: string,
     fileType: FileType,
@@ -87,54 +86,12 @@ export type TFile = {
     extension: string;
     blob: Blob;
 
-    createdAt: Date,
+    createdAt: string,
 }
 
-export interface IFileForRender extends TFile {
-    blobUrl: string
-}
+// HTTP response types
 
-export type TAttachmentType = "video" | "audio" | "image" | "unknown";
-
-export interface IKnownAndUnknownFiles {
-    known: ( IFileForRender & {attachmentType: Exclude<TAttachmentType, "unknown">} )[],
-    unknown: ( IFileForRender & {attachmentType: Extract<TAttachmentType, "unknown">} )[]
-}
-
-
-// Socket and HTTP response types
-export type TOriginalMessageHTTP = Omit<IOriginalMessage, "createdAt" | "updatedAt"> & {
-    createdAt: string;
-    updatedAt: string | null;
-}
-
-export interface IInnerMessageHTTP extends TOriginalMessageHTTP {
-    files: TFile[];
-    replyToMessageId: TValueOf<Pick<IMessage, "id">> | null;
-}
-
-export type TRoomHTTP = Omit<IRoom, "messages"> & {
-    messages: (TMessageHTTP | TForwardedMessageHTTP)[]
-}
-
-export type TMessageHTTP =
-    Omit<TInnerMessageHTTPResponse, "files" | "replyToMessage">
-    & { files: TFileHTTP[] }
-    & { replyToMessage: TInnerMessageHTTPResponse | TInnerForwardedMessageHTTP | null }
-
-export type TForwardedMessageHTTP =
-    Omit<TInnerForwardedMessageHTTP, "forwardedMessage">
-    & { forwardedMessage: TInnerMessageHTTPResponse | TInnerForwardedMessageHTTP | null }
-
-export type TInnerMessageHTTPResponse =
-    Omit<IInnerMessageHTTP, "files">
-    & { files: TFileHTTP[] }
-
-export type TInnerForwardedMessageHTTP =
-    TOriginalMessageHTTP
-    & { forwardedMessageId: TValueOf<Pick<IMessage, "id">> | null }
-
-type TFileHTTP = Omit<TFile, "buffer" | "createdAt"> & {
+type TFileHTTP = Omit<IFile, "buffer" | "createdAt"> & {
     buffer: {
         type: "Buffer",
         data: number[]
@@ -142,29 +99,48 @@ type TFileHTTP = Omit<TFile, "buffer" | "createdAt"> & {
     createdAt: string
 }
 
-export type TInnerMessageFromSocket =
-    Omit<IInnerMessage, "files">
-    & { files: TFileFromSocket[] }
+export interface IInnerMessageHTTP extends IOriginalMessage {
+    files: TFileHTTP[];
+    replyToMessageId: TValueOf<Pick<IMessage, "id">> | undefined | null;
+}
 
-export type TMessageFromSocket =
-    Omit<TMessageHTTP, "files">
-    & { files: TFileFromSocket[] }
-    & { replyToMessage: TInnerMessageFromSocket | IInnerForwardedMessage | null }
+export interface IMessageHTTP extends IInnerMessageHTTP {
+    replyToMessage: IInnerMessageHTTP | IInnerForwardedMessage | undefined | null
+}
 
-export type TForwardedMessageFromSocket =
-    Omit<TForwardedMessageHTTP, "forwardedMessage">
-    & { forwardedMessage: TInnerMessageFromSocket | IInnerForwardedMessage | null }
+export interface IForwardedMessageHTTP extends IInnerForwardedMessage {
+    forwardedMessage: IInnerMessageHTTP | IInnerForwardedMessage
+}
 
-export interface IEditedMessageFromSocket {
+export type TRoomHTTP = Omit<IRoom, "messages"> & {
+    messages: (IMessageHTTP | IForwardedMessageHTTP)[]
+}
+
+
+
+// Socket response types
+type TFileSocket = Omit<TFileHTTP, "buffer"> & {
+    buffer: ArrayBuffer
+}
+
+export interface TInnerMessageSocket extends IOriginalMessage {
+    files: TFileSocket[];
+    replyToMessageId: TValueOf<Pick<IMessage, "id">> | undefined | null;
+}
+
+export interface IMessageSocket extends TInnerMessageSocket {
+    replyToMessage: TInnerMessageSocket | IInnerForwardedMessage | undefined | null
+}
+
+export interface IForwardedMessageSocket extends IInnerForwardedMessage {
+    forwardedMessage: TInnerMessageSocket | IInnerForwardedMessage
+}
+
+export interface IEditedMessageSocket {
     roomId: TValueOf<Pick<IRoom, "id">>,
     messageId: TValueOf<Pick<IOriginalMessage, "id">>,
     text: TValueOf<Pick<IOriginalMessage, "text">>
 }
-
-type TFileFromSocket = Omit<TFileHTTP, "buffer"> & {
-    buffer: ArrayBuffer
-}
-
 
 
 // only client types(without responses) to send data
@@ -173,7 +149,7 @@ export type TSendUserTyping = Omit<IUserTyping, "updatedAt" | "userId">
 export type TSendMessage = {
     roomId: TValueOf<Pick<IRoom, "id">>;
     text: TValueOf<Pick<IMessage, "text">>;
-    replyToMessageId: TValueOf<Pick<IMessage, "id">> | null;
+    replyToMessageId: TValueOf<Pick<IMessage, "id">> | undefined | null;
 } & ISendAttachments;
 
 export type TForwardMessage = {
@@ -198,125 +174,29 @@ export interface IEditMessage {
     text: TValueOf<Pick<IOriginalMessage, "text">>
 }
 
-// DTO classes
-export class InnerMessage implements IInnerMessage {
-    id: string;
-    roomId: TValueOf<Pick<IRoom, "id">>;
-    senderId: TValueOf<Pick<IUserDto, "id">>;
-    text: string | null;
-    files: TFile[];
-    replyToMessageId: TValueOf<Pick<IMessage, "id">> | null;
-    hasRead: boolean;
-
-    createdAt: Date;
-    updatedAt: Date | null;
-
-    constructor({id, roomId, files, hasRead, replyToMessageId, senderId, text, createdAt, updatedAt}: IInnerMessage) {
-        this.id = id;
-        this.roomId = roomId;
-        this.senderId = senderId;
-        this.text = text;
-        this.files = files;
-        this.replyToMessageId = replyToMessageId;
-        this.hasRead = hasRead;
-
-        this.createdAt = new Date(createdAt);
-        this.updatedAt = updatedAt ? new Date(updatedAt) : null;
-    }
-
-}
-
-export class InnerForwardedMessage implements IInnerForwardedMessage {
-    id: string;
-    roomId: TValueOf<Pick<IRoom, "id">>;
-    senderId: TValueOf<Pick<IUserDto, "id">>;
-    text: string | null;
-    forwardedMessageId: TValueOf<Pick<IMessage, "id">> | null;
-    hasRead: boolean;
-
-    createdAt: Date;
-    updatedAt: Date | null;
-
-    constructor({id, roomId, hasRead, forwardedMessageId, senderId, text, createdAt, updatedAt}: IInnerForwardedMessage) {
-        this.id = id;
-        this.roomId = roomId;
-        this.senderId = senderId;
-        this.text = text;
-        this.forwardedMessageId = forwardedMessageId;
-        this.hasRead = hasRead;
-
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
-    }
-}
-
-export class Message extends InnerMessage
-    implements IMessage {
-    replyToMessage: InnerMessage | InnerForwardedMessage | null;
-    
-    constructor({replyToMessage, ...args}: IMessage) {
-        super(args);
-        this.replyToMessage = replyToMessage;
-    }
-}
-
-export class ForwardedMessage extends InnerForwardedMessage
-    implements IForwardedMessage
-{
-    forwardedMessage: InnerMessage | InnerForwardedMessage;
-
-    constructor({forwardedMessage, ...args}: IForwardedMessage) {
-        super(args);
-        this.forwardedMessage = forwardedMessage;
-    }
-}
-
-export class Attachment implements TFile {
-    id: string;
-    originalName: string;
-    extension: string;
-    fileType: FileType;
-    mimeType: string;
-    blob: Blob;
-    createdAt: Date;
-
-    constructor({
-                    id,
-                    originalName,
-                    extension,
-                    fileType,
-                    mimeType,
-                    blob,
-                    createdAt,
-                }: TFile) {
-        this.id = id;
-        this.originalName = originalName;
-        this.extension = extension;
-        this.fileType = fileType;
-        this.mimeType = mimeType;
-        this.blob = blob;
-        this.createdAt = createdAt;
-    }
-}
-
 
 // check methods
-export function checkIsInnerMessageFromSocket(obj: TInnerMessageFromSocket | IInnerForwardedMessage): obj is TInnerMessageFromSocket {
-    const message = obj as TInnerMessageFromSocket;
+export function checkIsInnerMessageSocket(obj: TInnerMessageSocket | IInnerForwardedMessage): obj is TInnerMessageSocket {
+    const message = obj as TInnerMessageSocket;
     return message.files !== undefined;
 }
 
-export function checkIsMessageFromSocket(obj: TMessageFromSocket | IForwardedMessage): obj is TMessageFromSocket {
-    const message = obj as TMessageFromSocket;
+export function checkIsInnerMessageHTTP(obj: IInnerMessageHTTP | IInnerForwardedMessage): obj is IInnerMessageHTTP {
+    const message = obj as IInnerMessageHTTP;
     return message.files !== undefined;
 }
 
-export function checkIsInnerMessageHTTP(obj: TInnerMessageHTTPResponse | TInnerForwardedMessageHTTP): obj is TInnerMessageHTTPResponse {
-    const message = obj as TInnerMessageHTTPResponse;
+export function checkIsMessageHTTP(obj: IMessageHTTP | IForwardedMessageHTTP): obj is IMessageHTTP {
+    const message = obj as IMessageHTTP;
     return message.files !== undefined;
 }
 
-export function checkIsMessageHTTP(obj: TMessageHTTP | TForwardedMessageHTTP): obj is TMessageHTTP {
-    const message = obj as TMessageHTTP;
+export function checkIsMessage(obj: IMessage | IForwardedMessage): obj is IMessage {
+    const message = obj as IMessage;
+    return message.files !== undefined;
+}
+
+export function checkIsInnerMessage(obj: IInnerMessage | IInnerForwardedMessage): obj is IInnerMessage {
+    const message = obj as IInnerMessage;
     return message.files !== undefined;
 }

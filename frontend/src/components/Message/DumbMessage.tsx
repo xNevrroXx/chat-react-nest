@@ -12,14 +12,10 @@ import PinOutlined from "../../icons/PinOutlined.tsx";
 import ForwardOutlined from "../../icons/ForwardOutlined.tsx";
 import emojiParser from "universal-emoji-parser";
 // types
-import {
-    IFileForRender,
-    IKnownAndUnknownFiles,
-    Message as MessageClass,
-    ForwardedMessage as ForwardedMessageClass
-} from "../../models/IStore/IChats.ts";
 // styles
 import "./message.scss";
+import {IFileForRender, IKnownAndUnknownFiles} from "../../models/IChat.ts";
+import {checkIsMessage, IForwardedMessage, IMessage} from "../../models/IStore/IChats.ts";
 
 type TMessageProps = {
     isMine: boolean,
@@ -32,7 +28,7 @@ type TMessageProps = {
     onClickMessageForEdit: () => void;
     onChooseMessageForReply: () => void;
     onChooseMessageForForward: () => void;
-    message: MessageClass | ForwardedMessageClass
+    message: IMessage | IForwardedMessage
 }
 
 const DumbMessage: FC<TMessageProps> = ({
@@ -139,14 +135,14 @@ const DumbMessage: FC<TMessageProps> = ({
                 </li>
             );
         });
-    }, [files, otherElem]);
+    }, [files.unknown, handleDownload, otherElem]);
 
     const messageContent = useMemo(() => {
         if (!message) {
             return;
         }
 
-        if (message instanceof MessageClass) {
+        if (checkIsMessage(message)) {
             return (
                 <Fragment>
                     {

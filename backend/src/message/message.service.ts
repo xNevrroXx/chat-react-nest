@@ -1,7 +1,13 @@
 import {Injectable} from "@nestjs/common";
 import {DatabaseService} from "../database/database.service";
 import {type Message, Prisma} from "@prisma/client";
-import {IMessage, isForwardedMessage, TForwardMessageWithoutFileBlobs, TMessageWithoutFileBlobs} from "./IMessage";
+import {
+    IMessage,
+    isForwardedMessage,
+    TForwardMessageWithoutFileBlobs,
+    TMessageWithoutFileBlobs,
+    TNormalizeMessageArgument
+} from "./IMessage";
 import {TFileToClient} from "../file/IFile";
 import {excludeSensitiveFields} from "../utils/excludeSensitiveFields";
 import {FileService} from "../file/file.service";
@@ -71,31 +77,10 @@ export class MessageService {
         });
     }
 
-    async normalize(message:
-        Prisma.MessageGetPayload<{
-            include: {
-                files: true,
-                replyToMessage: {
-                    include: {
-                        files: true
-                    }
-                },
-                forwardedMessage: {
-                    include: {
-                        files: true,
-                        replyToMessage: {
-                            include: {
-                                files: true
-                            }
-                        }
-                    }
-                }
-            }
-        }>
-    ): Promise<IMessage> {
+    async normalize(message: TNormalizeMessageArgument): Promise<IMessage> {
         let normalizedMessage;
         if (!isForwardedMessage(message)) {
-            normalizedMessage = excludeSensitiveFields(message, ["forwardedMessageId", "forwardedMessage"]);
+            normalizedMessage = excludeSensitiveFields(message, ["forwardedMessageId", "forwardedMessage" as any]);
 
             if (normalizedMessage.replyToMessage) {
                 if (normalizedMessage.replyToMessage.forwardedMessageId) {
@@ -128,7 +113,7 @@ export class MessageService {
             }
         }
         else {
-            normalizedMessage = excludeSensitiveFields(message, ["files", "replyToMessage", "replyToMessageId"]);
+            normalizedMessage = excludeSensitiveFields(message, ["files", "replyToMessage", "replyToMessageId" as any]);
 
             if (normalizedMessage.forwardedMessage.forwardedMessageId) {
                 normalizedMessage = {
@@ -140,10 +125,9 @@ export class MessageService {
                     ...normalizedMessage,
                     forwardedMessage: excludeSensitiveFields(normalizedMessage.forwardedMessage, ["forwardedMessageId"])
                 };
-            }
-
-            if (normalizedMessage.forwardedMessage.files && normalizedMessage.forwardedMessage.files.length > 0) {
-                normalizedMessage.forwardedMessage.files = await this.fileService.addBlobToFiles(normalizedMessage.forwardedMessage.files);
+                if (normalizedMessage.forwardedMessage.files && normalizedMessage.forwardedMessage.files.length > 0) {
+                    normalizedMessage.forwardedMessage.files = await this.fileService.addBlobToFiles(normalizedMessage.forwardedMessage.files);
+                }
             }
         }
 

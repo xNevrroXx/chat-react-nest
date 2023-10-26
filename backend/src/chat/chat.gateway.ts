@@ -210,7 +210,6 @@ export class ChatGateway
             include: {
                 forwardedMessage: {
                     include: {
-                        room: true,
                         files: true,
                         replyToMessage: {
                             include: {
@@ -220,13 +219,25 @@ export class ChatGateway
                     }
                 }
             }
-        }) as Prisma.MessageGetPayload<{include: {room: true, files: true, replyToMessage: true}}>;
+        }) as Prisma.MessageGetPayload<{include: {
+                forwardedMessage: {
+                    include: {
+                        files: true,
+                        replyToMessage: {
+                            include: {
+                                files: true
+                            }
+                        }
+                    }
+                }
+            }}>;
+        const normalizedMessage = await this.messageService.normalize(newMessage);
         
-        const newMessageExcludingFields =
-            excludeSensitiveFields(newMessage, ["replyToMessageId"]); // files
+        // const newMessageExcludingFields =
+        //     excludeSensitiveFields(newMessage, ["replyToMessageId"]); // files
 
         this.server
-            .emit("message:forwarded", newMessageExcludingFields);
+            .emit("message:forwarded", normalizedMessage);
     }
 
     @UseGuards(WsAuth)

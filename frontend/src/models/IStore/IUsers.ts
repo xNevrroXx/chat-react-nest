@@ -1,5 +1,5 @@
-import {UserDto} from "./IAuthentication.ts";
+import {IUserDto} from "./IAuthentication.ts";
 
 export interface IUsers {
-    users: UserDto[]
+    users: IUserDto[]
 }

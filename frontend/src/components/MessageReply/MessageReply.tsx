@@ -5,19 +5,18 @@ import {Interweave} from "interweave";
 // own modules
 import {messageOwnerSelector} from "../../store/selectors/messageOwnerSelector.ts";
 import {
-    InnerMessage,
-    InnerForwardedMessage
+    IInnerMessage,
+    IInnerForwardedMessage, checkIsInnerMessage
 } from "../../models/IStore/IChats.ts";
 // selectors
 import {useAppSelector} from "../../hooks/store.hook.ts";
 // styles
 import "./message-reply.scss";
-import {truncateTheText} from "../../utils/truncateTheText.ts";
 
 const {Text} = Typography;
 
 type TMessageReplyProps = {
-    message: InnerMessage | InnerForwardedMessage;
+    message: IInnerMessage | IInnerForwardedMessage;
     isInput?: boolean;
 }
 const MessageReply: FC<TMessageReplyProps> = ({message, isInput}) => {
@@ -36,7 +35,7 @@ const MessageReply: FC<TMessageReplyProps> = ({message, isInput}) => {
                 <Text strong>{ownerMessage.name.concat(" ").concat(ownerMessage.surname)}</Text>
             }
 
-            {message instanceof InnerMessage ?
+            {checkIsInnerMessage(message) ?
                 <Fragment>
                     {message.files && message.files.length > 0 &&
                         <Text italic>вложения: {message.files.length}</Text>
@@ -48,12 +47,6 @@ const MessageReply: FC<TMessageReplyProps> = ({message, isInput}) => {
                             tagName="span"
                             content={message.text}
                         />
-                        // <Text>
-                        //     {truncateTheText({
-                        //         text: message.text,
-                        //         maxLength: 35
-                        //     })}
-                        // </Text>
                     }
                 </Fragment>
                 :

@@ -2,7 +2,7 @@ import {FC, useState} from "react";
 import {Button, Form, FormItemProps, Input, Select, Typography} from "antd";
 import {useFormik} from "formik";
 import Paper from "../components/Paper/Paper.tsx";
-import {IUserAuth, TRegisterFormData} from "../models/IStore/IAuthentication.ts";
+import {IUserAuth, Sex, TRegisterFormData} from "../models/IStore/IAuthentication.ts";
 import {toFormikValidationSchema} from "zod-formik-adapter";
 import {registerUserValidation} from "../validation";
 import {TValueOf} from "../models/TUtils.ts";
@@ -25,7 +25,7 @@ const RegisterForm: FC<IRegisterForm> = ({changeForm}) => {
             email: "",
             name: "",
             surname: "",
-            sex: "MALE",
+            sex: Sex.MALE,
             age: 12,
             password: "",
             passwordConfirmation: ""
@@ -122,8 +122,8 @@ const RegisterForm: FC<IRegisterForm> = ({changeForm}) => {
                             value={formik.values.sex}
                             onChange={onSexChange}
                         >
-                            <Option value="MALE">муж</Option>
-                            <Option value="FEMALE">жен</Option>
+                            <Option value={Sex.MALE}>муж</Option>
+                            <Option value={Sex.FEMALE}>жен</Option>
                         </Select>
                     </Form.Item>
 

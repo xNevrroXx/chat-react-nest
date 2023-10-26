@@ -39,6 +39,55 @@ export type TForwardMessageWithoutFileBlobs = Prisma.MessageGetPayload<{
     }
 }>;
 
+export type TNormalizeMessageArgument =
+    Prisma.MessageGetPayload<{
+        include: {
+            files: true,
+            replyToMessage: {
+                include: {
+                    files: true
+                }
+            },
+            forwardedMessage: {
+                include: {
+                    files: true,
+                    replyToMessage: {
+                        include: {
+                            files: true
+                        }
+                    }
+                }
+            }
+        }
+    }>
+    |
+    Prisma.MessageGetPayload<{
+        include: {
+            forwardedMessage: {
+                include: {
+                    files: true,
+                    replyToMessage: {
+                        include: {
+                            files: true
+                        }
+                    }
+                }
+            }
+        }
+    }>
+    |
+    Prisma.MessageGetPayload<{
+        include: {
+            files: true,
+            replyToMessage: {
+                include: {
+                    files: true
+                }
+            }
+        }
+    }>;
+
+
 export function isForwardedMessage(obj: TMessageWithoutFileBlobs | TForwardMessageWithoutFileBlobs): obj is TForwardMessageWithoutFileBlobs {
     return (obj as TForwardMessageWithoutFileBlobs).forwardedMessage && (obj as TForwardMessageWithoutFileBlobs).forwardedMessage !== null;
 }

@@ -59,12 +59,8 @@ const useLongPress = ({
     };
 };
 
-const isTouchEvent = (event: any): event is React.TouchEvent => {
-    return "touches" in event;
-};
-
 const preventDefault: EventListener = event => {
-    if (!isTouchEvent(event)) return;
+    if (!(event instanceof TouchEvent)) return;
 
     if (event.touches.length < 2 && event.preventDefault) {
         event.preventDefault();

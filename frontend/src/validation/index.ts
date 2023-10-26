@@ -1,5 +1,5 @@
 import {z as zod} from "zod";
-import {TLoginFormData, TRegisterFormData} from "../models/IStore/IAuthentication.ts";
+import {Sex, TLoginFormData, TRegisterFormData} from "../models/IStore/IAuthentication.ts";
 
 const passwordValidation =
     zod.string({required_error: "Обязательное поле"})
@@ -25,7 +25,7 @@ const registerUserValidation =
         .extend({
             name: zod.string({required_error: "Обязательное поле"}),
             surname: zod.string({required_error: "Обязательное поле"}),
-            sex: zod.string({required_error: "Обязательное поле"}).regex(/^(MALE)|(FEMALE)$/),
+            sex: zod.nativeEnum(Sex, {required_error: "Обязательное поле"}),
             age: zod.number({required_error: "Обязательное поле"}).min(12, "Минимальное значение - 12 лет").max(120, "Максимальное значение - 120 лет\""),
             passwordConfirmation: passwordValidation
         })

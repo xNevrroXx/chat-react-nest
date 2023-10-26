@@ -3,20 +3,19 @@ import React, {FC, useCallback, useEffect, useMemo, useState} from "react";
 import DumbMessage from "../components/Message/DumbMessage.tsx";
 // types
 import {
-    IFileForRender,
-    FileType,
-    Message as MessageClass,
-    ForwardedMessage as ForwardedMessageClass, IKnownAndUnknownFiles, TAttachmentType
+    checkIsMessage,
+    FileType, IForwardedMessage, IMessage
 } from "../models/IStore/IChats.ts";
 import {IUserDto} from "../models/IStore/IAuthentication.ts";
 import {TValueOf} from "../models/TUtils.ts";
+import {IFileForRender, IKnownAndUnknownFiles, TAttachmentType} from "../models/IChat.ts";
 
 type TMessageProps = {
     userId: TValueOf<Pick<IUserDto, "id">>;
-    message: MessageClass | ForwardedMessageClass;
+    message: IMessage | IForwardedMessage;
     onOpenUsersListForForwardMessage: () => void;
-    onChooseMessageForEdit: (message: MessageClass) => void,
-    onChooseMessageForReply: (message: MessageClass | ForwardedMessageClass) => void;
+    onChooseMessageForEdit: (message: IMessage) => void,
+    onChooseMessageForReply: (message: IMessage | IForwardedMessage) => void;
 };
 
 const Message: FC<TMessageProps> = ({
@@ -35,7 +34,7 @@ const Message: FC<TMessageProps> = ({
     const [previewFile, setPreviewFile] = useState<IFileForRender | null>(null);
 
     useEffect(() => {
-        if (message instanceof MessageClass) {
+        if (checkIsMessage(message)) {
             if (!message.files || message.files.length === 0) {
                 return;
             }
@@ -97,7 +96,7 @@ const Message: FC<TMessageProps> = ({
     }, [onChooseMessageForReply, message]);
 
     const onClickMessageForEdit = useCallback(() => {
-        if (!(message instanceof MessageClass)) return;
+        if ( !checkIsMessage(message) ) return;
 
         onChooseMessageForEdit(message);
     }, [onChooseMessageForEdit, message]);
