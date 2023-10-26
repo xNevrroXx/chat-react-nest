@@ -3,7 +3,12 @@ import {createAsyncThunk} from "@reduxjs/toolkit";
 import {ChatService} from "../../services/Chat.service.ts";
 import {SocketIOService} from "../../services/SocketIO.service.ts";
 // actions
-import {handleForwardedMessageSocket, handleMessageSocket, handleUserToggleTypingSocket} from "../actions/chat.ts";
+import {
+    handleEditedMessageSocket,
+    handleForwardedMessageSocket,
+    handleMessageSocket,
+    handleUserToggleTypingSocket
+} from "../actions/chat.ts";
 import {handleUserToggleOnlineSocket} from "../actions/users.ts";
 // types
 import {
@@ -15,11 +20,10 @@ import {
     TFile,
     TForwardMessage,
     TSendMessage,
-    IUserTyping,
     Message,
     ForwardedMessage,
     InnerMessage,
-    InnerForwardedMessage, Attachment, TSendUserTyping
+    InnerForwardedMessage, Attachment, TSendUserTyping, IEditMessage
 } from "../../models/IStore/IChats.ts";
 import {RootState} from "../index.ts";
 
@@ -54,8 +58,11 @@ const connectSocket = createAsyncThunk<void, void, { state: RootState }>(
             socket?.on("user:toggle-online", (data) => {
                 thunkApi.dispatch(handleUserToggleOnlineSocket(data));
             });
-            socket?.on("user:toggle-typing", (data) => {
+            socket?.on("room:toggle-typing", (data) => {
                 thunkApi.dispatch(handleUserToggleTypingSocket(data));
+            });
+            socket?.on("message:edited", (data) => {
+                thunkApi.dispatch(handleEditedMessageSocket(data));
             });
         } catch (error) {
             return thunkApi.rejectWithValue(error);
@@ -92,6 +99,24 @@ const sendMessageSocket = createAsyncThunk<void, TSendMessage, { state: RootStat
         }
     }
 );
+
+const editMessageSocket = createAsyncThunk<void, IEditMessage, { state: RootState }>(
+    "chat/socket:edit-message",
+    (data, thunkAPI) => {
+        try {
+            const socket = thunkAPI.getState().chat.socket;
+            if (!socket) {
+                throw new Error("There is no socket");
+            }
+
+            socket.emit("message:edit", [data]);
+            return;
+        } catch (error) {
+            return thunkAPI.rejectWithValue(error);
+        }
+    }
+);
+
 const forwardMessageSocket = createAsyncThunk<void, TForwardMessage, { state: RootState }>(
     "chat/socket:forward-message",
     (data, thunkAPI) => {
@@ -199,7 +224,7 @@ const getAll = createAsyncThunk(
                     } else {
                         newMessage = {
                             ...messageHTTP,
-                            forwardedMessage: null, // temporarily
+                            forwardedMessage: null as unknown as InnerMessage, // temporarily
                             createdAt: new Date(messageHTTP.createdAt),
                             updatedAt: messageHTTP.updatedAt ? new Date(messageHTTP.updatedAt) : null
                         };
@@ -262,6 +287,7 @@ export {
     disconnectSocket,
     connectSocket,
     sendMessageSocket,
+    editMessageSocket,
     forwardMessageSocket,
     toggleUserTypingSocket
 };

@@ -13,12 +13,19 @@ import {TValueOf} from "../models/TUtils.ts";
 
 type TMessageProps = {
     userId: TValueOf<Pick<IUserDto, "id">>;
-    onChooseMessageForReply: (message: MessageClass | ForwardedMessageClass) => void;
     message: MessageClass | ForwardedMessageClass;
     onOpenUsersListForForwardMessage: () => void;
+    onChooseMessageForEdit: (message: MessageClass) => void,
+    onChooseMessageForReply: (message: MessageClass | ForwardedMessageClass) => void;
 };
 
-const Message: FC<TMessageProps> = ({userId, message, onChooseMessageForReply, onOpenUsersListForForwardMessage}) => {
+const Message: FC<TMessageProps> = ({
+                                        userId,
+                                        message,
+                                        onChooseMessageForEdit,
+                                        onChooseMessageForReply,
+                                        onOpenUsersListForForwardMessage
+}) => {
     const [isVoice, setIsVoice] = useState<boolean>(false);
     const [filesWithBlobUrls, setFilesWithBlobUrls] = useState<IKnownAndUnknownFiles>({
         known: [],
@@ -89,6 +96,12 @@ const Message: FC<TMessageProps> = ({userId, message, onChooseMessageForReply, o
         onChooseMessageForReply(message);
     }, [onChooseMessageForReply, message]);
 
+    const onClickMessageForEdit = useCallback(() => {
+        if (!(message instanceof MessageClass)) return;
+
+        onChooseMessageForEdit(message);
+    }, [onChooseMessageForEdit, message]);
+
     const isMine = useMemo((): boolean => {
         return userId === message.senderId;
     }, [message.senderId, userId]);
@@ -112,6 +125,7 @@ const Message: FC<TMessageProps> = ({userId, message, onChooseMessageForReply, o
             previewFile={previewFile}
             handlePreview={handlePreview}
             handleCancel={handleCancel}
+            onClickMessageForEdit={onClickMessageForEdit}
             onChooseMessageForReply={onClickMessageForReply}
             onChooseMessageForForward={onOpenUsersListForForwardMessage}
             message={message}

@@ -9,10 +9,21 @@ import {FileService} from "../file/file.service";
 import {AppConstantsService} from "../app.constants.service";
 import {RoomModule} from "../room/room.module";
 import {RoomService} from "../room/room.service";
+import {ParticipantService} from "../participant/participant.service";
 
 @Module({
     imports: [DatabaseModule, RoomModule],
-    providers: [AuthService, TokenService, ChatGateway, MessageService, UserService, FileService, AppConstantsService, RoomService]
+    providers: [
+        AuthService,
+        TokenService,
+        ChatGateway,
+        MessageService,
+        UserService,
+        FileService,
+        AppConstantsService,
+        RoomService,
+        ParticipantService
+    ]
 })
 export class ChatModule {
 }

@@ -12,7 +12,7 @@ import {
     TSendMessage,
     FileType,
     Message as MessageClass,
-    ForwardedMessage as ForwardedMessageClass
+    ForwardedMessage as ForwardedMessageClass, IEditMessage
 } from "../../models/IStore/IChats.ts";
 import {TValueOf} from "../../models/TUtils.ts";
 // styles
@@ -20,17 +20,23 @@ import "./input-message.scss";
 
 interface IInputMessage {
     onSendMessage: (text: TValueOf<Pick<TSendMessage, "text">>, attachments: IAttachment[]) => void;
-    sendVoiceMessage: (record: Blob) => void;
+    onSendVoiceMessage: (record: Blob) => void;
+    onSendEditedMessage: (text: TValueOf<Pick<IEditMessage, "text">>) => void;
     onTyping: () => void;
     messageForReply: MessageClass | ForwardedMessageClass | null;
+    messageForEdit: MessageClass | null;
+    removeMessageForEdit: () => void;
     removeMessageForReply: () => void;
 }
 
 const InputMessage: FC<IInputMessage> = ({
-                                             onSendMessage,
-                                             sendVoiceMessage,
                                              onTyping,
+                                             messageForEdit,
                                              messageForReply,
+                                             onSendMessage,
+                                             onSendVoiceMessage,
+                                             onSendEditedMessage,
+                                             removeMessageForEdit,
                                              removeMessageForReply
                                          }) => {
     const [message, setMessage] = useState<string>("");
@@ -70,6 +76,12 @@ const InputMessage: FC<IInputMessage> = ({
     };
 
     const sendMessage = async () => {
+        if (messageForEdit) {
+            onSendEditedMessage(message);
+            setMessage("");
+            return;
+        }
+
         const trimmedMessage = message ? message.trim() : null;
         const attachments = await files.reduce<Promise<IAttachment[]>>(async (previousValue, currentValue) => {
             const prev = await previousValue;
@@ -108,6 +120,20 @@ const InputMessage: FC<IInputMessage> = ({
                         />
                     </Flex>
                 }
+                {messageForEdit &&
+                    <Flex align="center">
+                        <MessageReply
+                            isInput={true}
+                            message={messageForEdit}
+                        />
+                        <Button
+                            size="small"
+                            type="text"
+                            icon={<DeleteOutlined/>}
+                            onClick={removeMessageForEdit}
+                        />
+                    </Flex>
+                }
                 {mediaRecorder.current && (isRecording || audioURL) ?
                     <InputDuringAudio
                         audio={audio}
@@ -116,7 +142,7 @@ const InputMessage: FC<IInputMessage> = ({
                         cleanAudio={cleanAudio}
                         isRecording={isRecording}
                         audioURL={audioURL}
-                        sendVoiceMessage={sendVoiceMessage}
+                        sendVoiceMessage={onSendVoiceMessage}
                     />
                     :
                     <InputDuringMessage

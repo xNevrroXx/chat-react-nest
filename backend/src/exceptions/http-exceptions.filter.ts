@@ -1,15 +1,15 @@
 import {Catch, ArgumentsHost, ExceptionFilter} from "@nestjs/common";
 import {Response} from "express";
-import ApiError from "./api-error";
+import HttpError from "./http-error";
 
-@Catch(ApiError)
-export class ExceptionsFilter implements ExceptionFilter {
-    catch(exception: ApiError, host: ArgumentsHost) {
-        console.log("EXCEPTION FILTER", exception);
+@Catch(HttpError)
+export class HttpExceptionsFilter implements ExceptionFilter {
+    catch(exception: HttpError, host: ArgumentsHost) {
+        console.log("EXCEPTION FILTER", exception.message);
         const ctx = host.switchToHttp();
         const response = ctx.getResponse<Response>();
         const request = ctx.getRequest<Request>();
-        const status = exception.status;
+        const status = exception.getStatus();
 
         response
             .status(status)

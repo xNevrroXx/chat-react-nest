@@ -1,6 +1,6 @@
 import {createSlice} from "@reduxjs/toolkit";
 // interfaces
-import type {IChats, TFile} from "../../models/IStore/IChats.ts";
+import type {IChats, IInnerMessage, TFile} from "../../models/IStore/IChats.ts";
 import {
     Attachment,
     checkIsInnerMessageFromSocket,
@@ -13,6 +13,7 @@ import {
 // actions
 import {createSocketInstance, getAll} from "../thunks/chat.ts";
 import {
+    handleEditedMessageSocket,
     handleForwardedMessageSocket,
     handleMessageSocket,
     handleUserToggleTypingSocket,
@@ -102,11 +103,13 @@ const chat = createSlice({
                 const message = new Message(newMessage);
 
                 if (!targetChat) {
-                    state.chats.push({
+                    state.chats.push({ // todo repair of the getting first message in the unrecognized room
                         id: message.roomId,
+                        userId: "",
+                        name: "",
+                        participants: [],
                         roomType: RoomType.PRIVATE,
                         messages: [message],
-                        usersTyping: [],
                         createdAt: new Date(),
                         updatedAt: undefined
                     });
@@ -122,7 +125,7 @@ const chat = createSlice({
 
                 const newMessage: ForwardedMessage = {
                     ...messageSocket,
-                    forwardedMessage: null, // temporarily
+                    forwardedMessage: null as unknown as IInnerMessage, // temporarily
                     createdAt: new Date(messageSocket.createdAt),
                     updatedAt: messageSocket.updatedAt ? new Date(messageSocket.updatedAt) : null
                 };
@@ -162,11 +165,13 @@ const chat = createSlice({
                 const message = new ForwardedMessage(newMessage);
 
                 if (!targetChat) {
-                    state.chats.push({
+                    state.chats.push({ // todo repair of the getting first message in the unrecognized room
                         id: message.roomId,
+                        userId: "",
+                        name: "",
+                        participants: [],
                         roomType: RoomType.PRIVATE,
                         messages: [message],
-                        usersTyping: [],
                         createdAt: new Date(),
                         updatedAt: undefined
                     });
@@ -175,16 +180,24 @@ const chat = createSlice({
                     targetChat.messages.push(message);
                 }
             })
-            .addCase(getAll.fulfilled, (state, action) => {
-                state.chats = action.payload;
+            .addCase(handleEditedMessageSocket, (state, action) => {
+                const targetChat = state.chats.find(chat => chat.id === action.payload.roomId);
+                if (!targetChat) return;
+
+                const targetMessage = targetChat.messages.find(chat => chat.id === action.payload.messageId);
+                if (!targetMessage) return;
+                targetMessage.text = action.payload.text;
             })
             .addCase(handleUserToggleTypingSocket, (state, action) => {
-                const targetChat = state.chats.find(chat => chat.id === action.payload.roomId);
+                const targetChat = state.chats.find(chat => chat.id === action.payload[0].roomId);
                 if (!targetChat) {
                     return;
                 }
 
-                targetChat.usersTyping = [...targetChat.usersTyping, action.payload];
+                targetChat.participants = action.payload;
+            })
+            .addCase(getAll.fulfilled, (state, action) => {
+                state.chats = action.payload;
             });
     }
 });

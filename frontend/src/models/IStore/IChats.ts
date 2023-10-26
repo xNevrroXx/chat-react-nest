@@ -26,7 +26,7 @@ export interface IRoom {
     userId: TValueOf<Pick<IUserDto, "id">>,
     roomType: RoomType,
     creatorUser?: TValueOf<Pick<IUserDto, "id">>,
-    usersTyping: IUserTyping[],
+    // usersTyping: IUserTyping[],
     messages: (Message | ForwardedMessage)[],
     participants: IParticipant[]
 
@@ -155,10 +155,16 @@ export type TForwardedMessageFromSocket =
     Omit<TForwardedMessageHTTP, "forwardedMessage">
     & { forwardedMessage: TInnerMessageFromSocket | IInnerForwardedMessage | null }
 
+export interface IEditedMessageFromSocket {
+    roomId: TValueOf<Pick<IRoom, "id">>,
+    messageId: TValueOf<Pick<IOriginalMessage, "id">>,
+    text: TValueOf<Pick<IOriginalMessage, "text">>
+}
 
 type TFileFromSocket = Omit<TFileHTTP, "buffer"> & {
     buffer: ArrayBuffer
 }
+
 
 
 // only client types(without responses) to send data
@@ -187,6 +193,10 @@ export interface IAttachment {
     buffer: ArrayBuffer;
 }
 
+export interface IEditMessage {
+    messageId: TValueOf<Pick<IOriginalMessage, "id">>,
+    text: TValueOf<Pick<IOriginalMessage, "text">>
+}
 
 // DTO classes
 export class InnerMessage implements IInnerMessage {

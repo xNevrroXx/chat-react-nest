@@ -1,7 +1,7 @@
 import React, {FC, Fragment, useCallback, useMemo, useRef} from "react";
 import * as classNames from "classnames";
 import {Button, Modal} from "antd";
-import {FileTwoTone} from "@ant-design/icons";
+import {FileTwoTone, EditOutlined} from "@ant-design/icons";
 import {Interweave} from "interweave";
 // own modules
 import AudioElement from "../AudioElement/AudioElement.tsx";
@@ -29,6 +29,7 @@ type TMessageProps = {
     previewFile: IFileForRender | null;
     handlePreview: (file: IFileForRender) => void;
     handleCancel: () => void;
+    onClickMessageForEdit: () => void;
     onChooseMessageForReply: () => void;
     onChooseMessageForForward: () => void;
     message: MessageClass | ForwardedMessageClass
@@ -43,6 +44,7 @@ const DumbMessage: FC<TMessageProps> = ({
                                             previewFile,
                                             handlePreview,
                                             handleCancel,
+                                            onClickMessageForEdit,
                                             onChooseMessageForReply,
                                             onChooseMessageForForward
                                         }) => {
@@ -202,7 +204,7 @@ const DumbMessage: FC<TMessageProps> = ({
         }
 
         return <ForwardedMessage message={message} isMine={isMine}/>;
-    }, [knownAttachments, files, handleCancel, isPreviewOpen, isVoice, message, previewFile, isMine]);
+    }, [knownAttachments, unknownAttachments, files, handleCancel, isPreviewOpen, isVoice, message, previewFile, isMine]);
 
     return (
         <div
@@ -230,8 +232,15 @@ const DumbMessage: FC<TMessageProps> = ({
                 <Button
                     type="text"
                     size="small"
+                    title="Изменить"
+                    icon={<EditOutlined/>}
+                    onClick={onClickMessageForEdit}
+                />
+                <Button
+                    type="text"
+                    size="small"
                     title="Ответить"
-                    icon={<ReplyOutlined/>}
+                    icon={<ReplyOutlined />}
                     onClick={onChooseMessageForReply}
                 />
             </div>

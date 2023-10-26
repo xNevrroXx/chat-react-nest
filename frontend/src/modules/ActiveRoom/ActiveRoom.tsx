@@ -16,11 +16,11 @@ import {
     FileType,
     ForwardedMessage as ForwardedMessageClass,
     Message as MessageClass,
-    RoomType
+    RoomType, IEditMessage
 } from "../../models/IStore/IChats.ts";
 // actions
 import {useAppDispatch} from "../../hooks/store.hook.ts";
-import {sendMessageSocket, toggleUserTypingSocket} from "../../store/thunks/chat.ts";
+import {editMessageSocket, sendMessageSocket, toggleUserTypingSocket} from "../../store/thunks/chat.ts";
 // styles
 import "./active-room.scss";
 
@@ -35,6 +35,7 @@ interface IActiveChatProps {
 const ActiveRoom: FC<IActiveChatProps> = ({user, room, onOpenUsersListForForwardMessage}) => {
     const dispatch = useAppDispatch();
     const [messageForReply, setMessageForReply] = useState<MessageClass | ForwardedMessageClass | null>(null);
+    const [messageForEdit, setMessageForEdit] = useState<MessageClass | null>(null);
     const [isVisibleScrollButton, setIsVisibleScrollButton] = useState<boolean>(true);
     const typingTimoutRef = useRef<number | null>(null);
     const refChatContent = useScrollTrigger({
@@ -57,6 +58,14 @@ const ActiveRoom: FC<IActiveChatProps> = ({user, room, onOpenUsersListForForward
 
     const removeMessageForReply = () => {
         setMessageForReply(null);
+    };
+
+    const onChooseMessageForEdit = (message: MessageClass) => {
+        setMessageForEdit(message);
+    };
+
+    const removeMessageForEdit = () => {
+        setMessageForEdit(null);
     };
 
     const onTyping = () => {
@@ -94,6 +103,17 @@ const ActiveRoom: FC<IActiveChatProps> = ({user, room, onOpenUsersListForForward
         }, 4000);
     };
 
+    const onSendEditedMessage = (text: TValueOf<Pick<IEditMessage, "text">>) => {
+        if (!messageForEdit) return;
+
+        void dispatch(editMessageSocket({
+                messageId: messageForEdit.id,
+                text: text
+            })
+        );
+        removeMessageForEdit();
+    };
+
     const onSendMessage = (text: TValueOf<Pick<TSendMessage, "text">>, attachments: IAttachment[]) => {
         const message: TSendMessage = {
             roomId: room.id,
@@ -106,8 +126,8 @@ const ActiveRoom: FC<IActiveChatProps> = ({user, room, onOpenUsersListForForward
             clearTimeout(typingTimoutRef.current);
             typingTimoutRef.current = null;
         }
-        removeMessageForReply();
         void dispatch(sendMessageSocket(message));
+        removeMessageForReply();
     };
 
     const sendVoiceMessage = async (record: Blob) => {
@@ -173,7 +193,9 @@ const ActiveRoom: FC<IActiveChatProps> = ({user, room, onOpenUsersListForForward
                     ref={refChatContent}
                     user={user}
                     room={room}
+                    isNeedScrollToLastMessage={!isVisibleScrollButton}
                     onChooseMessageForReply={onChooseMessageForReply}
+                    onChooseMessageForEdit={onChooseMessageForEdit}
                     onOpenUsersListForForwardMessage={onOpenUsersListForForwardMessage}
                 />
 
@@ -186,10 +208,13 @@ const ActiveRoom: FC<IActiveChatProps> = ({user, room, onOpenUsersListForForward
                     }
                     <InputMessage
                         messageForReply={messageForReply}
+                        messageForEdit={messageForEdit}
                         removeMessageForReply={removeMessageForReply}
+                        removeMessageForEdit={removeMessageForEdit}
                         onTyping={onTyping}
                         onSendMessage={onSendMessage}
-                        sendVoiceMessage={sendVoiceMessage}
+                        onSendVoiceMessage={sendVoiceMessage}
+                        onSendEditedMessage={onSendEditedMessage}
                     />
                 </div>
             </Fragment>

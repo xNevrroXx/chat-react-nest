@@ -1,7 +1,6 @@
 import {Module} from "@nestjs/common";
 import {ConfigModule} from "@nestjs/config";
 import {AppController} from "./app.controller";
-import {AppService} from "./app.service";
 import {ChatModule} from "./chat/chat.module";
 import {UserModule} from "./user/user.module";
 import {MessageModule} from "./message/message.module";
@@ -23,7 +22,7 @@ import {ParticipantService} from "./participant/participant.service";
         RoomModule
     ],
     controllers: [AppController],
-    providers: [AppService, TokenService, AuthService, AppConstantsService, ParticipantService]
+    providers: [TokenService, AuthService, AppConstantsService, ParticipantService]
 })
 export class AppModule {
 }

@@ -78,7 +78,9 @@ async (_, thunkAPI) => {
         await dispatch(createSocketInstance(response.data.accessToken));
         void dispatch(connectSocket());
 
-        if (router.state.matches.at(-1)!.route.path === "*") {
+        if (router.state.matches.at(-1)!.route.path === "*"
+            || router.state.matches.at(-1)!.route.path === ROUTES.AUTH
+        ) {
             void router.navigate(createRoute({path: ROUTES.MAIN}));
         }
 

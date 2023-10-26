@@ -5,19 +5,19 @@ import {
     WebSocketServer,
     OnGatewayDisconnect,
     OnGatewayConnection,
-    ConnectedSocket
+    ConnectedSocket, BaseWsExceptionFilter, WsException
 } from "@nestjs/websockets";
-import {UseGuards} from "@nestjs/common";
+import {UseFilters, UseGuards} from "@nestjs/common";
 import {Server, Socket} from "socket.io";
 // own modules
-import ApiError from "../exceptions/api-error";
+import HttpError from "../exceptions/http-error";
 import {WsAuth} from "../auth/ws-auth.guard";
 import {UserService} from "../user/user.service";
 import {AuthService} from "../auth/auth.service";
 import {MessageService} from "../message/message.service";
 // types
 import {IUserPayloadJWT} from "../user/IUser";
-import {TNewMessage, IUserIdToSocketId, TToggleUserTyping, TNewForwardedMessage} from "./IChat";
+import {TNewMessage, IUserIdToSocketId, TToggleUserTyping, TNewForwardedMessage, TNewEditedMessage} from "./IChat";
 import {FileService} from "../file/file.service";
 import {generateFileName} from "../utils/generateFileName";
 import {excludeSensitiveFields} from "../utils/excludeSensitiveFields";
@@ -26,7 +26,10 @@ import {TFileToClient} from "../file/IFile";
 import * as mime from "mime-types";
 import {isFulfilledPromise} from "../utils/isFulfilledPromise";
 import {RoomService} from "../room/room.service";
+import {ParticipantService} from "../participant/participant.service";
+// import {WsExceptionsFilter} from "../exceptions/ws-exceptions.filter";
 
+@UseFilters(BaseWsExceptionFilter)
 @WebSocketGateway({
     namespace: "api/chat",
     cors: {
@@ -41,7 +44,8 @@ export class ChatGateway
         private readonly messageService: MessageService,
         private readonly userService: UserService,
         private readonly authService: AuthService,
-        private readonly fileService: FileService
+        private readonly fileService: FileService,
+        private readonly participantService: ParticipantService
     ) {}
 
     @WebSocketServer()
@@ -85,18 +89,72 @@ export class ChatGateway
             isTyping,
             roomId
         });
-        const interlocutorSocket = Object.entries(this.socketToUserId)
-            .find(([, value]) => value === userId);
 
-        if (!interlocutorSocket) {
-            return;
+        const participants = await this.participantService.findMany({
+            where: {
+                roomId: roomId
+            },
+            include: {
+                user: {
+                    include: {
+                        userOnline: true,
+                        userTyping: true
+                    }
+                }
+            }
+        });
+        const normalizedParticipants = participants.map(this.participantService.normalize);
+        normalizedParticipants.forEach(participant => {
+            const socketId = Object.entries(this.socketToUserId)
+                .find(([socketId, userId]) => participant.userId === userId && socketId !== client.id);
+
+            if (!socketId) return;
+            client.broadcast
+                .to(socketId)
+                .emit("room:toggle-typing", normalizedParticipants);
+        });
+    }
+
+    @UseGuards(WsAuth)
+    @SubscribeMessage("message:edit")
+    async handleEditMessage(@ConnectedSocket() client, @MessageBody() message: TNewEditedMessage) {
+        const senderPayloadJWT: IUserPayloadJWT = client.user;
+
+        const sender = await this.userService.findOne({
+            id: senderPayloadJWT.id
+        });
+        if (!sender) {
+            throw HttpError.BadRequest("Не найден отправитель сообщения");
         }
-        // client.broadcast
-        //     .to(interlocutorSocket[0])
-        //     .emit("user:toggle-typing", {
-        //         userTargetId: typingUserId,
-        //         isTyping: typingInfo.isTyping
-        //     });
+
+        const updatedMessage = await this.messageService.update({
+            where: {
+                id: message.messageId
+            },
+            data: {
+                text: message.text
+            }
+        });
+
+        const participants = await this.participantService.findMany({
+            where: {
+                roomId: updatedMessage.roomId
+            }
+        });
+        participants.forEach(participant => {
+            const socketId = Object.entries(this.socketToUserId)
+                .find(([, userId]) => participant.userId === userId);
+            const editedMessageInfo = {
+                roomId: updatedMessage.roomId,
+                ...message
+            };
+
+            client.emit("message:edited", editedMessageInfo);
+            if (!socketId) return;
+            client
+                .to(socketId)
+                .emit("message:edited", editedMessageInfo);
+        });
     }
 
     @UseGuards(WsAuth)
@@ -108,7 +166,7 @@ export class ChatGateway
             id: senderPayloadJWT.id
         });
         if (!sender) {
-            throw ApiError.BadRequest("Не найден отправитель сообщения");
+            throw HttpError.BadRequest("Не найден отправитель сообщения");
         }
         let room: Room;
         if (!message.roomId) {
@@ -128,7 +186,7 @@ export class ChatGateway
             id: message.forwardedMessageId
         });
         if (!forwardedMessage) {
-            throw ApiError.BadRequest("Пересылаемое сообщение не существует");
+            throw HttpError.BadRequest("Пересылаемое сообщение не существует");
         }
 
         const newMessage = await this.messageService.create({
@@ -180,7 +238,7 @@ export class ChatGateway
             id: senderPayloadJWT.id
         });
         if (!sender) {
-            throw ApiError.BadRequest("Не найден отправитель сообщения");
+            throw HttpError.BadRequest("Не найден отправитель сообщения");
         }
 
         let room: Room;
@@ -278,7 +336,7 @@ export class ChatGateway
             const fileInfo = excludeSensitiveFields(file, ["fileName", "messageId"]) as TFileToClient;
             const attachment = message.attachments.find(fileInfoMessage => fileInfoMessage.originalName === fileInfo.originalName);
             if (!attachment) {
-                throw ApiError.InternalServerError("Не удалось сопоставить пришедший и отправляемый файлы");
+                throw HttpError.InternalServerError("Не удалось сопоставить пришедший и отправляемый файлы");
             }
             fileInfo.buffer = attachment.buffer;
             return fileInfo;

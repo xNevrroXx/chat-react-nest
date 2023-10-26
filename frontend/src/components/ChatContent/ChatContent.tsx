@@ -1,4 +1,4 @@
-import React, {forwardRef, useMemo} from "react";
+import React, {forwardRef, useEffect, useImperativeHandle, useMemo, useRef} from "react";
 import * as classNames from "classnames";
 // own modules
 import Message from "../../HOC/Message.tsx";
@@ -17,18 +17,25 @@ import "./chat-content.scss";
 interface IChatContentProps {
     className?: string,
     user: IUserDto;
-    room: IRoom
+    room: IRoom,
+    isNeedScrollToLastMessage: boolean,
+    onChooseMessageForEdit: (message: MessageClass) => void,
     onChooseMessageForReply: (message: MessageClass | ForwardedMessageClass) => void,
-    onOpenUsersListForForwardMessage: (forwardedMessageId: TValueOf<Pick<TForwardMessage, "forwardedMessageId">>) => void;
+    onOpenUsersListForForwardMessage: (forwardedMessageId: TValueOf<Pick<TForwardMessage, "forwardedMessageId">>) => void
 }
 
 const ChatContent = forwardRef<HTMLDivElement, IChatContentProps>(({
-                                                           className,
-                                                           user,
-                                                           room,
-                                                           onChooseMessageForReply,
-                                                           onOpenUsersListForForwardMessage
-                                                       }, ref) => {
+                                                                       className,
+                                                                       user,
+                                                                       room,
+                                                                       onChooseMessageForEdit,
+                                                                       onChooseMessageForReply,
+                                                                       isNeedScrollToLastMessage,
+                                                                       onOpenUsersListForForwardMessage
+                                                                   }, outerRef) => {
+    const innerRef = useRef<HTMLDivElement | null>(null);
+
+    useImperativeHandle(outerRef, () => innerRef.current!, []);
 
     const listMessages = useMemo(() => {
         if (!room) {
@@ -41,6 +48,7 @@ const ChatContent = forwardRef<HTMLDivElement, IChatContentProps>(({
                     key={message.id}
                     userId={user.id}
                     message={message}
+                    onChooseMessageForEdit={onChooseMessageForEdit}
                     onChooseMessageForReply={onChooseMessageForReply}
                     onOpenUsersListForForwardMessage={() => onOpenUsersListForForwardMessage(message.id)}
                 />
@@ -48,9 +56,15 @@ const ChatContent = forwardRef<HTMLDivElement, IChatContentProps>(({
         });
     }, [room, user, onChooseMessageForReply, onOpenUsersListForForwardMessage]);
 
+    useEffect(() => {
+        if (!innerRef.current || !isNeedScrollToLastMessage) return;
+
+        innerRef.current.scrollTo(0, innerRef.current.scrollHeight);
+    }, [isNeedScrollToLastMessage, listMessages]);
+
     return (
         <div
-            ref={ref}
+            ref={innerRef}
             className={classNames("chat-content", className)}
         >
             <div className="chat-content__wrapper">
@@ -58,6 +72,6 @@ const ChatContent = forwardRef<HTMLDivElement, IChatContentProps>(({
             </div>
         </div>
     );
-})
+});
 
 export default ChatContent;

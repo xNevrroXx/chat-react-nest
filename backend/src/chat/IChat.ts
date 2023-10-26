@@ -18,6 +18,11 @@ export type TNewForwardedMessage = {
     forwardedMessageId: TValueOf<Pick<Message, "id">>;
 }
 
+export type TNewEditedMessage = {
+    messageId: TValueOf<Pick<Message, "id">>;
+    text: TValueOf<Pick<Message, "text">>;
+}
+
 export interface IGetAttachments {
     attachments: IAttachment[]
 }

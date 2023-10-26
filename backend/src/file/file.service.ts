@@ -3,7 +3,7 @@ import {Injectable} from "@nestjs/common";
 import {DatabaseService} from "../database/database.service";
 import {AppConstantsService} from "../app.constants.service";
 import {type File, Prisma} from "@prisma/client";
-import ApiError from "../exceptions/api-error";
+import HttpError from "../exceptions/http-error";
 import * as path from "path";
 import {TFileToClient} from "./IFile";
 import {excludeSensitiveFields} from "../utils/excludeSensitiveFields";
@@ -38,7 +38,7 @@ export class FileService {
         const pathToFile = path.join(this.constants.USERS_DATA_FOLDER_PATH, filename);
         fs.writeFile(pathToFile, buffer, (error) => {
             if (error) {
-                throw ApiError.InternalServerError();
+                throw HttpError.InternalServerError();
             }
         });
     }

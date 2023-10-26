@@ -1,8 +1,39 @@
 import {Injectable} from "@nestjs/common";
-import {Prisma} from "@prisma/client";
+import {Participant, Prisma, Room} from "@prisma/client";
+import {DatabaseService} from "../database/database.service";
+import {TNormalizedParticipant} from "./IParticipant";
 
 @Injectable()
 export class ParticipantService {
+
+    constructor(
+        private readonly prisma: DatabaseService
+    ) {
+    }
+
+    async findMany<T extends Prisma.ParticipantInclude>(
+        params: {
+            skip?: number;
+            take?: number;
+            cursor?: Prisma.ParticipantWhereUniqueInput;
+            where?: Prisma.ParticipantWhereInput;
+            orderBy?: Prisma.ParticipantOrderByWithRelationInput;
+            select?: Prisma.ParticipantSelect;
+            include?: T;
+        }
+    ): Promise<Prisma.ParticipantGetPayload<{include: T}>[] | Participant[]> {
+        const {skip, take, cursor, where, orderBy, include} = params;
+
+        return this.prisma.participant.findMany({
+            skip,
+            take,
+            cursor,
+            where,
+            orderBy,
+            include
+        });
+    }
+
     normalize(
         participant: Prisma.ParticipantGetPayload<{
             include: {
@@ -14,7 +45,7 @@ export class ParticipantService {
                     }
                 }
             }>
-    ) {
+    ): TNormalizedParticipant {
         const userNickname = participant.user.name + " " + participant.user.surname;
         const isOnline = participant.user.userOnline ? participant.user.userOnline.isOnline : false;
         const isTyping = participant.user.userTyping ? participant.user.userTyping.isTyping : false;
