@@ -20,9 +20,9 @@ const store = configureStore({
               ignoredActions: [
                   "chat/socket:create-instance/fulfilled",
                   "chat/get-all/fulfilled",
-                  "chat/socket:handle-message",
-                  "chat/socket:send-message/pending",
-                  "chat/socket:send-message/fulfilled",
+                  "chat/socket:room:handle-message",
+                  "chat/socket:room:send-message/pending",
+                  "chat/socket:room:send-message/fulfilled",
 
                   "users/get-all/fulfilled"
               ],

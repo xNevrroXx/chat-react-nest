@@ -5,7 +5,6 @@ import HttpError from "./http-error";
 @Catch(HttpError)
 export class HttpExceptionsFilter implements ExceptionFilter {
     catch(exception: HttpError, host: ArgumentsHost) {
-        console.log("EXCEPTION FILTER", exception.message);
         const ctx = host.switchToHttp();
         const response = ctx.getResponse<Response>();
         const request = ctx.getRequest<Request>();

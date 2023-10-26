@@ -105,26 +105,29 @@ export class ChatGateway
         });
         const normalizedParticipants = participants.map(this.participantService.normalize);
         normalizedParticipants.forEach(participant => {
-            const socketId = Object.entries(this.socketToUserId)
+            const socketInfo: [string, string] | undefined = Object.entries(this.socketToUserId)
                 .find(([socketId, userId]) => participant.userId === userId && socketId !== client.id);
 
-            if (!socketId) return;
+            if (!socketInfo) return;
+            const excludingThisUserTypingInfo = normalizedParticipants
+                .filter(participant => participant.userId !== socketInfo[1]);
+
             client.broadcast
-                .to(socketId)
-                .emit("room:toggle-typing", normalizedParticipants);
+                .to(socketInfo[0])
+                .emit("room:toggle-typing", excludingThisUserTypingInfo);
         });
     }
 
     @UseGuards(WsAuth)
     @SubscribeMessage("message:edit")
-    async handleEditMessage(@ConnectedSocket() client, @MessageBody() message: TNewEditedMessage) {
+    async handleEditedMessage(@ConnectedSocket() client, @MessageBody() message: TNewEditedMessage) {
         const senderPayloadJWT: IUserPayloadJWT = client.user;
 
         const sender = await this.userService.findOne({
             id: senderPayloadJWT.id
         });
         if (!sender) {
-            throw HttpError.BadRequest("Не найден отправитель сообщения");
+            throw new WsException("Не найден отправитель сообщения");
         }
 
         const updatedMessage = await this.messageService.update({
@@ -135,6 +138,9 @@ export class ChatGateway
                 text: message.text
             }
         });
+        if (!updatedMessage || updatedMessage.senderId !== sender.id) {
+            throw new WsException("Сообщение либо не существует, либо вы пытаетесь изменить стороннее сообщение");
+        }
 
         const participants = await this.participantService.findMany({
             where: {

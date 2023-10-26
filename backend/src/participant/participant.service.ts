@@ -39,7 +39,6 @@ export class ParticipantService {
             include: {
                     user: {
                         include: {
-                            userOnline: true,
                             userTyping: true
                         }
                     }
@@ -47,11 +46,9 @@ export class ParticipantService {
             }>
     ): TNormalizedParticipant {
         const userNickname = participant.user.name + " " + participant.user.surname;
-        const isOnline = participant.user.userOnline ? participant.user.userOnline.isOnline : false;
         const isTyping = participant.user.userTyping ? participant.user.userTyping.isTyping : false;
         const participantInfo = {
             ...participant,
-            isOnline: isOnline,
             isTyping: isTyping,
             nickname: userNickname
         };

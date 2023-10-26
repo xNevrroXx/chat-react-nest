@@ -18,7 +18,7 @@ import {
     handleEditedMessageSocket,
     handleForwardedMessageSocket,
     handleMessageSocket,
-    handleUserToggleTypingSocket,
+    handleChangeUserTypingSocket,
     setUserId
 } from "../actions/chat.ts";
 
@@ -179,7 +179,7 @@ const chat = createSlice({
                 if (!targetMessage) return;
                 targetMessage.text = action.payload.text;
             })
-            .addCase(handleUserToggleTypingSocket, (state, action) => {
+            .addCase(handleChangeUserTypingSocket, (state, action) => {
                 const targetChat = state.chats.find(chat => chat.id === action.payload[0].roomId);
                 if (!targetChat) {
                     return;

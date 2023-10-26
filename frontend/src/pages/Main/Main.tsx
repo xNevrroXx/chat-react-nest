@@ -1,4 +1,4 @@
-import {Fragment, useEffect, useState} from "react";
+import {Fragment, useCallback, useEffect, useState} from "react";
 import {Modal} from "antd";
 import {useNavigate} from "react-router-dom";
 // own modules
@@ -58,10 +58,10 @@ const Main = () => {
             })
         );
     };
-    const openUsersListForForwardMessage = (forwardedMessageId: TValueOf<Pick<TForwardMessage, "forwardedMessageId">>) => {
+    const openUsersListForForwardMessage = useCallback((forwardedMessageId: TValueOf<Pick<TForwardMessage, "forwardedMessageId">>) => {
         setForwardedMessageId(forwardedMessageId);
         setIsOpenModalForForwardMessage(true);
-    };
+    }, []);
 
     const onCloseForwardModal = () => {
         setIsOpenModalForForwardMessage(false);

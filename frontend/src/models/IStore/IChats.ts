@@ -38,7 +38,6 @@ export interface IParticipant {
     roomId: TValueOf<Pick<IRoom, "id">>,
     userId: TValueOf<Pick<IUserDto, "id">>,
     nickname: string,
-    isOnline: boolean,
     isTyping: boolean
 }
 

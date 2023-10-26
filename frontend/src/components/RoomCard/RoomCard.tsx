@@ -5,6 +5,7 @@ import {Avatar, Typography} from "antd";
 import {IRoom, RoomType} from "../../models/IStore/IChats.ts";
 // styles
 import "./room-card.scss";
+import {useAppSelector} from "../../hooks/store.hook.ts";
 
 const {Title, Text} = Typography;
 
@@ -14,6 +15,11 @@ interface IUserCardProps {
 }
 
 const RoomCard:FC<IUserCardProps> = ({room, onClick}) => {
+    const interlocutor = useAppSelector(state => {
+        if (room.roomType === RoomType.GROUP) return;
+        return state.users.users.find(user => user.id === room.participants[0].userId);
+    });
+
     return (
         <li
             tabIndex={0}
@@ -35,7 +41,7 @@ const RoomCard:FC<IUserCardProps> = ({room, onClick}) => {
                 <Text>
                     { room.roomType === RoomType.GROUP
                         ? "Группа"
-                        : room.participants[0].isOnline
+                        : interlocutor && interlocutor.userOnline.isOnline
                             ? "В сети" : "Не в сети"
                     }
                 </Text>

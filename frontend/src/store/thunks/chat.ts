@@ -7,9 +7,9 @@ import {
     handleEditedMessageSocket,
     handleForwardedMessageSocket,
     handleMessageSocket,
-    handleUserToggleTypingSocket
+    handleChangeUserTypingSocket
 } from "../actions/chat.ts";
-import {handleUserToggleOnlineSocket} from "../actions/users.ts";
+import {handleChangeUserOnlineSocket} from "../actions/users.ts";
 // types
 import {
     checkIsInnerMessageHTTP,
@@ -54,10 +54,10 @@ const connectSocket = createAsyncThunk<void, void, { state: RootState }>(
                 thunkApi.dispatch(handleForwardedMessageSocket(data));
             });
             socket?.on("user:toggle-online", (data) => {
-                thunkApi.dispatch(handleUserToggleOnlineSocket(data));
+                thunkApi.dispatch(handleChangeUserOnlineSocket(data));
             });
             socket?.on("room:toggle-typing", (data) => {
-                thunkApi.dispatch(handleUserToggleTypingSocket(data));
+                thunkApi.dispatch(handleChangeUserTypingSocket(data));
             });
             socket?.on("message:edited", (data) => {
                 thunkApi.dispatch(handleEditedMessageSocket(data));
@@ -82,7 +82,7 @@ const disconnectSocket = createAsyncThunk<void, void, { state: RootState }>(
 );
 
 const sendMessageSocket = createAsyncThunk<void, TSendMessage, { state: RootState }>(
-    "chat/socket:send-message",
+    "chat/socket:room:send-message",
     (data, thunkAPI) => {
         try {
             const socket = thunkAPI.getState().chat.socket;
@@ -99,7 +99,7 @@ const sendMessageSocket = createAsyncThunk<void, TSendMessage, { state: RootStat
 );
 
 const editMessageSocket = createAsyncThunk<void, IEditMessage, { state: RootState }>(
-    "chat/socket:edit-message",
+    "chat/socket:room:edit-message",
     (data, thunkAPI) => {
         try {
             const socket = thunkAPI.getState().chat.socket;
@@ -116,7 +116,7 @@ const editMessageSocket = createAsyncThunk<void, IEditMessage, { state: RootStat
 );
 
 const forwardMessageSocket = createAsyncThunk<void, TForwardMessage, { state: RootState }>(
-    "chat/socket:forward-message",
+    "chat/socket:room:forward-message",
     (data, thunkAPI) => {
         try {
             const socket = thunkAPI.getState().chat.socket;
@@ -133,7 +133,7 @@ const forwardMessageSocket = createAsyncThunk<void, TForwardMessage, { state: Ro
 );
 
 const toggleUserTypingSocket = createAsyncThunk<void, TSendUserTyping, { state: RootState }>(
-    "chat/socket:send-toggle-typing",
+    "chat/socket:room:send-toggle-typing",
     (data, thunkAPI) => {
         try {
             const socket = thunkAPI.getState().chat.socket;

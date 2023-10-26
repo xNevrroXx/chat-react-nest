@@ -16,6 +16,7 @@ import {
 import {TValueOf} from "../../models/TUtils.ts";
 // styles
 import "./input-message.scss";
+import {isSpecialKey} from "../../utils/checkIsNotSpecialKey.ts";
 
 interface IInputMessage {
     onSendMessage: (text: TValueOf<Pick<TSendMessage, "text">>, attachments: IAttachment[]) => void;
@@ -73,7 +74,9 @@ const InputMessage: FC<IInputMessage> = ({
             || !message
             || message.length === 0
         ) {
-            onTyping();
+            if ( !isSpecialKey(event) ) {
+                onTyping();
+            }
             return;
         }
 

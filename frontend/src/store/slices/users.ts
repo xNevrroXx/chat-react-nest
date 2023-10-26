@@ -3,7 +3,7 @@ import {createSlice} from "@reduxjs/toolkit";
 import {getAll} from "../thunks/users.ts";
 // types
 import type {IUsers} from "../../models/IStore/IUsers.ts";
-import {handleUserToggleOnlineSocket} from "../actions/users.ts";
+import {handleChangeUserOnlineSocket} from "../actions/users.ts";
 
 
 const initialState: IUsers = {
@@ -19,7 +19,7 @@ const users = createSlice({
             .addCase(getAll.fulfilled, (state, action) => {
                 state.users = action.payload.users;
             })
-            .addCase(handleUserToggleOnlineSocket, (state, action) => {
+            .addCase(handleChangeUserOnlineSocket, (state, action) => {
                 const targetUser = state.users.find(user => user.id === action.payload.userId);
                 if (!targetUser) return;
                 targetUser.userOnline = action.payload;

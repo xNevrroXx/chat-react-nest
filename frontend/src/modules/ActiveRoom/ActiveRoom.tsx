@@ -1,6 +1,6 @@
 import {MenuFoldOutlined, PhoneTwoTone} from "@ant-design/icons";
 import {Avatar, Spin, Typography} from "antd";
-import React, {type FC, Fragment, useMemo, useRef, useState} from "react";
+import React, {type FC, Fragment, useCallback, useMemo, useRef, useState} from "react";
 // own modules
 import {useScrollTrigger} from "../../hooks/useScrollTrigger.hook.ts";
 import ChatContent from "../../components/ChatContent/ChatContent.tsx";
@@ -10,20 +10,21 @@ import type {IUserDto} from "../../models/IStore/IAuthentication.ts";
 import type {TValueOf} from "../../models/TUtils.ts";
 import {
     FileType,
+    IAttachment,
+    IEditMessage,
+    IForwardedMessage,
+    IMessage,
+    IRoom,
     RoomType,
     TForwardMessage,
-    TSendMessage,
-    IAttachment,
-    IRoom,
-    IEditMessage,
-    IMessage,
-    IForwardedMessage
+    TSendMessage
 } from "../../models/IStore/IChats.ts";
 // actions
-import {useAppDispatch} from "../../hooks/store.hook.ts";
+import {useAppDispatch, useAppSelector} from "../../hooks/store.hook.ts";
 import {editMessageSocket, sendMessageSocket, toggleUserTypingSocket} from "../../store/thunks/chat.ts";
 // styles
 import "./active-room.scss";
+import {truncateTheText} from "../../utils/truncateTheText.ts";
 
 const {Title} = Typography;
 
@@ -35,14 +36,25 @@ interface IActiveChatProps {
 
 const ActiveRoom: FC<IActiveChatProps> = ({user, room, onOpenUsersListForForwardMessage}) => {
     const dispatch = useAppDispatch();
+    const interlocutor = useAppSelector(state => {
+        if (room.roomType === RoomType.GROUP) return;
+        return state.users.users.find(user => user.id === room.participants[0].userId);
+    });
     const [messageForReply, setMessageForReply] = useState<IMessage | IForwardedMessage | null>(null);
     const [messageForEdit, setMessageForEdit] = useState<IMessage | null>(null);
-    const [isVisibleScrollButton, setIsVisibleScrollButton] = useState<boolean>(true);
+    const [isVisibleScrollButtonState, setIsVisibleScrollButtonState] = useState<boolean>(true);
+    const isNeedScrollToLastMessage = useRef<boolean>(true);
     const typingTimoutRef = useRef<number | null>(null);
     const refChatContent = useScrollTrigger({
         onIntersectionBreakpoint: {
-            toTop: () => setIsVisibleScrollButton(true),
-            toBottom: () => setIsVisibleScrollButton(false)
+            toTop: () => {
+                setIsVisibleScrollButtonState(true);
+                isNeedScrollToLastMessage.current = false;
+            },
+            toBottom: () => {
+                setIsVisibleScrollButtonState(false);
+                isNeedScrollToLastMessage.current = true;
+            },
         },
         breakpointPx: 350
     });
@@ -53,17 +65,17 @@ const ActiveRoom: FC<IActiveChatProps> = ({user, room, onOpenUsersListForForward
         refChatContent.current.scrollTo(0, refChatContent.current?.scrollHeight);
     };
 
-    const onChooseMessageForReply = (message: IMessage | IForwardedMessage) => {
+    const onChooseMessageForReply = useCallback((message: IMessage | IForwardedMessage) => {
         setMessageForReply(message);
-    };
+    }, []);
 
-    const removeMessageForReply = () => {
+    const removeMessageForReply = useCallback(() => {
         setMessageForReply(null);
-    };
+    }, []);
 
-    const onChooseMessageForEdit = (message: IMessage) => {
+    const onChooseMessageForEdit = useCallback((message: IMessage) => {
         setMessageForEdit(message);
-    };
+    }, []);
 
     const removeMessageForEdit = () => {
         setMessageForEdit(null);
@@ -101,6 +113,7 @@ const ActiveRoom: FC<IActiveChatProps> = ({user, room, onOpenUsersListForForward
                     isTyping: false
                 })
             );
+            typingTimoutRef.current = null;
         }, 4000);
     };
 
@@ -150,18 +163,27 @@ const ActiveRoom: FC<IActiveChatProps> = ({user, room, onOpenUsersListForForward
         }
 
         switch (room.roomType) {
-            case RoomType.PRIVATE:
-                if (room.participants[0].isOnline) {
-                    if (room.participants[0].isTyping) {
-                        return "Печатает...";
-                    }
-                    return "В сети";
+            case RoomType.PRIVATE: {
+                if (!interlocutor || !interlocutor.userOnline.isOnline) {
+                    return "Не в сети";
                 }
-                return "Не в сети";
-            case RoomType.GROUP:
-                return room.participants.map(participant => participant.nickname + "печатает...");
+                else if (room.participants[0].isTyping) {
+                    return "Печатает...";
+                }
+                return "В сети";
+            }
+            case RoomType.GROUP: {
+                const typingUsersText = room.participants
+                    .filter(participant => participant.isTyping)
+                    .map(participant => participant.nickname + "...")
+                    .join(" ");
+                return truncateTheText({
+                    text: typingUsersText,
+                    maxLength: 50
+                });
+            }
         }
-    }, [room]);
+    }, [room.participants, room.roomType, interlocutor]);
 
     const content = (): JSX.Element => {
         if (!room) {
@@ -194,14 +216,14 @@ const ActiveRoom: FC<IActiveChatProps> = ({user, room, onOpenUsersListForForward
                     ref={refChatContent}
                     user={user}
                     room={room}
-                    isNeedScrollToLastMessage={!isVisibleScrollButton}
+                    isNeedScrollToLastMessage={isNeedScrollToLastMessage}
                     onChooseMessageForReply={onChooseMessageForReply}
                     onChooseMessageForEdit={onChooseMessageForEdit}
                     onOpenUsersListForForwardMessage={onOpenUsersListForForwardMessage}
                 />
 
                 <div className="active-room__footer">
-                    {isVisibleScrollButton &&
+                    {isVisibleScrollButtonState &&
                         <ScrollDownButton
                             onClick={onClickScrollButton}
                             amountUnreadMessages={0}

@@ -1,4 +1,4 @@
-import React, {forwardRef, useEffect, useImperativeHandle, useMemo, useRef} from "react";
+import React, {forwardRef, RefObject, useEffect, useImperativeHandle, useMemo, useRef} from "react";
 import * as classNames from "classnames";
 // own modules
 import Message from "../../HOC/Message.tsx";
@@ -18,7 +18,7 @@ interface IChatContentProps {
     className?: string,
     user: IUserDto;
     room: IRoom,
-    isNeedScrollToLastMessage: boolean,
+    isNeedScrollToLastMessage: RefObject<boolean>,
     onChooseMessageForEdit: (message: IMessage) => void,
     onChooseMessageForReply: (message: IMessage | IForwardedMessage) => void,
     onOpenUsersListForForwardMessage: (forwardedMessageId: TValueOf<Pick<TForwardMessage, "forwardedMessageId">>) => void
@@ -38,7 +38,7 @@ const ChatContent = forwardRef<HTMLDivElement, IChatContentProps>(({
     useImperativeHandle(outerRef, () => innerRef.current!, []);
 
     const listMessages = useMemo(() => {
-        if (!room) {
+        if (!room.messages) {
             return null;
         }
 
@@ -54,10 +54,10 @@ const ChatContent = forwardRef<HTMLDivElement, IChatContentProps>(({
                 />
             );
         });
-    }, [room, user.id, onChooseMessageForEdit, onChooseMessageForReply, onOpenUsersListForForwardMessage]);
+    }, [room.messages, user.id, onChooseMessageForEdit, onChooseMessageForReply, onOpenUsersListForForwardMessage]);
 
     useEffect(() => {
-        if (!innerRef.current || !isNeedScrollToLastMessage) return;
+        if (!innerRef.current || !isNeedScrollToLastMessage.current) return;
 
         innerRef.current.scrollTo(0, innerRef.current.scrollHeight);
     }, [isNeedScrollToLastMessage, listMessages]);
