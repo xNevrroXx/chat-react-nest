@@ -9,6 +9,7 @@ import {
 import {IUserDto} from "../models/IStore/IAuthentication.ts";
 import {TValueOf} from "../models/TUtils.ts";
 import {IFileForRender, IKnownAndUnknownFiles, TAttachmentType} from "../models/IChat.ts";
+import {findLinksInText} from "../utils/findLinksInText.ts";
 
 type TMessageProps = {
     userId: TValueOf<Pick<IUserDto, "id">>;
@@ -16,6 +17,7 @@ type TMessageProps = {
     onOpenUsersListForForwardMessage: () => void;
     onChooseMessageForEdit: (message: IMessage) => void,
     onChooseMessageForReply: (message: IMessage | IForwardedMessage) => void;
+    handlePreview: (file: IFileForRender) => void;
 };
 
 const Message: FC<TMessageProps> = ({
@@ -23,18 +25,23 @@ const Message: FC<TMessageProps> = ({
                                         message,
                                         onChooseMessageForEdit,
                                         onChooseMessageForReply,
-                                        onOpenUsersListForForwardMessage
-}) => {
+                                        onOpenUsersListForForwardMessage,
+                                        handlePreview
+                                    }) => {
+    const [links, setLinks] = useState<string[]>([]);
     const [isVoice, setIsVoice] = useState<boolean>(false);
     const [filesWithBlobUrls, setFilesWithBlobUrls] = useState<IKnownAndUnknownFiles>({
         known: [],
         unknown: []
     });
-    const [isPreviewOpen, setIsPreviewOpen] = useState<boolean>(false);
-    const [previewFile, setPreviewFile] = useState<IFileForRender | null>(null);
 
     useEffect(() => {
         if (checkIsMessage(message)) {
+            if (message.text) {
+                const links = findLinksInText(message.text);
+                setLinks(links);
+            }
+
             if (!message.files || message.files.length === 0) {
                 return;
             }
@@ -54,8 +61,7 @@ const Message: FC<TMessageProps> = ({
                     unknown: []
                 });
                 setIsVoice(true);
-            }
-            else {
+            } else {
                 const filesWithBlobUrl = message.files.reduce<IKnownAndUnknownFiles>((previousValue, file) => {
                     let attachmentType: TAttachmentType;
                     if (file.mimeType.includes("video")) {
@@ -96,7 +102,7 @@ const Message: FC<TMessageProps> = ({
     }, [onChooseMessageForReply, message]);
 
     const onClickMessageForEdit = useCallback(() => {
-        if ( !checkIsMessage(message) ) return;
+        if (!checkIsMessage(message)) return;
 
         onChooseMessageForEdit(message);
     }, [onChooseMessageForEdit, message]);
@@ -105,25 +111,13 @@ const Message: FC<TMessageProps> = ({
         return userId === message.senderId;
     }, [message.senderId, userId]);
 
-    const handlePreview = useCallback((file: IFileForRender) => {
-        setPreviewFile(file);
-        setIsPreviewOpen(true);
-    }, []);
-
-    const handleCancel = useCallback(() => {
-        setIsPreviewOpen(false);
-        setPreviewFile(null);
-    }, []);
-
     return (
         <DumbMessage
+            links={links}
             isMine={isMine}
             isVoice={isVoice}
             files={filesWithBlobUrls}
-            isPreviewOpen={isPreviewOpen}
-            previewFile={previewFile}
             handlePreview={handlePreview}
-            handleCancel={handleCancel}
             onClickMessageForEdit={onClickMessageForEdit}
             onChooseMessageForReply={onClickMessageForReply}
             onChooseMessageForForward={onOpenUsersListForForwardMessage}

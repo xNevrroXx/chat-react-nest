@@ -1,4 +1,13 @@
-import React, {forwardRef, RefObject, useEffect, useImperativeHandle, useMemo, useRef} from "react";
+import React, {
+    forwardRef,
+    RefObject,
+    useCallback,
+    useEffect,
+    useImperativeHandle,
+    useMemo,
+    useRef,
+    useState
+} from "react";
 import * as classNames from "classnames";
 // own modules
 import Message from "../../HOC/Message.tsx";
@@ -12,6 +21,8 @@ import {
 import {TValueOf} from "../../models/TUtils.ts";
 // styles
 import "./chat-content.scss";
+import {IFileForRender} from "../../models/IChat.ts";
+import {Modal} from "antd";
 
 
 interface IChatContentProps {
@@ -34,8 +45,20 @@ const ChatContent = forwardRef<HTMLDivElement, IChatContentProps>(({
                                                                        onOpenUsersListForForwardMessage
                                                                    }, outerRef) => {
     const innerRef = useRef<HTMLDivElement | null>(null);
+    const [isPreviewOpen, setIsPreviewOpen] = useState<boolean>(false);
+    const [previewFile, setPreviewFile] = useState<IFileForRender | null>(null);
 
     useImperativeHandle(outerRef, () => innerRef.current!, []);
+
+    const handlePreview = useCallback((file: IFileForRender) => {
+        setPreviewFile(file);
+        setIsPreviewOpen(true);
+    }, []);
+
+    const handleCancel = useCallback(() => {
+        setIsPreviewOpen(false);
+        setPreviewFile(null);
+    }, []);
 
     const listMessages = useMemo(() => {
         if (!room.messages) {
@@ -48,13 +71,14 @@ const ChatContent = forwardRef<HTMLDivElement, IChatContentProps>(({
                     key={message.id}
                     userId={user.id}
                     message={message}
+                    handlePreview={handlePreview}
                     onChooseMessageForEdit={onChooseMessageForEdit}
                     onChooseMessageForReply={onChooseMessageForReply}
                     onOpenUsersListForForwardMessage={() => onOpenUsersListForForwardMessage(message.id)}
                 />
             );
         });
-    }, [room.messages, user.id, onChooseMessageForEdit, onChooseMessageForReply, onOpenUsersListForForwardMessage]);
+    }, [room.messages, user.id, handlePreview, onChooseMessageForEdit, onChooseMessageForReply, onOpenUsersListForForwardMessage]);
 
     useEffect(() => {
         if (!innerRef.current || !isNeedScrollToLastMessage.current) return;
@@ -70,6 +94,21 @@ const ChatContent = forwardRef<HTMLDivElement, IChatContentProps>(({
             <div className="chat-content__wrapper">
                 {listMessages}
             </div>
+
+            <Modal
+                className="file-input__preview-wrapper"
+                title={previewFile?.originalName}
+                open={isPreviewOpen}
+                footer={null}
+                onCancel={handleCancel}
+            >
+                <img
+                    className="file-input__preview"
+                    alt="preview image"
+                    style={{width: "100%"}}
+                    src={previewFile?.blobUrl || ""}
+                />
+            </Modal>
         </div>
     );
 });

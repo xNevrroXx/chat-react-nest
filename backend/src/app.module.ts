@@ -10,6 +10,8 @@ import {AuthService} from "./auth/auth.service";
 import {AppConstantsService} from "./app.constants.service";
 import {RoomModule} from "./room/room.module";
 import {ParticipantService} from "./participant/participant.service";
+import {LinkPreviewController} from "./link-preview/link-preview.controller";
+import {LinkPreviewService} from "./link-preview/link-preview.service";
 
 
 @Module({
@@ -21,8 +23,8 @@ import {ParticipantService} from "./participant/participant.service";
         ChatModule,
         RoomModule
     ],
-    controllers: [AppController],
-    providers: [TokenService, AuthService, AppConstantsService, ParticipantService]
+    controllers: [AppController, LinkPreviewController],
+    providers: [TokenService, AuthService, AppConstantsService, ParticipantService, LinkPreviewService]
 })
 export class AppModule {
 }

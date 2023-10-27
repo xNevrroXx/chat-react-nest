@@ -10,10 +10,10 @@
   transition: 125ms;
 
   &_active {
-    background: rgb(1, 153, 253);
+    background: rgb(190 225 248);
 
     &:hover {
-      background: rgb(1, 153, 253) !important;
+      background: rgb(190 225 248) !important;
     }
 
     &::after {

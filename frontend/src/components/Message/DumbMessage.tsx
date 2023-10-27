@@ -1,45 +1,40 @@
 import React, {FC, Fragment, useCallback, useMemo, useRef} from "react";
 import * as classNames from "classnames";
-import {Button, Modal} from "antd";
+import {Button} from "antd";
 import {FileTwoTone, EditOutlined} from "@ant-design/icons";
-import {Interweave} from "interweave";
 // own modules
+import OriginalMessage from "../OriginalMessage/OriginalMessage.tsx";
 import AudioElement from "../AudioElement/AudioElement.tsx";
 import MessageReply from "../MessageReply/MessageReply.tsx";
 import ForwardedMessage from "../ForwardedMessage/ForwardedMessage.tsx";
 import ReplyOutlined from "../../icons/ReplyOutlined.tsx";
 import PinOutlined from "../../icons/PinOutlined.tsx";
 import ForwardOutlined from "../../icons/ForwardOutlined.tsx";
-import emojiParser from "universal-emoji-parser";
 // types
+import {checkIsMessage, IForwardedMessage, IMessage} from "../../models/IStore/IChats.ts";
+import {IFileForRender, IKnownAndUnknownFiles} from "../../models/IChat.ts";
 // styles
 import "./message.scss";
-import {IFileForRender, IKnownAndUnknownFiles} from "../../models/IChat.ts";
-import {checkIsMessage, IForwardedMessage, IMessage} from "../../models/IStore/IChats.ts";
 
-type TMessageProps = {
-    isMine: boolean,
+interface IMessageProps {
+    message: IMessage | IForwardedMessage;
+    links: string[];
+    isMine: boolean;
     files: IKnownAndUnknownFiles;
     isVoice: boolean;
-    isPreviewOpen: boolean;
-    previewFile: IFileForRender | null;
     handlePreview: (file: IFileForRender) => void;
-    handleCancel: () => void;
     onClickMessageForEdit: () => void;
     onChooseMessageForReply: () => void;
     onChooseMessageForForward: () => void;
-    message: IMessage | IForwardedMessage
 }
 
-const DumbMessage: FC<TMessageProps> = ({
+const DumbMessage: FC<IMessageProps> = ({
+                                            links,
                                             message,
                                             isMine,
                                             isVoice,
                                             files,
-                                            isPreviewOpen,
-                                            previewFile,
                                             handlePreview,
-                                            handleCancel,
                                             onClickMessageForEdit,
                                             onChooseMessageForReply,
                                             onChooseMessageForForward
@@ -172,27 +167,9 @@ const DumbMessage: FC<TMessageProps> = ({
                                     {unknownAttachments}
                                 </div>
                             }
-                            {message.text &&
-                                <Interweave
-                                    tagName="p"
-                                    className="message__text"
-                                    content={emojiParser.parse(message.text)}
-                                />
+                            { message.text &&
+                                <OriginalMessage text={message.text} links={links}/>
                             }
-                            <Modal
-                                className="file-input__preview-wrapper"
-                                title={previewFile?.originalName}
-                                open={isPreviewOpen}
-                                footer={null}
-                                onCancel={handleCancel}
-                            >
-                                <img
-                                    className="file-input__preview"
-                                    alt="preview image"
-                                    style={{width: "100%"}}
-                                    src={previewFile?.blobUrl || ""}
-                                />
-                            </Modal>
                         </Fragment>
                     }
                 </Fragment>
@@ -200,7 +177,7 @@ const DumbMessage: FC<TMessageProps> = ({
         }
 
         return <ForwardedMessage message={message} isMine={isMine}/>;
-    }, [knownAttachments, unknownAttachments, files, handleCancel, isPreviewOpen, isVoice, message, previewFile, isMine]);
+    }, [links, knownAttachments, unknownAttachments, files, isVoice, message, isMine]);
 
     return (
         <div
@@ -208,16 +185,29 @@ const DumbMessage: FC<TMessageProps> = ({
             id={message.id}
             data-message-id={message.id}
             className={
-                classNames("message", isMine && "message__mine")
+                classNames("message", isMine && "message_mine")
             }
         >
+            <div className="message__content">
+                {messageContent}
+            </div>
             <div className="message__actions">
                 <Button
                     type="text"
                     size="small"
-                    title="Закрепить"
-                    icon={<PinOutlined/>}
+                    title="Ответить"
+                    icon={<ReplyOutlined/>}
+                    onClick={onChooseMessageForReply}
                 />
+                {isMine &&
+                    <Button
+                        type="text"
+                        size="small"
+                        title="Изменить"
+                        icon={<EditOutlined/>}
+                        onClick={onClickMessageForEdit}
+                    />
+                }
                 <Button
                     type="text"
                     size="small"
@@ -228,20 +218,9 @@ const DumbMessage: FC<TMessageProps> = ({
                 <Button
                     type="text"
                     size="small"
-                    title="Изменить"
-                    icon={<EditOutlined/>}
-                    onClick={onClickMessageForEdit}
+                    title="Закрепить"
+                    icon={<PinOutlined/>}
                 />
-                <Button
-                    type="text"
-                    size="small"
-                    title="Ответить"
-                    icon={<ReplyOutlined />}
-                    onClick={onChooseMessageForReply}
-                />
-            </div>
-            <div className="message__content">
-                {messageContent}
             </div>
         </div>
     );
