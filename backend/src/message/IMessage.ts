@@ -3,6 +3,7 @@ import {TValueOf} from "../models/TUtils";
 import {Prisma} from "@prisma/client";
 import {TFileToClient} from "../file/IFile";
 import {IRoom} from "../room/IRooms";
+import {ILinkPreviewInfo} from "../link-preview/ILinkPreview";
 
 export interface IChat {
     userId: TValueOf<Pick<TUserDto, "id">>;
@@ -10,7 +11,7 @@ export interface IChat {
 }
 
 export type IMessage = ( TMessage | TForwardMessage );
-export type TMessage = Omit<TMessageWithoutFileBlobs, "forwardedMessageId"> & { files: TFileToClient[] };
+export type TMessage = Omit<TMessageWithoutFileBlobs, "forwardedMessageId"> & { files: TFileToClient[], links: string[], firstLinkInfo: ILinkPreviewInfo };
 export type TForwardMessage = Omit<TForwardMessageWithoutFileBlobs, "replyToMessageId">;
 
 export type TMessageWithoutFileBlobs = Prisma.MessageGetPayload<{

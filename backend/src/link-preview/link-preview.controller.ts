@@ -11,14 +11,14 @@ export class LinkPreviewController {
     ) {}
 
     @Get()
-    async preview(@Req() request: Request) {
+    async getLinkInfo(@Req() request: Request) {
         const {url} = request.query;
         if (!url) return;
 
         try {
             const {data} = await axios.get(url as string);
             const page = await this.linkPreviewService.loadPage(data);
-            return this.linkPreviewService.generatePreviewInfo(page, url as string);
+            return await this.linkPreviewService.generatePreviewInfo(page, url as string);
         }
         catch (error) {
             throw HttpError.BadRequest("Сайт не найден: ", url);

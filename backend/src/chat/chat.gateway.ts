@@ -27,6 +27,7 @@ import * as mime from "mime-types";
 import {isFulfilledPromise} from "../utils/isFulfilledPromise";
 import {RoomService} from "../room/room.service";
 import {ParticipantService} from "../participant/participant.service";
+import {TNormalizeMessageArgument} from "../message/IMessage";
 // import {WsExceptionsFilter} from "../exceptions/ws-exceptions.filter";
 
 @UseFilters(BaseWsExceptionFilter)
@@ -139,7 +140,7 @@ export class ChatGateway
             }
         });
         if (!updatedMessage || updatedMessage.senderId !== sender.id) {
-            throw new WsException("Сообщение либо не существует, либо вы пытаетесь изменить стороннее сообщение");
+            throw new WsException("Сообщение либо не существует, либо вы пытаетесь изменить не свое сообщение");
         }
 
         const participants = await this.participantService.findMany({
@@ -238,9 +239,6 @@ export class ChatGateway
                 }
             }}>;
         const normalizedMessage = await this.messageService.normalize(newMessage);
-        
-        // const newMessageExcludingFields =
-        //     excludeSensitiveFields(newMessage, ["replyToMessageId"]); // files
 
         this.server
             .emit("message:forwarded", normalizedMessage);
@@ -349,20 +347,9 @@ export class ChatGateway
                 }
             }
         }) as Prisma.MessageGetPayload<{include: {files: true, replyToMessage: true}}>;
-        const files: TFileToClient[] = newMessage.files.map((file) => {
-            const fileInfo = excludeSensitiveFields(file, ["fileName", "messageId"]) as TFileToClient;
-            const attachment = message.attachments.find(fileInfoMessage => fileInfoMessage.originalName === fileInfo.originalName);
-            if (!attachment) {
-                throw HttpError.InternalServerError("Не удалось сопоставить пришедший и отправляемый файлы");
-            }
-            fileInfo.buffer = attachment.buffer;
-            return fileInfo;
-        });
-        const messageExcludingFields = {
-            ...newMessage,
-            files: files
-        };
+        const normalizedMessage = await this.messageService.normalize(newMessage as TNormalizeMessageArgument);
+
         this.server
-            .emit("message", messageExcludingFields);
+            .emit("message", normalizedMessage);
     }
 }

@@ -1,22 +1,19 @@
 import {Injectable} from "@nestjs/common";
 import {DatabaseService} from "../database/database.service";
 import {type Message, Prisma} from "@prisma/client";
-import {
-    IMessage,
-    isForwardedMessage,
-    TForwardMessageWithoutFileBlobs,
-    TMessageWithoutFileBlobs,
-    TNormalizeMessageArgument
-} from "./IMessage";
+import {IMessage, isForwardedMessage, TNormalizeMessageArgument} from "./IMessage";
 import {TFileToClient} from "../file/IFile";
 import {excludeSensitiveFields} from "../utils/excludeSensitiveFields";
 import {FileService} from "../file/file.service";
+import {findLinksInText} from "../utils/findLinksInText";
+import {LinkPreviewService} from "../link-preview/link-preview.service";
 
 @Injectable()
 export class MessageService {
     constructor(
         private readonly prisma: DatabaseService,
-        private readonly fileService: FileService
+        private readonly fileService: FileService,
+        private readonly linkPreviewService: LinkPreviewService
     ) {
     }
 
@@ -81,18 +78,28 @@ export class MessageService {
         let normalizedMessage;
         if (!isForwardedMessage(message)) {
             normalizedMessage = excludeSensitiveFields(message, ["forwardedMessageId", "forwardedMessage" as any]);
+            normalizedMessage.links = findLinksInText(normalizedMessage.text);
+
+            if (normalizedMessage.links.length > 0) {
+                normalizedMessage.firstLinkInfo = await this.linkPreviewService.getLinkInfo(normalizedMessage.links[0]);
+            }
 
             if (normalizedMessage.replyToMessage) {
                 if (normalizedMessage.replyToMessage.forwardedMessageId) {
                     normalizedMessage = {
                         ...normalizedMessage,
-                        replyToMessage: excludeSensitiveFields(normalizedMessage.replyToMessage, ["replyToMessageId", "files"])
+                        replyToMessage: excludeSensitiveFields(normalizedMessage.replyToMessage, ["replyToMessageId", "files", "text"])
                     };
                 } else {
                     normalizedMessage = {
                         ...normalizedMessage,
                         replyToMessage: excludeSensitiveFields(normalizedMessage.replyToMessage, ["forwardedMessageId"])
                     };
+
+                    normalizedMessage.replyToMessage.links = findLinksInText(normalizedMessage.replyToMessage.text);
+                    if (normalizedMessage.replyToMessage.links.length > 0) {
+                        normalizedMessage.replyToMessage.firstLinkInfo = await this.linkPreviewService.getLinkInfo(normalizedMessage.replyToMessage.links[0]);
+                    }
                 }
             }
             const hasFiles = normalizedMessage.files.length > 0;
@@ -125,6 +132,12 @@ export class MessageService {
                     ...normalizedMessage,
                     forwardedMessage: excludeSensitiveFields(normalizedMessage.forwardedMessage, ["forwardedMessageId"])
                 };
+
+                normalizedMessage.forwardedMessage.links = findLinksInText(normalizedMessage.replyToMessage.text);
+                if (normalizedMessage.forwardedMessage.links.length > 0) {
+                    normalizedMessage.forwardedMessage.firstLinkInfo = await this.linkPreviewService.getLinkInfo(normalizedMessage.forwardedMessage.links[0]);
+                }
+
                 if (normalizedMessage.forwardedMessage.files && normalizedMessage.forwardedMessage.files.length > 0) {
                     normalizedMessage.forwardedMessage.files = await this.fileService.addBlobToFiles(normalizedMessage.forwardedMessage.files);
                 }

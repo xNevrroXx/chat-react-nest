@@ -18,7 +18,6 @@ import "./message.scss";
 
 interface IMessageProps {
     message: IMessage | IForwardedMessage;
-    links: string[];
     isMine: boolean;
     files: IKnownAndUnknownFiles;
     isVoice: boolean;
@@ -29,7 +28,6 @@ interface IMessageProps {
 }
 
 const DumbMessage: FC<IMessageProps> = ({
-                                            links,
                                             message,
                                             isMine,
                                             isVoice,
@@ -168,7 +166,7 @@ const DumbMessage: FC<IMessageProps> = ({
                                 </div>
                             }
                             { message.text &&
-                                <OriginalMessage text={message.text} links={links}/>
+                                <OriginalMessage text={message.text} firstLinkInfo={message.firstLinkInfo}/>
                             }
                         </Fragment>
                     }
@@ -177,7 +175,7 @@ const DumbMessage: FC<IMessageProps> = ({
         }
 
         return <ForwardedMessage message={message} isMine={isMine}/>;
-    }, [links, knownAttachments, unknownAttachments, files, isVoice, message, isMine]);
+    }, [knownAttachments, unknownAttachments, files, isVoice, message, isMine]);
 
     return (
         <div
@@ -199,7 +197,7 @@ const DumbMessage: FC<IMessageProps> = ({
                     icon={<ReplyOutlined/>}
                     onClick={onChooseMessageForReply}
                 />
-                {isMine &&
+                {isMine && !isVoice &&
                     <Button
                         type="text"
                         size="small"

@@ -9,6 +9,7 @@ import {FileService} from "../file/file.service";
 import {AppConstantsService} from "../app.constants.service";
 import {MessageService} from "../message/message.service";
 import {ParticipantService} from "../participant/participant.service";
+import {LinkPreviewService} from "../link-preview/link-preview.service";
 
 @Module({
     controllers: [RoomController],
@@ -21,7 +22,8 @@ import {ParticipantService} from "../participant/participant.service";
         FileService,
         AppConstantsService,
         MessageService,
-        ParticipantService
+        ParticipantService,
+        LinkPreviewService
     ]
 })
 export class RoomModule {

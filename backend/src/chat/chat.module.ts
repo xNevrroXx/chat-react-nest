@@ -10,6 +10,7 @@ import {AppConstantsService} from "../app.constants.service";
 import {RoomModule} from "../room/room.module";
 import {RoomService} from "../room/room.service";
 import {ParticipantService} from "../participant/participant.service";
+import {LinkPreviewService} from "../link-preview/link-preview.service";
 
 @Module({
     imports: [DatabaseModule, RoomModule],
@@ -22,7 +23,8 @@ import {ParticipantService} from "../participant/participant.service";
         FileService,
         AppConstantsService,
         RoomService,
-        ParticipantService
+        ParticipantService,
+        LinkPreviewService
     ]
 })
 export class ChatModule {

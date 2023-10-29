@@ -8,10 +8,24 @@ function findLinksInText(text: string): string[] {
     for (const match of matches) {
         const maybeCombinedUrls = match[0];
         const sliced = maybeCombinedUrls.split(URL_COMBINED_REGEX);
-        links.push(...sliced);
+        links.push(...parseCombined(sliced));
     }
 
     return links;
+}
+
+function parseCombined(links: string[]): string[] {
+    const newLinks = [];
+    for (const link of links) {
+        const sliced = link.split(URL_COMBINED_REGEX);
+        if (sliced.length > 1) {
+            newLinks.push(...parseCombined(sliced));
+        }
+        else {
+            newLinks.push(link);
+        }
+    }
+    return newLinks;
 }
 
 export {findLinksInText};

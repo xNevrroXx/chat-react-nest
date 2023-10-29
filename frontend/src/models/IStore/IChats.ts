@@ -1,6 +1,7 @@
 import {IUserDto} from "./IAuthentication.ts";
 import {TValueOf} from "../TUtils.ts";
 import {SocketIOService} from "../../services/SocketIO.service.ts";
+import {ILinkPreviewInfo} from "../IResponse/ILinkPreviewInfo.ts";
 
 
 export enum FileType {
@@ -68,9 +69,11 @@ export interface IInnerForwardedMessage extends IOriginalMessage {
 
 export interface IOriginalMessage {
     id: string;
-    roomId: TValueOf<Pick<IRoom, "id">>
+    roomId: TValueOf<Pick<IRoom, "id">>;
     senderId: TValueOf<Pick<IUserDto, "id">>;
     hasRead: boolean;
+    links: string[];
+    firstLinkInfo: ILinkPreviewInfo | undefined;
     text: string | undefined | null;
 
     createdAt: string;

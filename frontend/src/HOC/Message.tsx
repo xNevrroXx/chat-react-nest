@@ -9,7 +9,6 @@ import {
 import {IUserDto} from "../models/IStore/IAuthentication.ts";
 import {TValueOf} from "../models/TUtils.ts";
 import {IFileForRender, IKnownAndUnknownFiles, TAttachmentType} from "../models/IChat.ts";
-import {findLinksInText} from "../utils/findLinksInText.ts";
 
 type TMessageProps = {
     userId: TValueOf<Pick<IUserDto, "id">>;
@@ -28,7 +27,6 @@ const Message: FC<TMessageProps> = ({
                                         onOpenUsersListForForwardMessage,
                                         handlePreview
                                     }) => {
-    const [links, setLinks] = useState<string[]>([]);
     const [isVoice, setIsVoice] = useState<boolean>(false);
     const [filesWithBlobUrls, setFilesWithBlobUrls] = useState<IKnownAndUnknownFiles>({
         known: [],
@@ -37,11 +35,6 @@ const Message: FC<TMessageProps> = ({
 
     useEffect(() => {
         if (checkIsMessage(message)) {
-            if (message.text) {
-                const links = findLinksInText(message.text);
-                setLinks(links);
-            }
-
             if (!message.files || message.files.length === 0) {
                 return;
             }
@@ -113,7 +106,6 @@ const Message: FC<TMessageProps> = ({
 
     return (
         <DumbMessage
-            links={links}
             isMine={isMine}
             isVoice={isVoice}
             files={filesWithBlobUrls}
