@@ -22,6 +22,7 @@ const AudioRecorderButton: FC<IAudioRecorderProps> = ({
                     type="text"
                     icon={<AudioTwoTone/>}
                     onClick={startRecording}
+                    size="large"
                 />
             );
         }
@@ -31,6 +32,7 @@ const AudioRecorderButton: FC<IAudioRecorderProps> = ({
                 type="text"
                 icon={<AudioTwoTone/>}
                 onClick={stopRecording}
+                size="large"
             />
         );
     }, [isRecording, startRecording, stopRecording]);

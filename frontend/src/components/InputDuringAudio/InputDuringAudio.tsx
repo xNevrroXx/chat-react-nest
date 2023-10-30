@@ -44,6 +44,7 @@ const InputDuringAudio: FC<IInputDuringAudioProps> = ({
                     type={"text"}
                     onClick={cleanAudio} 
                     icon={<CloseCircleOutlined/>}
+                    size="large"
                 />
             </div>
 
@@ -53,6 +54,7 @@ const InputDuringAudio: FC<IInputDuringAudioProps> = ({
                         type={"text"}
                         onClick={stopRecording}
                         icon={<StopCircleOutlined/>}
+                        size="large"
                     />
                 </div>
             }
@@ -74,6 +76,7 @@ const InputDuringAudio: FC<IInputDuringAudioProps> = ({
                     type="text"
                     icon={<SendOutlined/>}
                     onClick={sendVoiceMessage}
+                    size="large"
                 />
             </div>
         </Flex>

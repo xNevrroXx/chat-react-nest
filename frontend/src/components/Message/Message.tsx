@@ -27,7 +27,7 @@ interface IMessageProps {
     onChooseMessageForForward: () => void;
 }
 
-const DumbMessage: FC<IMessageProps> = ({
+const Message: FC<IMessageProps> = ({
                                             message,
                                             isMine,
                                             isVoice,
@@ -154,12 +154,12 @@ const DumbMessage: FC<IMessageProps> = ({
                         </div>
                         :
                         <Fragment>
-                            {knownAttachments &&
+                            { knownAttachments &&
                                 <div className="message__attachments-wrapper">
                                     {knownAttachments}
                                 </div>
                             }
-                            {unknownAttachments &&
+                            { unknownAttachments &&
                                 <div
                                     className={classNames("message__attachments-unknown-wrapper", message.text && "message__attachments-unknown-wrapper_with-line")}>
                                     {unknownAttachments}
@@ -224,4 +224,4 @@ const DumbMessage: FC<IMessageProps> = ({
     );
 };
 
-export default DumbMessage;
+export default Message;

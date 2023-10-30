@@ -5,8 +5,8 @@ import {useNavigate} from "react-router-dom";
 import {ROUTES} from "../../router/routes.ts";
 import {useAppDispatch, useAppSelector} from "../../hooks/store.hook.ts";
 import {createRoute} from "../../router/createRoute.ts";
-import Rooms from "../../modules/Rooms/Rooms.tsx";
-import Dialogs from "../../modules/Dialogs/Dialogs.tsx";
+import ListRooms from "../../modules/ListRooms/ListRooms.tsx";
+import ListDialogs from "../../modules/Dialogs/ListDialogs.tsx";
 import ActiveRoom from "../../modules/ActiveRoom/ActiveRoom.tsx";
 // selectors & actions
 import {forwardMessageSocket} from "../../store/thunks/chat.ts";
@@ -70,7 +70,7 @@ const Main = () => {
     return (
         <Fragment>
             <div className="messenger">
-                <Dialogs
+                <ListDialogs
                     user={user}
                     rooms={rooms}
                     onChangeDialog={onChangeDialog}
@@ -91,7 +91,7 @@ const Main = () => {
                 okButtonProps={{ style: {display: "none"} }}
                 cancelButtonProps={{ style: {display: "none"} }}
             >
-                <Rooms rooms={rooms} onClickRoom={onClickRoom}/>
+                <ListRooms rooms={rooms} onClickRoom={onClickRoom}/>
             </Modal>
         </Fragment>
     );

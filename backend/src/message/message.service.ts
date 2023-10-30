@@ -96,8 +96,10 @@ export class MessageService {
                         replyToMessage: excludeSensitiveFields(normalizedMessage.replyToMessage, ["forwardedMessageId"])
                     };
 
-                    normalizedMessage.replyToMessage.links = findLinksInText(normalizedMessage.replyToMessage.text);
-                    if (normalizedMessage.replyToMessage.links.length > 0) {
+                    if (normalizedMessage.replyToMessage.text) {
+                        normalizedMessage.replyToMessage.links = findLinksInText(normalizedMessage.replyToMessage.text);
+                    }
+                    if (normalizedMessage.replyToMessage.links && normalizedMessage.replyToMessage.links.length > 0) {
                         normalizedMessage.replyToMessage.firstLinkInfo = await this.linkPreviewService.getLinkInfo(normalizedMessage.replyToMessage.links[0]);
                     }
                 }
@@ -133,7 +135,7 @@ export class MessageService {
                     forwardedMessage: excludeSensitiveFields(normalizedMessage.forwardedMessage, ["forwardedMessageId"])
                 };
 
-                normalizedMessage.forwardedMessage.links = findLinksInText(normalizedMessage.replyToMessage.text);
+                normalizedMessage.forwardedMessage.links = findLinksInText(normalizedMessage.forwardedMessage.text);
                 if (normalizedMessage.forwardedMessage.links.length > 0) {
                     normalizedMessage.forwardedMessage.firstLinkInfo = await this.linkPreviewService.getLinkInfo(normalizedMessage.forwardedMessage.links[0]);
                 }

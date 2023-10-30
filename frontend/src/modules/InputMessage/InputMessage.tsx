@@ -63,6 +63,12 @@ const InputMessage: FC<IInputMessage> = ({
         inputRef.current?.focus();
     }, [messageForEdit, messageForReply]);
 
+    useEffect(() => {
+        if (!inputRef.current || !messageForEdit) return;
+
+        setMessage(messageForEdit.text || "");
+    }, [messageForEdit]);
+
     const onChangeMessage = (str: string) => {
         setMessage(str);
     };

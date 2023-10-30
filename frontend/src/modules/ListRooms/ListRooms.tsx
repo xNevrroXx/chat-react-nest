@@ -8,7 +8,7 @@ interface IRoomsProps {
     onClickRoom: (room: IRoom) => void;
 }
 
-const Rooms: FC<IRoomsProps> = ({rooms, onClickRoom}) => {
+const ListRooms: FC<IRoomsProps> = ({rooms, onClickRoom}) => {
 
     const list = useMemo(() => {
         return rooms.map(room =>
@@ -27,4 +27,4 @@ const Rooms: FC<IRoomsProps> = ({rooms, onClickRoom}) => {
     );
 };
 
-export default Rooms;
+export default ListRooms;

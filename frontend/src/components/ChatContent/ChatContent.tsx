@@ -55,7 +55,7 @@ const ChatContent = forwardRef<HTMLDivElement, IChatContentProps>(({
         setIsPreviewOpen(true);
     }, []);
 
-    const handleCancel = useCallback(() => {
+    const handleCancelPreview = useCallback(() => {
         setIsPreviewOpen(false);
         setPreviewFile(null);
     }, []);
@@ -100,7 +100,7 @@ const ChatContent = forwardRef<HTMLDivElement, IChatContentProps>(({
                 title={previewFile?.originalName}
                 open={isPreviewOpen}
                 footer={null}
-                onCancel={handleCancel}
+                onCancel={handleCancelPreview}
             >
                 <img
                     className="file-input__preview"

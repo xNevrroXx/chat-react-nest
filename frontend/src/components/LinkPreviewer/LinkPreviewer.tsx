@@ -29,7 +29,7 @@ const LinkPreviewer: FC<ILinkPreviewerProps> = ({data, className}) => {
     const [hasLoadImage, setHasLoadImage] = useState<boolean>(false);
 
     useEffect(() => {
-        if (!data || !data.image) return;
+        if (!data) return;
 
         void checkImage(data.image)
             .then(image => {

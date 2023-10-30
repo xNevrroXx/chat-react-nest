@@ -8,7 +8,7 @@ import {TValueOf} from "../../models/TUtils.ts";
 import {IUserDto} from "../../models/IStore/IAuthentication.ts";
 import {ILastMessageInfo} from "../../models/IChat.ts";
 // styles
-import "./dialogs.scss";
+import "./list-dialogs.scss";
 
 const {Title} = Typography;
 
@@ -19,7 +19,7 @@ interface IDialogsProps {
     onChangeDialog: (roomId: TValueOf<Pick<IRoom, "id">>) => void,
 }
 
-const Dialogs: FC<IDialogsProps> = ({user, rooms, onChangeDialog, activeChatId}) => {
+const ListDialogs: FC<IDialogsProps> = ({user, rooms, onChangeDialog, activeChatId}) => {
     const findLastMessageInfo = useCallback((room: IRoom): ILastMessageInfo | null => {
         const lastMessage = room.messages.at(-1);
         if (!lastMessage) {
@@ -66,16 +66,16 @@ const Dialogs: FC<IDialogsProps> = ({user, rooms, onChangeDialog, activeChatId})
     }, [rooms, activeChatId, onChangeDialog, findLastMessageInfo]);
 
     return (
-        <div className="dialogs">
-            <div className="dialogs__header">
+        <div className="list-dialogs">
+            <div className="list-dialogs__header">
                 <Title level={4}>Диалоги</Title>
                 <Input placeholder={"поиск..."}/>
             </div>
-            <ul className="dialogs__list">
+            <ul className="list-dialogs__list">
                 {list}
             </ul>
         </div>
     );
 };
 
-export default Dialogs;
+export default ListDialogs;

@@ -20,14 +20,6 @@ export class LinkPreviewService {
         return cheerio.load(url);
     }
 
-    getMetaTag($: cheerio.Root, name: string) {
-        return (
-            $(`meta[name=${name}]`).attr("content") ||
-            $(`meta[propety="twitter${name}"]`).attr("content") ||
-            $(`meta[property="og:${name}"]`).attr("content")
-        );
-    }
-
     async generatePreviewInfo($: cheerio.Root, url: string) {
         const data = {
             url,
@@ -48,6 +40,14 @@ export class LinkPreviewService {
             image: data.image && data.image.trim(),
             author: data.author && data.author.trim(),
         };
+    }
+
+    getMetaTag($: cheerio.Root, name: string) {
+        return (
+            $(`meta[name=${name}]`).attr("content") ||
+            $(`meta[propety="twitter${name}"]`).attr("content") ||
+            $(`meta[property="og:${name}"]`).attr("content")
+        );
     }
 
     getTitle($: cheerio.Root) {

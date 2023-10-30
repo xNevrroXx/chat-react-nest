@@ -1,10 +1,12 @@
 import React, {FC, useCallback, useEffect, useMemo, useState} from "react";
 // own modules
-import DumbMessage from "../components/Message/DumbMessage.tsx";
+import DumbMessage from "../components/Message/Message.tsx";
 // types
 import {
+    FileType,
     checkIsMessage,
-    FileType, IForwardedMessage, IMessage
+    IMessage,
+    IForwardedMessage
 } from "../models/IStore/IChats.ts";
 import {IUserDto} from "../models/IStore/IAuthentication.ts";
 import {TValueOf} from "../models/TUtils.ts";

@@ -1,5 +1,5 @@
 import React, {forwardRef, Fragment, useRef} from "react";
-import {PlusCircleTwoTone, SendOutlined} from "@ant-design/icons";
+import {PlusCircleTwoTone, SendOutlined, SmileOutlined} from "@ant-design/icons";
 import {Button, Flex} from "antd";
 import * as classNames from "classnames";
 import InputEmoji from "react-input-emoji";
@@ -36,6 +36,7 @@ const InputDuringMessage = forwardRef<HTMLDivElement, IInputDuringMessageProps>(
                                            removeFile,
                                            onChange
                                        }, ref) => {
+    const emojiButtonRef = useRef<HTMLDivElement | null>(null);
     const inputFilesRef = useRef<HTMLInputElement | null>(null);
     const buttonAddFilesRef = useRef<HTMLButtonElement | null>(null);
 
@@ -75,6 +76,8 @@ const InputDuringMessage = forwardRef<HTMLDivElement, IInputDuringMessageProps>(
                 <div className="input-message__field" style={{flexGrow: 1}}>
                     <InputEmoji
                         ref={ref}
+                        buttonRef={emojiButtonRef}
+                        theme="light"
                         set="twitter"
                         value={message}
                         onChange={onChange}
@@ -92,12 +95,22 @@ const InputDuringMessage = forwardRef<HTMLDivElement, IInputDuringMessageProps>(
                     />
                 </div>
                 <div className="input-message__btn-wrapper">
+                    <Button
+                        ref={emojiButtonRef}
+                        type="text"
+                        icon={<SmileOutlined/>}
+                        onClick={sendMessage}
+                        size="large"
+                    />
+                </div>
+                <div className="input-message__btn-wrapper">
                     {
                         message || files.length > 0 ?
                             <Button
                                 type="text"
                                 icon={<SendOutlined/>}
                                 onClick={sendMessage}
+                                size="large"
                             />
                             :
                             <AudioRecorderButton

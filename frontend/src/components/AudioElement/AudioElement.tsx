@@ -57,12 +57,14 @@ const AudioElement: FC<IVoiceRecording> = ({blob, blobURL, height = 50, width= 6
                         type={"text"}
                         onClick={pauseAudio}
                         icon={<PauseCircleOutlined/>}
+                        size="large"
                     />
                     :
                     <Button
                         type={"text"}
                         onClick={playAudio}
                         icon={<PlayCircleOutlined/>}
+                        size="large"
                     />
                 }
             </div>
@@ -74,8 +76,8 @@ const AudioElement: FC<IVoiceRecording> = ({blob, blobURL, height = 50, width= 6
                     height={height}
                     barWidth={3}
                     gap={2}
-                    barColor={"lightblue"}
-                    barPlayedColor="rgb(160, 198, 255)"
+                    barColor={"rgb(99,162,255)"}
+                    barPlayedColor={"rgb(22, 119, 255)"}
                     currentTime={audioTimestamp}
                 />
                 <audio
