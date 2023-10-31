@@ -32,8 +32,6 @@ import * as mime from "mime-types";
 import {isFulfilledPromise} from "../utils/isFulfilledPromise";
 import {RoomService} from "../room/room.service";
 import {ParticipantService} from "../participant/participant.service";
-import {TNormalizeMessageArgument} from "../message/TMessage";
-// import {WsExceptionsFilter} from "../exceptions/ws-exceptions.filter";
 
 @UseFilters(BaseWsExceptionFilter)
 @WebSocketGateway({
@@ -215,6 +213,12 @@ export class ChatGateway
             throw new WsException("Сообщение либо не существует, либо вы пытаетесь изменить не свое сообщение");
         }
 
+        const editedMessageInfo = {
+            roomId: updatedMessage.roomId,
+            ...message
+        };
+
+        client.emit("message:edited", editedMessageInfo);
         const participants = await this.participantService.findMany({
             where: {
                 roomId: updatedMessage.roomId
@@ -223,12 +227,7 @@ export class ChatGateway
         participants.forEach(participant => {
             const socketId = Object.entries(this.socketToUserId)
                 .find(([, userId]) => participant.userId === userId);
-            const editedMessageInfo = {
-                roomId: updatedMessage.roomId,
-                ...message
-            };
 
-            client.emit("message:edited", editedMessageInfo);
             if (!socketId) return;
             client
                 .to(socketId)
@@ -314,8 +313,21 @@ export class ChatGateway
             }}>;
         const normalizedMessage = await this.messageService.normalize(sender.id, newMessage);
 
-        this.server
-            .emit("message:forwarded", normalizedMessage);
+        client.emit("message:forwarded", normalizedMessage);
+        const participants = await this.participantService.findMany({
+            where: {
+                roomId: newMessage.roomId
+            }
+        });
+        participants.forEach(participant => {
+            const socketId = Object.entries(this.socketToUserId)
+                .find(([, userId]) => participant.userId === userId);
+
+            if (!socketId) return;
+            client
+                .to(socketId)
+                .emit("message:forwarded", normalizedMessage);
+        });
     }
 
     @UseGuards(WsAuth)
@@ -350,7 +362,7 @@ export class ChatGateway
         });
 
 
-        const attachmentPromises: Promise<Omit<File, "id" | "messageId" | "createdAt">>[] = message.attachments.map(async (value) => {
+        const attachmentPromises = message.attachments.map<Promise<Omit<File, "id" | "messageId" | "createdAt">>>(async (value, index) => {
             let extension: string;
             if (value.extension.length > 0) {
                 extension = value.extension;
@@ -358,7 +370,7 @@ export class ChatGateway
             else {
                 extension = mime.extension(value.mimeType) || value.mimeType.concat("/")[1];
             }
-            const fileName = generateFileName(sender.id, value.fileType, extension);
+            const fileName = generateFileName(sender.id, value.fileType, extension, index);
 
             return new Promise(async (resolve, reject) => {
                 this.fileService.write(value.buffer, fileName)
@@ -433,7 +445,20 @@ export class ChatGateway
             }>;
         const normalizedMessage = await this.messageService.normalize(sender.id, newMessage);
 
-        this.server
-            .emit("message", normalizedMessage);
+        client.emit("message", normalizedMessage);
+        const participants = await this.participantService.findMany({
+            where: {
+                roomId: newMessage.roomId
+            }
+        });
+        participants.forEach(participant => {
+            const socketId = Object.entries(this.socketToUserId)
+                .find(([, userId]) => participant.userId === userId);
+
+            if (!socketId) return;
+            client
+                .to(socketId)
+                .emit("message", normalizedMessage);
+        });
     }
 }

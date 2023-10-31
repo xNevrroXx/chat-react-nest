@@ -15,11 +15,11 @@ const {Title} = Typography;
 interface IDialogsProps {
     user: IUserDto,
     rooms: IRoom[],
-    activeChatId: TValueOf<Pick<IRoom, "id">> | null,
+    activeRoomId: TValueOf<Pick<IRoom, "id">> | null,
     onChangeDialog: (roomId: TValueOf<Pick<IRoom, "id">>) => void,
 }
 
-const ListDialogs: FC<IDialogsProps> = ({user, rooms, onChangeDialog, activeChatId}) => {
+const ListDialogs: FC<IDialogsProps> = ({user, rooms, onChangeDialog, activeRoomId}) => {
     const findLastMessageInfo = useCallback((room: IRoom): ILastMessageInfo | null => {
         const lastMessage = room.messages.at(-1);
         if (!lastMessage) {
@@ -57,13 +57,13 @@ const ListDialogs: FC<IDialogsProps> = ({user, rooms, onChangeDialog, activeChat
                     id={room.id}
                     onClick={() => onChangeDialog(room.id)}
                     dialogName={room.name}
-                    isActive={activeChatId === room.id}
+                    isActive={activeRoomId === room.id}
                     lastMessageInfo={lastMessageInfo}
                     roomType={room.roomType}
                 />
             );
         });
-    }, [rooms, activeChatId, onChangeDialog, findLastMessageInfo]);
+    }, [rooms, activeRoomId, onChangeDialog, findLastMessageInfo]);
 
     return (
         <div className="list-dialogs">

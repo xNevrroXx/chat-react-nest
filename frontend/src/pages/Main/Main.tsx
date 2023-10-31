@@ -33,12 +33,14 @@ const Main = () => {
 
     useEffect(() => {
         // set the first found chat as an active one
-        if (rooms.length === 0) {
+        const currentModifiedRoom = activeRoom && rooms.find(room => room.id === activeRoom.id);
+        if (currentModifiedRoom) {
+            setActiveRoom(currentModifiedRoom);
             return;
         }
 
-        setActiveRoom(rooms[0]);
-    }, [rooms]);
+        setActiveRoom(rooms[0] || null);
+    }, [rooms, activeRoom]);
 
     const onChangeDialog = (roomId: TValueOf<Pick<IRoom, "id">>) => {
         const targetRoom = rooms.find(room => room.id === roomId)!;
@@ -74,7 +76,7 @@ const Main = () => {
                     user={user}
                     rooms={rooms}
                     onChangeDialog={onChangeDialog}
-                    activeChatId={activeRoom ? activeRoom.id : null}
+                    activeRoomId={activeRoom ? activeRoom.id : null}
                 />
                 { activeRoom &&
                     <ActiveRoom

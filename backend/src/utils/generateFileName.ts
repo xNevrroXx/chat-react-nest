@@ -1,7 +1,7 @@
 import {FileType} from "@prisma/client";
 import {exhaustiveCheck} from "../chat/IChat";
 
-function generateFileName(senderId: string, typeMessage: FileType, extension: string) {
+function generateFileName(senderId: string, typeMessage: FileType, extension: string, index: number) {
     let type: null | string = null;
     switch (typeMessage) {
         case "ATTACHMENT":
@@ -17,7 +17,7 @@ function generateFileName(senderId: string, typeMessage: FileType, extension: st
             exhaustiveCheck(typeMessage);
     }
 
-    return senderId + "-" + type + "-" + Date.now() + "." + extension;
+    return senderId + "-" + type + "-" + Date.now() + "-" + index + "." + extension;
 }
 
 export {generateFileName};

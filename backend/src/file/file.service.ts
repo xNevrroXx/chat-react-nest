@@ -88,6 +88,6 @@ export class FileService {
                 });
         });
 
-        return await Promise.all(filePromises);
+        return Promise.all(filePromises);
     }
 }

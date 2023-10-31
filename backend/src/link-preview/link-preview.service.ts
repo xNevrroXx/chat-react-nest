@@ -1,7 +1,7 @@
 import {Injectable} from "@nestjs/common";
 import * as cheerio from "cheerio";
 import axios from "axios";
-import HttpError from "../exceptions/http-error";
+import {WsException} from "@nestjs/websockets";
 
 @Injectable()
 export class LinkPreviewService {
@@ -12,7 +12,8 @@ export class LinkPreviewService {
             return await this.generatePreviewInfo(page, url as string);
         }
         catch (error) {
-            throw HttpError.BadRequest("Информация о ссылке не найдена: ", url);
+            return;
+            throw new WsException("Информация о ссылке не найдена: " + url);
         }
     }
 
@@ -43,42 +44,81 @@ export class LinkPreviewService {
     }
 
     getMetaTag($: cheerio.Root, name: string) {
-        return (
-            $(`meta[name=${name}]`).attr("content") ||
-            $(`meta[propety="twitter${name}"]`).attr("content") ||
-            $(`meta[property="og:${name}"]`).attr("content")
-        );
+        try {
+            return (
+                $(`meta[name=${name}]`).attr("content") ||
+                $(`meta[propety="twitter${name}"]`).attr("content") ||
+                $(`meta[property="og:${name}"]`).attr("content")
+            );
+        }
+        catch (error) {
+            console.log("getMetaTag!!");
+        }
     }
 
     getTitle($: cheerio.Root) {
-        return this.getMetaTag($, "title") || $("title").first().text();
+        try {
+            return this.getMetaTag($, "title") || $("title").first().text();
+        }
+        catch {
+            console.log("getTitle!!");
+        }
     }
 
     async getShortTitle($: cheerio.Root, url: string): Promise<string | undefined> {
-        const searchXmlFileUrlPath = $("link[rel='search']").attr("href");
-        if (!searchXmlFileUrlPath) return;
+        try {
+            const linkSearchElem = $("link[rel='search']");
+            if (linkSearchElem.attr("title")) {
+                return linkSearchElem.attr("title");
+            }
+            const searchXmlFileUrlPath = linkSearchElem.attr("href");
+            if(!searchXmlFileUrlPath) return;
 
-        const searchXmlFileUrl = new URL(url);
-        searchXmlFileUrl.pathname = searchXmlFileUrlPath;
+            const searchXmlFileUrl = new URL(url);
+            searchXmlFileUrl.pathname = searchXmlFileUrlPath;
 
-        const {data} = await axios.get(searchXmlFileUrl.href);
-        const page = await this.loadPage(data);
-        return page("ShortName").text();
+            const {data} = await axios.get(searchXmlFileUrl.href);
+            const page = await this.loadPage(data);
+            return page("ShortName").text();
+        }
+        catch {
+            return "";
+        }
     }
 
     getFavicon($: cheerio.Root) {
-        return $("link[rel='icon']").attr("href") || $("link[rel='shortcut icon']").attr("href") || $("link[rel='alternate icon']").attr("href");
+        try {
+            return $("link[rel='icon']").attr("href") || $("link[rel='shortcut icon']").attr("href") || $("link[rel='alternate icon']").attr("href");
+        }
+        catch {
+            console.log("getFavicon!!");
+        }
     }
 
     getDescription($: cheerio.Root) {
+        try {
         return this.getMetaTag($, "description");
+        }
+        catch {
+            console.log("getDescription!!");
+        }
     }
 
     getImage($: cheerio.Root) {
+        try {
         return this.getMetaTag($, "image");
+        }
+        catch {
+            console.log("getImage!!");
+        }
     }
 
     getAuthor($: cheerio.Root) {
-        return this.getMetaTag($, "author");
+        try {
+            return this.getMetaTag($, "author");
+        }
+        catch (error) {
+            console.log("getAuthor");
+        }
     }
 }
