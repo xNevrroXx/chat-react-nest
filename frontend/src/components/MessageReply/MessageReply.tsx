@@ -1,18 +1,18 @@
 import React, {FC, Fragment} from "react";
-import {Flex, Typography} from "antd";
+import {Flex, Typography, theme} from "antd";
 import * as classNames from "classnames";
 import {Interweave} from "interweave";
 // own modules
+import {useAppSelector} from "../../hooks/store.hook.ts";
 import {messageOwnerSelector} from "../../store/selectors/messageOwnerSelector.ts";
 import {
     IInnerMessage,
     IInnerForwardedMessage, checkIsInnerMessage
 } from "../../models/IStore/IChats.ts";
-// selectors
-import {useAppSelector} from "../../hooks/store.hook.ts";
 // styles
 import "./message-reply.scss";
 
+const {useToken} = theme;
 const {Text} = Typography;
 
 type TMessageReplyProps = {
@@ -20,6 +20,7 @@ type TMessageReplyProps = {
     isInput?: boolean;
 }
 const MessageReply: FC<TMessageReplyProps> = ({message, isInput}) => {
+    const { token } = useToken();
     const ownerMessage = useAppSelector(state => messageOwnerSelector(state, message));
 
     return (
@@ -30,6 +31,7 @@ const MessageReply: FC<TMessageReplyProps> = ({message, isInput}) => {
             className={classNames("message-reply", isInput && "message-reply_input")}
             vertical
             data-reply-message-id={message.id}
+            style={{color: token.colorText}}
         >
             {ownerMessage &&
                 <Text strong>{ownerMessage.name.concat(" ").concat(ownerMessage.surname)}</Text>
@@ -43,7 +45,7 @@ const MessageReply: FC<TMessageReplyProps> = ({message, isInput}) => {
 
                     {message.text &&
                         <Interweave
-                            className="ant-typography css-dev-only-do-not-override-3mqfnx"
+                            className="message-reply__text"
                             tagName="span"
                             content={message.text}
                         />

@@ -64,7 +64,7 @@ const InputDuringMessage = forwardRef<HTMLDivElement, IInputDuringMessageProps>(
                         multiple
                         style={{display: "none"}}
                         onChange={(e) => {
-                            setFiles(e, "a");
+                            setFiles(e as never as Event, "a");
                             if (!inputFilesRef.current || inputFilesRef.current.type !== "file") {
                                 return;
                             }

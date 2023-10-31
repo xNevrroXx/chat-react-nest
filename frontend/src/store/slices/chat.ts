@@ -19,7 +19,7 @@ import {
     handleForwardedMessageSocket,
     handleMessageSocket,
     handleChangeUserTypingSocket,
-    setUserId, handleDeletedMessageSocket
+    setUserId, handleDeletedMessageSocket, handlePinnedMessageSocket
 } from "../actions/chat.ts";
 
 
@@ -105,6 +105,8 @@ const chat = createSlice({
                         participants: [],
                         roomType: RoomType.PRIVATE,
                         messages: [message],
+                        pinnedMessages: [],
+
                         createdAt: "",
                         updatedAt: undefined
                     });
@@ -163,6 +165,8 @@ const chat = createSlice({
                         participants: [],
                         roomType: RoomType.PRIVATE,
                         messages: [message],
+                        pinnedMessages: [],
+
                         createdAt: "",
                         updatedAt: undefined
                     });
@@ -170,6 +174,12 @@ const chat = createSlice({
                 else {
                     targetChat.messages.push(message);
                 }
+            })
+            .addCase(handlePinnedMessageSocket, (state, action) => {
+                const targetRoom = state.chats.find(chat => chat.id === action.payload.roomId);
+                if (!targetRoom) return;
+
+                targetRoom.pinnedMessages = action.payload.messages;
             })
             .addCase(handleEditedMessageSocket, (state, action) => {
                 const targetChat = state.chats.find(chat => chat.id === action.payload.roomId);

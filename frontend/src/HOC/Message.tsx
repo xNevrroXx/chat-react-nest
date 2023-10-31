@@ -16,7 +16,8 @@ type TMessageProps = {
     userId: TValueOf<Pick<IUserDto, "id">>;
     message: IMessage | IForwardedMessage;
     onOpenUsersListForForwardMessage: () => void;
-    onChooseMessageForEdit: (message: IMessage) => void,
+    onChooseMessageForPin: (message: IMessage | IForwardedMessage) => void;
+    onChooseMessageForEdit: (message: IMessage) => void;
     onChooseMessageForDelete: (message: IMessage | IForwardedMessage) => void;
     onChooseMessageForReply: (message: IMessage | IForwardedMessage) => void;
     handlePreview: (file: IFileForRender) => void;
@@ -25,6 +26,7 @@ type TMessageProps = {
 const Message: FC<TMessageProps> = ({
                                         userId,
                                         message,
+                                        onChooseMessageForPin,
                                         onChooseMessageForEdit,
                                         onChooseMessageForReply,
                                         onChooseMessageForDelete,
@@ -94,6 +96,10 @@ const Message: FC<TMessageProps> = ({
         }
     }, [message]);
 
+    const onClickMessageForPin = useCallback(() => {
+        onChooseMessageForPin(message);
+    }, [onChooseMessageForPin, message]);
+
     const onClickMessageForReply = useCallback(() => {
         onChooseMessageForReply(message);
     }, [onChooseMessageForReply, message]);
@@ -118,8 +124,9 @@ const Message: FC<TMessageProps> = ({
             isVoice={isVoice}
             files={filesWithBlobUrls}
             handlePreview={handlePreview}
-            onClickMessageForEdit={onClickMessageForEdit}
-            onClickMessageForDelete={onClickMessageForDelete}
+            onChooseMessageForPin={onClickMessageForPin}
+            onChooseMessageForEdit={onClickMessageForEdit}
+            onChooseMessageForDelete={onClickMessageForDelete}
             onChooseMessageForReply={onClickMessageForReply}
             onChooseMessageForForward={onOpenUsersListForForwardMessage}
             message={message}

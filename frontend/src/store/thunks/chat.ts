@@ -4,10 +4,12 @@ import {ChatService} from "../../services/Chat.service.ts";
 import {SocketIOService} from "../../services/SocketIO.service.ts";
 // actions
 import {
-    handleEditedMessageSocket,
-    handleForwardedMessageSocket,
     handleMessageSocket,
-    handleChangeUserTypingSocket, handleDeletedMessageSocket
+    handlePinnedMessageSocket,
+    handleEditedMessageSocket,
+    handleDeletedMessageSocket,
+    handleChangeUserTypingSocket,
+    handleForwardedMessageSocket
 } from "../actions/chat.ts";
 import {handleChangeUserOnlineSocket} from "../actions/users.ts";
 // types
@@ -23,7 +25,7 @@ import {
     IForwardMessage,
     IForwardedMessage,
     IInnerMessage,
-    IInnerForwardedMessage, IDeleteMessage
+    IInnerForwardedMessage, IDeleteMessage, IPinMessage
 } from "../../models/IStore/IChats.ts";
 import {RootState} from "../index.ts";
 
@@ -55,6 +57,9 @@ const connectSocket = createAsyncThunk<void, void, { state: RootState }>(
             });
             socket?.on("message", (data) => {
                 thunkApi.dispatch(handleMessageSocket(data));
+            });
+            socket?.on("message:pinned", (data) => {
+                thunkApi.dispatch(handlePinnedMessageSocket(data));
             });
             socket?.on("message:edited", (data) => {
                 thunkApi.dispatch(handleEditedMessageSocket(data));
@@ -94,6 +99,23 @@ const sendMessageSocket = createAsyncThunk<void, TSendMessage, { state: RootStat
             }
 
             socket.emit("message", [data]);
+            return;
+        } catch (error) {
+            return thunkAPI.rejectWithValue(error);
+        }
+    }
+);
+
+const pinMessageSocket  = createAsyncThunk<void, IPinMessage, { state: RootState }>(
+    "chat/socket:room:pin-message",
+    (data, thunkAPI) => {
+        try {
+            const socket = thunkAPI.getState().chat.socket;
+            if (!socket) {
+                throw new Error("There is no socket");
+            }
+
+            socket.emit("message:pin", [data]);
             return;
         } catch (error) {
             return thunkAPI.rejectWithValue(error);
@@ -305,6 +327,7 @@ export {
     disconnectSocket,
     connectSocket,
     sendMessageSocket,
+    pinMessageSocket,
     editMessageSocket,
     deleteMessageSocket,
     forwardMessageSocket,

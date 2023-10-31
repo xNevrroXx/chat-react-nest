@@ -28,7 +28,8 @@ export interface IRoom {
     roomType: RoomType,
     creatorUser?: TValueOf<Pick<IUserDto, "id">>,
     messages: (IMessage | IForwardedMessage)[],
-    participants: IParticipant[]
+    participants: IParticipant[],
+    pinnedMessages: TPinnedMessage[]
 
     createdAt: string,
     updatedAt: string | undefined | null
@@ -40,6 +41,13 @@ export interface IParticipant {
     userId: TValueOf<Pick<IUserDto, "id">>,
     nickname: string,
     isTyping: boolean
+}
+
+export type TPinnedMessage = {
+    id: string,
+    roomId: TValueOf<Pick<IRoom, "id">>,
+    messageId: TValueOf<Pick<IOriginalMessage, "id">>,
+    text: string | undefined
 }
 
 export interface IUserTyping {
@@ -138,11 +146,14 @@ export interface IForwardedMessageSocket extends IInnerForwardedMessage {
     forwardedMessage: TInnerMessageSocket | IInnerForwardedMessage
 }
 
-export interface IEditedMessageSocket {
-    roomId: TValueOf<Pick<IRoom, "id">>,
-    messageId: TValueOf<Pick<IOriginalMessage, "id">>,
-    text: TValueOf<Pick<IOriginalMessage, "text">>
+export interface IEditedMessageSocket extends IEditMessage {
+    roomId: TValueOf<Pick<IRoom, "id">>
 }
+
+export type TPinnedMessagesSocket = {
+    roomId: TValueOf<Pick<IRoom, "id">>,
+    messages: TPinnedMessage[]
+};
 
 export interface IDeletedMessageSocket {
     roomId: TValueOf<Pick<IRoom, "id">>,
@@ -185,6 +196,11 @@ export interface IDeleteMessage {
 export interface IEditMessage {
     messageId: TValueOf<Pick<IOriginalMessage, "id">>,
     text: TValueOf<Pick<IOriginalMessage, "text">>
+}
+
+export interface IPinMessage {
+    messageId: TValueOf<Pick<IOriginalMessage, "id">>,
+    roomId: TValueOf<Pick<IRoom, "id">>
 }
 
 

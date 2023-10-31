@@ -47,6 +47,11 @@ export class RoomController {
                 },
                 usersTyping: true,
                 creatorUser: true,
+                pinnedMessages: {
+                    include: {
+                        message: true
+                    }
+                },
                 messages: {
                     include: {
                         files: true,
@@ -65,7 +70,7 @@ export class RoomController {
                                 }
                             }
                         },
-                        usersDeletedThisMessage: true
+                        usersDeletedThisMessage: true,
                     },
                     orderBy: {
                         createdAt: "asc"
@@ -86,6 +91,11 @@ export class RoomController {
                 },
                 usersTyping: true,
                 creatorUser: true,
+                pinnedMessages: {
+                    include: {
+                        message: true
+                    }
+                },
                 messages: {
                     include: {
                         files: true,
@@ -136,7 +146,14 @@ export class RoomController {
                 ...unnormalizedRoom,
                 name: roomName,
                 participants: normalizedParticipants,
-                messages: normalizedMessages
+                messages: normalizedMessages,
+                pinnedMessages: unnormalizedRoom.pinnedMessages.map(pinnedMessage => {
+                    return {
+                        id: pinnedMessage.id,
+                        messageId: pinnedMessage.messageId,
+                        text: pinnedMessage.message.text
+                    };
+                })
             };
         });
 

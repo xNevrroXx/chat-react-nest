@@ -1,4 +1,4 @@
-import React, {FC, useCallback, useEffect, useMemo, useState} from "react";
+import React, {FC, useEffect, useMemo, useState} from "react";
 import {Image as ImageAntd, Typography} from "antd";
 import * as classNames from "classnames";
 // own modules

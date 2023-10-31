@@ -23,13 +23,14 @@ import {
 import {useAppDispatch, useAppSelector} from "../../hooks/store.hook.ts";
 import {
     deleteMessageSocket,
-    editMessageSocket,
+    editMessageSocket, pinMessageSocket,
     sendMessageSocket,
     toggleUserTypingSocket
 } from "../../store/thunks/chat.ts";
 // styles
 import "./active-room.scss";
 import {truncateTheText} from "../../utils/truncateTheText.ts";
+import PinnedMessagesList from "../../components/PinnedMessagesList/PinnedMessagesList.tsx";
 
 const {Text, Title} = Typography;
 
@@ -46,6 +47,7 @@ const ActiveRoom: FC<IActiveChatProps> = ({user, room, onOpenUsersListForForward
         return state.users.users.find(user => user.id === room.participants[0].userId);
     });
     const [messageForEdit, setMessageForEdit] = useState<IMessage | null>(null);
+    const [messageForPin, setMessageForPin] = useState<IMessage | IForwardedMessage | null>(null);
     const [messageForReply, setMessageForReply] = useState<IMessage | IForwardedMessage | null>(null);
     const [messageForDelete, setMessageForDelete] = useState<{
         message: IMessage | IForwardedMessage,
@@ -82,6 +84,10 @@ const ActiveRoom: FC<IActiveChatProps> = ({user, room, onOpenUsersListForForward
         setMessageForReply(null);
     }, []);
 
+    const onChooseMessageForPin = useCallback((message: IMessage | IForwardedMessage) => {
+        setMessageForPin(message);
+    }, []);
+
     const onChooseMessageForEdit = useCallback((message: IMessage) => {
         setMessageForEdit(message);
     }, []);
@@ -99,6 +105,10 @@ const ActiveRoom: FC<IActiveChatProps> = ({user, room, onOpenUsersListForForward
 
     const removeMessageForDelete = () => {
         setMessageForDelete(null);
+    };
+
+    const removeMessageForPin = () => {
+        setMessageForPin(null);
     };
 
     const onTyping = () => {
@@ -137,7 +147,7 @@ const ActiveRoom: FC<IActiveChatProps> = ({user, room, onOpenUsersListForForward
         }, 4000);
     };
 
-    const onSendDeletedMessage = () => {
+    const onDeleteMessage = () => {
         if (!messageForDelete) return;
 
         void dispatch(deleteMessageSocket({
@@ -146,6 +156,17 @@ const ActiveRoom: FC<IActiveChatProps> = ({user, room, onOpenUsersListForForward
             })
         );
         removeMessageForDelete();
+    };
+
+    const onPinMessage = () => {
+        if (!messageForPin) return;
+
+        void dispatch(pinMessageSocket({
+                roomId: room.id,
+                messageId: messageForPin.id
+            })
+        );
+        removeMessageForPin();
     };
 
     const onSendEditedMessage = (text: TValueOf<Pick<IEditMessage, "text">>) => {
@@ -242,11 +263,18 @@ const ActiveRoom: FC<IActiveChatProps> = ({user, room, onOpenUsersListForForward
                     </div>
                 </div>
 
+                { room.pinnedMessages &&
+                    <div>
+                        <PinnedMessagesList pinnedMessages={room.pinnedMessages}/>
+                    </div>
+                }
+                
                 <ChatContent
                     ref={refChatContent}
                     user={user}
                     room={room}
                     isNeedScrollToLastMessage={isNeedScrollToLastMessage}
+                    onChooseMessageForPin={onChooseMessageForPin}
                     onChooseMessageForEdit={onChooseMessageForEdit}
                     onChooseMessageForReply={onChooseMessageForReply}
                     onChooseMessageForDelete={onChooseMessageForDelete}
@@ -275,7 +303,7 @@ const ActiveRoom: FC<IActiveChatProps> = ({user, room, onOpenUsersListForForward
                 <Modal
                     title="Вы хотите удалить сообщение?"
                     onCancel={removeMessageForDelete}
-                    onOk={onSendDeletedMessage}
+                    onOk={onDeleteMessage}
                     open={!!messageForDelete}
                 >
                     {room.roomType === RoomType.PRIVATE && messageForDelete && messageForDelete.message.senderId === user.id
@@ -297,6 +325,13 @@ const ActiveRoom: FC<IActiveChatProps> = ({user, room, onOpenUsersListForForward
                             : <Text>Сообщение будет удалено у всех в этом чате.</Text>
                     }
                 </Modal>
+
+                <Modal
+                    title="Вы хотели бы закрепить сообщение?"
+                    onCancel={removeMessageForPin}
+                    onOk={onPinMessage}
+                    open={!!messageForPin}
+                />
             </Fragment>
         );
     };

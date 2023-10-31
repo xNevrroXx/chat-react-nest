@@ -100,10 +100,11 @@ model Room {
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime? @map("updated_at")
 
-  creatorUser  User?         @relation("room", fields: [creatorUserId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  messages     Message[]     @relation("room")
-  usersTyping  UserTyping[]  @relation("users_typing")
-  participants Participant[] @relation("participant")
+  creatorUser    User?           @relation("room", fields: [creatorUserId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  messages       Message[]       @relation("room")
+  usersTyping    UserTyping[]    @relation("users_typing")
+  participants   Participant[]   @relation("participant")
+  pinnedMessages PinnedMessage[] @relation("room:pinned_messages")
 
   @@map("room")
 }
@@ -133,16 +134,28 @@ model Message {
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime? @map("updated_at")
 
-  sender                  User      @relation("messages", fields: [senderId], references: [id], onDelete: NoAction, onUpdate: Cascade)
-  room                    Room      @relation("room", fields: [roomId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  replyToMessage          Message?  @relation("reply_to_message", fields: [replyToMessageId], references: [id], onDelete: NoAction, onUpdate: Cascade)
-  repliesThisMessage      Message[] @relation("reply_to_message")
-  forwardedMessage        Message?  @relation("forwarded_message", fields: [forwardedMessageId], references: [id], onDelete: NoAction, onUpdate: Cascade)
-  forwardThisMessage      Message[] @relation("forwarded_message")
-  usersDeletedThisMessage User[]    @relation("deleted_messages")
-  files                   File[]    @relation("files")
+  sender                  User            @relation("messages", fields: [senderId], references: [id], onDelete: NoAction, onUpdate: Cascade)
+  room                    Room            @relation("room", fields: [roomId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  replyToMessage          Message?        @relation("reply_to_message", fields: [replyToMessageId], references: [id], onDelete: NoAction, onUpdate: Cascade)
+  repliesThisMessage      Message[]       @relation("reply_to_message")
+  forwardedMessage        Message?        @relation("forwarded_message", fields: [forwardedMessageId], references: [id], onDelete: NoAction, onUpdate: Cascade)
+  forwardThisMessage      Message[]       @relation("forwarded_message")
+  usersDeletedThisMessage User[]          @relation("deleted_messages")
+  files                   File[]          @relation("files")
+  pinnedMessages          PinnedMessage[] @relation("message:pinned_messages")
 
   @@map("message")
+}
+
+model PinnedMessage {
+  id        String @id @default(uuid())
+  messageId String @map("message_id")
+  roomId    String @map("room_id")
+
+  message Message @relation("message:pinned_messages", fields: [messageId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  room    Room    @relation("room:pinned_messages", fields: [roomId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("pinned_message")
 }
 
 model File {

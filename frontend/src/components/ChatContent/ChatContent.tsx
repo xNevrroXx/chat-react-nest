@@ -9,15 +9,15 @@ import React, {
     useState
 } from "react";
 import * as classNames from "classnames";
+import {Modal} from "antd";
 // own modules
 import Message from "../../HOC/Message.tsx";
 import {IUserDto} from "../../models/IStore/IAuthentication.ts";
 import {IForwardedMessage, IForwardMessage, IMessage, IRoom} from "../../models/IStore/IChats.ts";
 import {TValueOf} from "../../models/TUtils.ts";
+import {IFileForRender} from "../../models/IChat.ts";
 // styles
 import "./chat-content.scss";
-import {IFileForRender} from "../../models/IChat.ts";
-import {Modal} from "antd";
 
 
 interface IChatContentProps {
@@ -25,6 +25,7 @@ interface IChatContentProps {
     user: IUserDto;
     room: IRoom,
     isNeedScrollToLastMessage: RefObject<boolean>,
+    onChooseMessageForPin: (message: IMessage | IForwardedMessage) => void,
     onChooseMessageForEdit: (message: IMessage) => void,
     onChooseMessageForReply: (message: IMessage | IForwardedMessage) => void,
     onChooseMessageForDelete: (message: IMessage | IForwardedMessage) => void,
@@ -35,6 +36,7 @@ const ChatContent = forwardRef<HTMLDivElement, IChatContentProps>(({
                                                                        className,
                                                                        user,
                                                                        room,
+                                                                       onChooseMessageForPin,
                                                                        onChooseMessageForEdit,
                                                                        onChooseMessageForReply,
                                                                        onChooseMessageForDelete,
@@ -70,6 +72,7 @@ const ChatContent = forwardRef<HTMLDivElement, IChatContentProps>(({
                     userId={user.id}
                     message={message}
                     handlePreview={handlePreview}
+                    onChooseMessageForPin={onChooseMessageForPin}
                     onChooseMessageForEdit={onChooseMessageForEdit}
                     onChooseMessageForDelete={onChooseMessageForDelete}
                     onChooseMessageForReply={onChooseMessageForReply}
@@ -77,7 +80,7 @@ const ChatContent = forwardRef<HTMLDivElement, IChatContentProps>(({
                 />
             );
         });
-    }, [room.messages, user.id, handlePreview, onChooseMessageForEdit, onChooseMessageForDelete, onChooseMessageForReply, onOpenUsersListForForwardMessage]);
+    }, [room.messages, user.id, handlePreview, onChooseMessageForPin, onChooseMessageForEdit, onChooseMessageForDelete, onChooseMessageForReply, onOpenUsersListForForwardMessage]);
 
     useEffect(() => {
         if (!innerRef.current || !isNeedScrollToLastMessage.current) return;

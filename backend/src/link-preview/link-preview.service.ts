@@ -12,7 +12,6 @@ export class LinkPreviewService {
             return await this.generatePreviewInfo(page, url as string);
         }
         catch (error) {
-            return;
             throw new WsException("Информация о ссылке не найдена: " + url);
         }
     }

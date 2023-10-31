@@ -28,6 +28,11 @@ export type TDeleteMessage = {
     isForEveryone: boolean
 }
 
+export type TPinMessage = {
+    messageId: TValueOf<Pick<Message, "id">>,
+    roomId: TValueOf<Pick<Room, "id">>
+}
+
 export interface IGetAttachments {
     attachments: IAttachment[]
 }

@@ -22,8 +22,9 @@ interface IMessageProps {
     isMine: boolean;
     isVoice: boolean;
     handlePreview: (file: IFileForRender) => void;
-    onClickMessageForEdit: () => void;
-    onClickMessageForDelete: () => void;
+    onChooseMessageForPin: () => void;
+    onChooseMessageForEdit: () => void;
+    onChooseMessageForDelete: () => void;
     onChooseMessageForReply: () => void;
     onChooseMessageForForward: () => void;
 }
@@ -34,8 +35,9 @@ const Message: FC<IMessageProps> = ({
                                         isVoice,
                                         files,
                                         handlePreview,
-                                        onClickMessageForEdit,
-                                        onClickMessageForDelete,
+                                        onChooseMessageForPin,
+                                        onChooseMessageForEdit,
+                                        onChooseMessageForDelete,
                                         onChooseMessageForReply,
                                         onChooseMessageForForward
                                     }) => {
@@ -205,7 +207,7 @@ const Message: FC<IMessageProps> = ({
                         size="small"
                         title="Изменить"
                         icon={<EditOutlined/>}
-                        onClick={onClickMessageForEdit}
+                        onClick={onChooseMessageForEdit}
                     />
                 }
                 <Button
@@ -220,13 +222,14 @@ const Message: FC<IMessageProps> = ({
                     size="small"
                     title="Закрепить"
                     icon={<PinOutlined/>}
+                    onClick={onChooseMessageForPin}
                 />
                 <Button
                     type="text"
                     size="small"
                     title="Удалить"
                     icon={<DeleteOutlined/>}
-                    onClick={onClickMessageForDelete}
+                    onClick={onChooseMessageForDelete}
                 />
             </div>
         </div>

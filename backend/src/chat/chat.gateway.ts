@@ -23,7 +23,7 @@ import {
     TToggleUserTyping,
     TNewForwardedMessage,
     TNewEditedMessage,
-    TDeleteMessage
+    TDeleteMessage, TPinMessage
 } from "./IChat";
 import {FileService} from "../file/file.service";
 import {generateFileName} from "../utils/generateFileName";
@@ -119,6 +119,82 @@ export class ChatGateway
             client.broadcast
                 .to(socketInfo[0])
                 .emit("room:toggle-typing", excludingThisUserTypingInfo);
+        });
+    }
+
+    @UseGuards(WsAuth)
+    @SubscribeMessage("message:pin")
+    async handlePinMessage(@ConnectedSocket() client, @MessageBody() message: TPinMessage) {
+        const senderPayloadJWT: IUserPayloadJWT = client.user;
+
+        const sender = await this.userService.findOne({
+            id: senderPayloadJWT.id
+        });
+        if (!sender) {
+            throw new WsException("Не найден отправитель сообщения");
+        }
+        const pinnedMessage = await this.messageService.update({
+            where: {
+                id: message.messageId
+            },
+            data: {
+                pinnedMessages: {
+                    create: {
+                        roomId: message.roomId
+                    },
+                }
+            },
+            include: {
+                room: {
+                    include: {
+                        pinnedMessages: {
+                            include: {
+                                message: true
+                            }
+                        }
+                    }
+                }
+            }
+        }) as Prisma.MessageGetPayload<{
+            include: {
+                room: {
+                    include: {
+                        pinnedMessages: {
+                            include: {
+                                message: true
+                            }
+                        }
+                    }
+                }
+            }
+        }>;
+
+        const participants = await this.participantService.findMany({
+            where: {
+                roomId: pinnedMessage.roomId
+            }
+        });
+
+        const responseInfo = {
+            roomId: pinnedMessage.roomId,
+            messages: pinnedMessage.room.pinnedMessages.map(pinnedMessage => {
+                return {
+                    id: pinnedMessage.id,
+                    text: pinnedMessage.message.text,
+                    messageId: pinnedMessage.message.id
+                };
+            })
+        };
+
+        client.emit("message:pinned", responseInfo);
+        participants.forEach(participant => {
+            const socketId = Object.entries(this.socketToUserId)
+                .find(([, userId]) => participant.userId === userId);
+
+            if (!socketId) return;
+            client
+                .to(socketId)
+                .emit("message:pinned", responseInfo);
         });
     }
 
