@@ -1,7 +1,7 @@
 import React, {FC, Fragment, useCallback, useMemo, useRef} from "react";
 import * as classNames from "classnames";
 import {Button} from "antd";
-import {FileTwoTone, EditOutlined} from "@ant-design/icons";
+import {FileTwoTone, EditOutlined, DeleteOutlined} from "@ant-design/icons";
 // own modules
 import OriginalMessage from "../OriginalMessage/OriginalMessage.tsx";
 import AudioElement from "../AudioElement/AudioElement.tsx";
@@ -18,25 +18,27 @@ import "./message.scss";
 
 interface IMessageProps {
     message: IMessage | IForwardedMessage;
-    isMine: boolean;
     files: IKnownAndUnknownFiles;
+    isMine: boolean;
     isVoice: boolean;
     handlePreview: (file: IFileForRender) => void;
     onClickMessageForEdit: () => void;
+    onClickMessageForDelete: () => void;
     onChooseMessageForReply: () => void;
     onChooseMessageForForward: () => void;
 }
 
 const Message: FC<IMessageProps> = ({
-                                            message,
-                                            isMine,
-                                            isVoice,
-                                            files,
-                                            handlePreview,
-                                            onClickMessageForEdit,
-                                            onChooseMessageForReply,
-                                            onChooseMessageForForward
-                                        }) => {
+                                        message,
+                                        isMine,
+                                        isVoice,
+                                        files,
+                                        handlePreview,
+                                        onClickMessageForEdit,
+                                        onClickMessageForDelete,
+                                        onChooseMessageForReply,
+                                        onChooseMessageForForward
+                                    }) => {
     const downloadLinkRef = useRef<HTMLAnchorElement | null>(null);
 
     const handleDownload = useCallback((fileInfo: IFileForRender) => {
@@ -154,18 +156,18 @@ const Message: FC<IMessageProps> = ({
                         </div>
                         :
                         <Fragment>
-                            { knownAttachments &&
+                            {knownAttachments &&
                                 <div className="message__attachments-wrapper">
                                     {knownAttachments}
                                 </div>
                             }
-                            { unknownAttachments &&
+                            {unknownAttachments &&
                                 <div
                                     className={classNames("message__attachments-unknown-wrapper", message.text && "message__attachments-unknown-wrapper_with-line")}>
                                     {unknownAttachments}
                                 </div>
                             }
-                            { message.text &&
+                            {message.text &&
                                 <OriginalMessage text={message.text} firstLinkInfo={message.firstLinkInfo}/>
                             }
                         </Fragment>
@@ -218,6 +220,13 @@ const Message: FC<IMessageProps> = ({
                     size="small"
                     title="Закрепить"
                     icon={<PinOutlined/>}
+                />
+                <Button
+                    type="text"
+                    size="small"
+                    title="Удалить"
+                    icon={<DeleteOutlined/>}
+                    onClick={onClickMessageForDelete}
                 />
             </div>
         </div>

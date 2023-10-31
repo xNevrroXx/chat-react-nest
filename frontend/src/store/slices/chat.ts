@@ -19,7 +19,7 @@ import {
     handleForwardedMessageSocket,
     handleMessageSocket,
     handleChangeUserTypingSocket,
-    setUserId
+    setUserId, handleDeletedMessageSocket
 } from "../actions/chat.ts";
 
 
@@ -178,6 +178,14 @@ const chat = createSlice({
                 const targetMessage = targetChat.messages.find(chat => chat.id === action.payload.messageId);
                 if (!targetMessage) return;
                 targetMessage.text = action.payload.text;
+            })
+            .addCase(handleDeletedMessageSocket, (state, action) => {
+                const targetChat = state.chats.find(chat => chat.id === action.payload.roomId);
+                if (!targetChat) return;
+
+                const targetMessage = targetChat.messages.find(chat => chat.id === action.payload.messageId);
+                if (!targetMessage) return;
+                targetMessage.isDeleted = action.payload.isDeleted;
             })
             .addCase(handleChangeUserTypingSocket, (state, action) => {
                 const targetChat = state.chats.find(chat => chat.id === action.payload[0].roomId);

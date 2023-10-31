@@ -12,12 +12,7 @@ import * as classNames from "classnames";
 // own modules
 import Message from "../../HOC/Message.tsx";
 import {IUserDto} from "../../models/IStore/IAuthentication.ts";
-import {
-    IForwardedMessage,
-    IMessage,
-    IRoom,
-    TForwardMessage
-} from "../../models/IStore/IChats.ts";
+import {IForwardedMessage, IForwardMessage, IMessage, IRoom} from "../../models/IStore/IChats.ts";
 import {TValueOf} from "../../models/TUtils.ts";
 // styles
 import "./chat-content.scss";
@@ -32,7 +27,8 @@ interface IChatContentProps {
     isNeedScrollToLastMessage: RefObject<boolean>,
     onChooseMessageForEdit: (message: IMessage) => void,
     onChooseMessageForReply: (message: IMessage | IForwardedMessage) => void,
-    onOpenUsersListForForwardMessage: (forwardedMessageId: TValueOf<Pick<TForwardMessage, "forwardedMessageId">>) => void
+    onChooseMessageForDelete: (message: IMessage | IForwardedMessage) => void,
+    onOpenUsersListForForwardMessage: (forwardedMessageId: TValueOf<Pick<IForwardMessage, "forwardedMessageId">>) => void
 }
 
 const ChatContent = forwardRef<HTMLDivElement, IChatContentProps>(({
@@ -41,6 +37,7 @@ const ChatContent = forwardRef<HTMLDivElement, IChatContentProps>(({
                                                                        room,
                                                                        onChooseMessageForEdit,
                                                                        onChooseMessageForReply,
+                                                                       onChooseMessageForDelete,
                                                                        isNeedScrollToLastMessage,
                                                                        onOpenUsersListForForwardMessage
                                                                    }, outerRef) => {
@@ -66,6 +63,7 @@ const ChatContent = forwardRef<HTMLDivElement, IChatContentProps>(({
         }
 
         return room.messages.map(message => {
+            if (message.isDeleted) return;
             return (
                 <Message
                     key={message.id}
@@ -73,12 +71,13 @@ const ChatContent = forwardRef<HTMLDivElement, IChatContentProps>(({
                     message={message}
                     handlePreview={handlePreview}
                     onChooseMessageForEdit={onChooseMessageForEdit}
+                    onChooseMessageForDelete={onChooseMessageForDelete}
                     onChooseMessageForReply={onChooseMessageForReply}
                     onOpenUsersListForForwardMessage={() => onOpenUsersListForForwardMessage(message.id)}
                 />
             );
         });
-    }, [room.messages, user.id, handlePreview, onChooseMessageForEdit, onChooseMessageForReply, onOpenUsersListForForwardMessage]);
+    }, [room.messages, user.id, handlePreview, onChooseMessageForEdit, onChooseMessageForDelete, onChooseMessageForReply, onOpenUsersListForForwardMessage]);
 
     useEffect(() => {
         if (!innerRef.current || !isNeedScrollToLastMessage.current) return;

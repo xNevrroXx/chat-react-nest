@@ -23,6 +23,11 @@ export type TNewEditedMessage = {
     text: TValueOf<Pick<Message, "text">>;
 }
 
+export type TDeleteMessage = {
+    messageId: TValueOf<Pick<Message, "id">>,
+    isForEveryone: boolean
+}
+
 export interface IGetAttachments {
     attachments: IAttachment[]
 }

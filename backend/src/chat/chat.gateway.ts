@@ -17,17 +17,22 @@ import {AuthService} from "../auth/auth.service";
 import {MessageService} from "../message/message.service";
 // types
 import {IUserPayloadJWT} from "../user/IUser";
-import {TNewMessage, IUserIdToSocketId, TToggleUserTyping, TNewForwardedMessage, TNewEditedMessage} from "./IChat";
+import {
+    TNewMessage,
+    IUserIdToSocketId,
+    TToggleUserTyping,
+    TNewForwardedMessage,
+    TNewEditedMessage,
+    TDeleteMessage
+} from "./IChat";
 import {FileService} from "../file/file.service";
 import {generateFileName} from "../utils/generateFileName";
-import {excludeSensitiveFields} from "../utils/excludeSensitiveFields";
 import {Prisma, File, Room, RoomType} from "@prisma/client";
-import {TFileToClient} from "../file/IFile";
 import * as mime from "mime-types";
 import {isFulfilledPromise} from "../utils/isFulfilledPromise";
 import {RoomService} from "../room/room.service";
 import {ParticipantService} from "../participant/participant.service";
-import {TNormalizeMessageArgument} from "../message/IMessage";
+import {TNormalizeMessageArgument} from "../message/TMessage";
 // import {WsExceptionsFilter} from "../exceptions/ws-exceptions.filter";
 
 @UseFilters(BaseWsExceptionFilter)
@@ -116,6 +121,73 @@ export class ChatGateway
             client.broadcast
                 .to(socketInfo[0])
                 .emit("room:toggle-typing", excludingThisUserTypingInfo);
+        });
+    }
+
+    @UseGuards(WsAuth)
+    @SubscribeMessage("message:delete")
+    async handleDeleteMessage(@ConnectedSocket() client, @MessageBody() message: TDeleteMessage) {
+        const senderPayloadJWT: IUserPayloadJWT = client.user;
+
+        const sender = await this.userService.findOne({
+            id: senderPayloadJWT.id
+        });
+        if (!sender) {
+            throw new WsException("Не найден отправитель сообщения");
+        }
+        const deletedMessageQuery: Prisma.MessageUpdateInput = message.isForEveryone ?
+            { isDeleteForEveryone: true }
+            :
+            {
+                usersDeletedThisMessage: {
+                    connect: {
+                        id: sender.id
+                    }
+                }
+            };
+        const deletedMessage = await this.messageService.update({
+            where: {
+                id: message.messageId
+            },
+            data: deletedMessageQuery,
+            include: {
+                repliesThisMessage: true,
+                forwardThisMessage: true
+            }
+        }) as Prisma.MessageGetPayload<{ include: {
+                repliesThisMessage: true,
+                forwardThisMessage: true
+            }
+        }>;
+
+        if (message.isForEveryone && deletedMessage.repliesThisMessage.length === 0 && deletedMessage.forwardThisMessage.length === 0) {
+            // delete the message there no references to this one in other messages
+            void this.messageService.delete({
+                id: deletedMessage.id
+            });
+        }
+
+        const participants = await this.participantService.findMany({
+            where: {
+                roomId: deletedMessage.roomId
+            }
+        });
+        const editedMessageInfo = {
+            roomId: deletedMessage.roomId,
+            messageId: deletedMessage.id,
+            isDeleted: true
+        };
+        client.emit("message:deleted", editedMessageInfo);
+
+        if (!message.isForEveryone) return;
+        participants.forEach(participant => {
+            const socketId = Object.entries(this.socketToUserId)
+                .find(([, userId]) => participant.userId === userId);
+
+            if (!socketId) return;
+            client
+                .to(socketId)
+                .emit("message:deleted", editedMessageInfo);
         });
     }
 
@@ -224,7 +296,8 @@ export class ChatGateway
                             }
                         }
                     }
-                }
+                },
+                usersDeletedThisMessage: true
             }
         }) as Prisma.MessageGetPayload<{include: {
                 forwardedMessage: {
@@ -236,9 +309,10 @@ export class ChatGateway
                             }
                         }
                     }
-                }
+                },
+                usersDeletedThisMessage: true
             }}>;
-        const normalizedMessage = await this.messageService.normalize(newMessage);
+        const normalizedMessage = await this.messageService.normalize(sender.id, newMessage);
 
         this.server
             .emit("message:forwarded", normalizedMessage);
@@ -344,10 +418,20 @@ export class ChatGateway
                     include: {
                         files: true
                     }
-                }
+                },
+                usersDeletedThisMessage: true
             }
-        }) as Prisma.MessageGetPayload<{include: {files: true, replyToMessage: true}}>;
-        const normalizedMessage = await this.messageService.normalize(newMessage as TNormalizeMessageArgument);
+        }) as Prisma.MessageGetPayload<{ include: {
+                    files: true,
+                    replyToMessage: {
+                        include: {
+                            files: true
+                        }
+                    },
+                    usersDeletedThisMessage: true
+                }
+            }>;
+        const normalizedMessage = await this.messageService.normalize(sender.id, newMessage);
 
         this.server
             .emit("message", normalizedMessage);

@@ -1,5 +1,5 @@
 import {MenuFoldOutlined, PhoneTwoTone} from "@ant-design/icons";
-import {Avatar, Spin, Typography} from "antd";
+import {Avatar, Checkbox, Modal, Spin, Typography} from "antd";
 import React, {type FC, Fragment, useCallback, useMemo, useRef, useState} from "react";
 // own modules
 import {useScrollTrigger} from "../../hooks/useScrollTrigger.hook.ts";
@@ -13,25 +13,30 @@ import {
     IAttachment,
     IEditMessage,
     IForwardedMessage,
+    IForwardMessage,
     IMessage,
     IRoom,
     RoomType,
-    TForwardMessage,
     TSendMessage
 } from "../../models/IStore/IChats.ts";
 // actions
 import {useAppDispatch, useAppSelector} from "../../hooks/store.hook.ts";
-import {editMessageSocket, sendMessageSocket, toggleUserTypingSocket} from "../../store/thunks/chat.ts";
+import {
+    deleteMessageSocket,
+    editMessageSocket,
+    sendMessageSocket,
+    toggleUserTypingSocket
+} from "../../store/thunks/chat.ts";
 // styles
 import "./active-room.scss";
 import {truncateTheText} from "../../utils/truncateTheText.ts";
 
-const {Title} = Typography;
+const {Text, Title} = Typography;
 
 interface IActiveChatProps {
     user: IUserDto;
     room: IRoom
-    onOpenUsersListForForwardMessage: (forwardedMessageId: TValueOf<Pick<TForwardMessage, "forwardedMessageId">>) => void;
+    onOpenUsersListForForwardMessage: (forwardedMessageId: TValueOf<Pick<IForwardMessage, "forwardedMessageId">>) => void;
 }
 
 const ActiveRoom: FC<IActiveChatProps> = ({user, room, onOpenUsersListForForwardMessage}) => {
@@ -40,8 +45,12 @@ const ActiveRoom: FC<IActiveChatProps> = ({user, room, onOpenUsersListForForward
         if (room.roomType === RoomType.GROUP) return;
         return state.users.users.find(user => user.id === room.participants[0].userId);
     });
-    const [messageForReply, setMessageForReply] = useState<IMessage | IForwardedMessage | null>(null);
     const [messageForEdit, setMessageForEdit] = useState<IMessage | null>(null);
+    const [messageForReply, setMessageForReply] = useState<IMessage | IForwardedMessage | null>(null);
+    const [messageForDelete, setMessageForDelete] = useState<{
+        message: IMessage | IForwardedMessage,
+        isForEveryone: boolean
+    } | null>(null);
     const [isVisibleScrollButtonState, setIsVisibleScrollButtonState] = useState<boolean>(true);
     const isNeedScrollToLastMessage = useRef<boolean>(true);
     const typingTimoutRef = useRef<number | null>(null);
@@ -81,6 +90,17 @@ const ActiveRoom: FC<IActiveChatProps> = ({user, room, onOpenUsersListForForward
         setMessageForEdit(null);
     };
 
+    const onChooseMessageForDelete = useCallback((message: IMessage | IForwardedMessage) => {
+        setMessageForDelete({
+            message,
+            isForEveryone: false
+        });
+    }, []);
+
+    const removeMessageForDelete = () => {
+        setMessageForDelete(null);
+    };
+
     const onTyping = () => {
         if (typingTimoutRef.current) {
             // if the user has recently typed
@@ -115,6 +135,17 @@ const ActiveRoom: FC<IActiveChatProps> = ({user, room, onOpenUsersListForForward
             );
             typingTimoutRef.current = null;
         }, 4000);
+    };
+
+    const onSendDeletedMessage = () => {
+        if (!messageForDelete) return;
+
+        void dispatch(deleteMessageSocket({
+                messageId: messageForDelete.message.id,
+                isForEveryone: messageForDelete.isForEveryone
+            })
+        );
+        removeMessageForDelete();
     };
 
     const onSendEditedMessage = (text: TValueOf<Pick<IEditMessage, "text">>) => {
@@ -166,8 +197,7 @@ const ActiveRoom: FC<IActiveChatProps> = ({user, room, onOpenUsersListForForward
             case RoomType.PRIVATE: {
                 if (!interlocutor || !interlocutor.userOnline.isOnline) {
                     return "Не в сети";
-                }
-                else if (room.participants[0].isTyping) {
+                } else if (room.participants[0].isTyping) {
                     return "Печатает...";
                 }
                 return "В сети";
@@ -217,8 +247,9 @@ const ActiveRoom: FC<IActiveChatProps> = ({user, room, onOpenUsersListForForward
                     user={user}
                     room={room}
                     isNeedScrollToLastMessage={isNeedScrollToLastMessage}
-                    onChooseMessageForReply={onChooseMessageForReply}
                     onChooseMessageForEdit={onChooseMessageForEdit}
+                    onChooseMessageForReply={onChooseMessageForReply}
+                    onChooseMessageForDelete={onChooseMessageForDelete}
                     onOpenUsersListForForwardMessage={onOpenUsersListForForwardMessage}
                 />
 
@@ -230,8 +261,8 @@ const ActiveRoom: FC<IActiveChatProps> = ({user, room, onOpenUsersListForForward
                         />
                     }
                     <InputMessage
-                        messageForReply={messageForReply}
                         messageForEdit={messageForEdit}
+                        messageForReply={messageForReply}
                         removeMessageForReply={removeMessageForReply}
                         removeMessageForEdit={removeMessageForEdit}
                         onTyping={onTyping}
@@ -240,6 +271,32 @@ const ActiveRoom: FC<IActiveChatProps> = ({user, room, onOpenUsersListForForward
                         onSendEditedMessage={onSendEditedMessage}
                     />
                 </div>
+
+                <Modal
+                    title="Вы хотите удалить сообщение?"
+                    onCancel={removeMessageForDelete}
+                    onOk={onSendDeletedMessage}
+                    open={!!messageForDelete}
+                >
+                    {room.roomType === RoomType.PRIVATE && messageForDelete && messageForDelete.message.senderId === user.id
+                        ?
+                        <Checkbox
+                            checked={messageForDelete.isForEveryone}
+                            onChange={event => {
+                                setMessageForDelete({
+                                    ...messageForDelete,
+                                    isForEveryone: event.target.checked
+                                });
+                            }}
+                        >
+                            <Text>Удалить у всех</Text>
+                        </Checkbox>
+                        :
+                        room.roomType === RoomType.PRIVATE && messageForDelete && messageForDelete.message.senderId !== user.id
+                            ? <Text>Сообщение будет удалено только у вас.</Text>
+                            : <Text>Сообщение будет удалено у всех в этом чате.</Text>
+                    }
+                </Modal>
             </Fragment>
         );
     };

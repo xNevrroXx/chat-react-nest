@@ -104,8 +104,7 @@ const InputDuringMessage = forwardRef<HTMLDivElement, IInputDuringMessageProps>(
                     />
                 </div>
                 <div className="input-message__btn-wrapper">
-                    {
-                        message || files.length > 0 ?
+                    { message || files.length > 0 ?
                             <Button
                                 type="text"
                                 icon={<SendOutlined/>}

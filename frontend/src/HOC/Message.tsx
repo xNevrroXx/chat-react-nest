@@ -17,6 +17,7 @@ type TMessageProps = {
     message: IMessage | IForwardedMessage;
     onOpenUsersListForForwardMessage: () => void;
     onChooseMessageForEdit: (message: IMessage) => void,
+    onChooseMessageForDelete: (message: IMessage | IForwardedMessage) => void;
     onChooseMessageForReply: (message: IMessage | IForwardedMessage) => void;
     handlePreview: (file: IFileForRender) => void;
 };
@@ -26,6 +27,7 @@ const Message: FC<TMessageProps> = ({
                                         message,
                                         onChooseMessageForEdit,
                                         onChooseMessageForReply,
+                                        onChooseMessageForDelete,
                                         onOpenUsersListForForwardMessage,
                                         handlePreview
                                     }) => {
@@ -102,6 +104,10 @@ const Message: FC<TMessageProps> = ({
         onChooseMessageForEdit(message);
     }, [onChooseMessageForEdit, message]);
 
+    const onClickMessageForDelete = useCallback(() => {
+        onChooseMessageForDelete(message);
+    }, [onChooseMessageForDelete, message]);
+
     const isMine = useMemo((): boolean => {
         return userId === message.senderId;
     }, [message.senderId, userId]);
@@ -113,6 +119,7 @@ const Message: FC<TMessageProps> = ({
             files={filesWithBlobUrls}
             handlePreview={handlePreview}
             onClickMessageForEdit={onClickMessageForEdit}
+            onClickMessageForDelete={onClickMessageForDelete}
             onChooseMessageForReply={onClickMessageForReply}
             onChooseMessageForForward={onOpenUsersListForForwardMessage}
             message={message}

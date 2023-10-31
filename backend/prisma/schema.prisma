@@ -28,6 +28,7 @@ model User {
   refreshToken    RefreshToken? @relation("refresh_token")
   room            Room[]        @relation("room")
   messages        Message[]     @relation("messages")
+  deletedMessages Message[]     @relation("deleted_messages")
   friendshipUser1 Friendship[]  @relation("user1")
   friendshipUser2 Friendship[]  @relation("user2")
   participant     Participant[] @relation("participant")
@@ -44,8 +45,8 @@ model UserTyping {
 
   updatedAt DateTime @default(now()) @map("updated_at")
 
-  user User @relation("user_typing", fields: [userId], references: [id])
-  room Room @relation("users_typing", fields: [roomId], references: [id])
+  user User @relation("user_typing", fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  room Room @relation("users_typing", fields: [roomId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   @@unique([userId])
   @@map("user_typing")
@@ -58,7 +59,7 @@ model UserOnline {
 
   updatedAt DateTime @default(now()) @map("updated_at")
 
-  user User @relation("user_online", fields: [userId], references: [id])
+  user User @relation("user_online", fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   @@unique([userId])
   @@map("user_online")
@@ -70,8 +71,8 @@ model Friendship {
 
   createdAt DateTime @default(now()) @map("created_at")
 
-  user1 User @relation("user1", fields: [userId1], references: [id])
-  user2 User @relation("user2", fields: [userId2], references: [id])
+  user1 User @relation("user1", fields: [userId1], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  user2 User @relation("user2", fields: [userId2], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   @@unique([userId1, userId2])
   @@map("friendship")
@@ -84,7 +85,7 @@ model RefreshToken {
 
   updatedAt DateTime @default(now()) @map("updated_at")
 
-  user User @relation("refresh_token", fields: [userId], references: [id])
+  user User @relation("refresh_token", fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   @@unique([userId])
   @@map("refresh_token")
@@ -99,7 +100,7 @@ model Room {
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime? @map("updated_at")
 
-  creatorUser  User?         @relation("room", fields: [creatorUserId], references: [id])
+  creatorUser  User?         @relation("room", fields: [creatorUserId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   messages     Message[]     @relation("room")
   usersTyping  UserTyping[]  @relation("users_typing")
   participants Participant[] @relation("participant")
@@ -112,32 +113,34 @@ model Participant {
   userId String @map("user_id")
   roomId String @map("room_id")
 
-  user User @relation("participant", fields: [userId], references: [id])
-  room Room @relation("participant", fields: [roomId], references: [id])
+  user User @relation("participant", fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  room Room @relation("participant", fields: [roomId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   @@unique([userId, roomId])
   @@map("participant")
 }
 
 model Message {
-  id                 String  @id @default(uuid())
-  senderId           String  @map("sender_id")
-  roomId             String  @map("room_id")
-  text               String? @db.Text()
-  hasRead            Boolean @default(false) @map("has_read")
-  replyToMessageId   String? @map("reply_to_message_id")
-  forwardedMessageId String? @map("forwarded_message_id")
+  id                  String  @id @default(uuid())
+  senderId            String  @map("sender_id")
+  roomId              String  @map("room_id")
+  text                String? @db.Text()
+  hasRead             Boolean @default(false) @map("has_read")
+  isDeleteForEveryone Boolean @default(false)
+  replyToMessageId    String? @map("reply_to_message_id")
+  forwardedMessageId  String? @map("forwarded_message_id")
 
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime? @map("updated_at")
 
-  sender             User      @relation("messages", fields: [senderId], references: [id])
-  room               Room      @relation("room", fields: [roomId], references: [id])
-  files              File[]    @relation("files")
-  replyToMessage     Message?  @relation("reply_to_message", fields: [replyToMessageId], references: [id])
-  repliesThisMessage Message[] @relation("reply_to_message")
-  forwardedMessage   Message?  @relation("forwarded_message", fields: [forwardedMessageId], references: [id])
-  forwardThisMessage Message[] @relation("forwarded_message")
+  sender                  User      @relation("messages", fields: [senderId], references: [id], onDelete: NoAction, onUpdate: Cascade)
+  room                    Room      @relation("room", fields: [roomId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  replyToMessage          Message?  @relation("reply_to_message", fields: [replyToMessageId], references: [id], onDelete: NoAction, onUpdate: Cascade)
+  repliesThisMessage      Message[] @relation("reply_to_message")
+  forwardedMessage        Message?  @relation("forwarded_message", fields: [forwardedMessageId], references: [id], onDelete: NoAction, onUpdate: Cascade)
+  forwardThisMessage      Message[] @relation("forwarded_message")
+  usersDeletedThisMessage User[]    @relation("deleted_messages")
+  files                   File[]    @relation("files")
 
   @@map("message")
 }
@@ -153,7 +156,7 @@ model File {
 
   createdAt DateTime @default(now()) @map("created_at")
 
-  message Message @relation("files", fields: [messageId], references: [id])
+  message Message @relation("files", fields: [messageId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   @@map("file")
 }

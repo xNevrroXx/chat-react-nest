@@ -6,7 +6,7 @@ import {MessageService} from "../message/message.service";
 import {ParticipantService} from "../participant/participant.service";
 import {Prisma, RoomType} from "@prisma/client";
 import {IRoom} from "./IRooms";
-import {IMessage} from "../message/IMessage";
+import {IMessage} from "../message/TMessage";
 
 @Controller("room")
 export class RoomController {
@@ -64,7 +64,8 @@ export class RoomController {
                                     }
                                 }
                             }
-                        }
+                        },
+                        usersDeletedThisMessage: true
                     },
                     orderBy: {
                         createdAt: "asc"
@@ -102,7 +103,8 @@ export class RoomController {
                                     }
                                 }
                             }
-                        }
+                        },
+                        usersDeletedThisMessage: true
                     }
                 }
             }
@@ -111,9 +113,10 @@ export class RoomController {
         const normalizedRoomPromises: Promise<IRoom>[] = unnormalizedRooms.map(async unnormalizedRoom => {
             const normalizedMessages = await unnormalizedRoom.messages.reduce<Promise<IMessage[]>>(async (prevPromise, unnormalizedMessage) => {
                 const prev = await prevPromise;
-                const messages = await this.messageService.normalize(unnormalizedMessage);
 
-                prev.push(messages);
+                const normalizedMessage = await this.messageService.normalize(userPayload.id, unnormalizedMessage);
+
+                prev.push(normalizedMessage);
                 return prev;
             }, Promise.resolve([]));
 

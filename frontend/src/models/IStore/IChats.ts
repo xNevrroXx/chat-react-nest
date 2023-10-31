@@ -73,6 +73,7 @@ export interface IOriginalMessage {
     senderId: TValueOf<Pick<IUserDto, "id">>;
     hasRead: boolean;
     links: string[];
+    isDeleted: boolean;
     firstLinkInfo: ILinkPreviewInfo | undefined;
     text: string | undefined | null;
 
@@ -92,7 +93,6 @@ export interface IFile {
 }
 
 // HTTP response types
-
 type TFileHTTP = Omit<IFile, "buffer" | "createdAt"> & {
     buffer: {
         type: "Buffer",
@@ -144,6 +144,12 @@ export interface IEditedMessageSocket {
     text: TValueOf<Pick<IOriginalMessage, "text">>
 }
 
+export interface IDeletedMessageSocket {
+    roomId: TValueOf<Pick<IRoom, "id">>,
+    messageId: TValueOf<Pick<IOriginalMessage, "id">>,
+    isDeleted: boolean
+}
+
 
 // only client types(without responses) to send data
 export type TSendUserTyping = Omit<IUserTyping, "updatedAt" | "userId">
@@ -154,7 +160,7 @@ export type TSendMessage = {
     replyToMessageId: TValueOf<Pick<IMessage, "id">> | undefined | null;
 } & ISendAttachments;
 
-export type TForwardMessage = {
+export interface IForwardMessage {
     roomId: TValueOf<Pick<IRoom, "id">>;
     forwardedMessageId: TValueOf<Pick<IMessage, "id">>;
 }
@@ -169,6 +175,11 @@ export interface IAttachment {
     mimeType: string,
     extension: string;
     buffer: ArrayBuffer;
+}
+
+export interface IDeleteMessage {
+    messageId: TValueOf<Pick<IOriginalMessage, "id">>,
+    isForEveryone: boolean
 }
 
 export interface IEditMessage {

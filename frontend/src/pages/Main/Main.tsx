@@ -11,7 +11,7 @@ import ActiveRoom from "../../modules/ActiveRoom/ActiveRoom.tsx";
 // selectors & actions
 import {forwardMessageSocket} from "../../store/thunks/chat.ts";
 // own types
-import type {IRoom, TForwardMessage} from "../../models/IStore/IChats.ts";
+import type {IRoom, IForwardMessage} from "../../models/IStore/IChats.ts";
 import type {TValueOf} from "../../models/TUtils.ts";
 // styles
 import "./main.scss";
@@ -23,7 +23,7 @@ const Main = () => {
     const rooms = useAppSelector(state => state.chat.chats);
     const [activeRoom, setActiveRoom] = useState<IRoom | null>(null);
     const [isOpenModalForForwardMessage, setIsOpenModalForForwardMessage] = useState<boolean>(false);
-    const [forwardedMessageId, setForwardedMessageId] = useState<TValueOf<Pick<TForwardMessage, "forwardedMessageId">> | null>(null);
+    const [forwardedMessageId, setForwardedMessageId] = useState<TValueOf<Pick<IForwardMessage, "forwardedMessageId">> | null>(null);
 
     useEffect(() => {
         if (!user) {
@@ -58,7 +58,7 @@ const Main = () => {
             })
         );
     };
-    const openUsersListForForwardMessage = useCallback((forwardedMessageId: TValueOf<Pick<TForwardMessage, "forwardedMessageId">>) => {
+    const openUsersListForForwardMessage = useCallback((forwardedMessageId: TValueOf<Pick<IForwardMessage, "forwardedMessageId">>) => {
         setForwardedMessageId(forwardedMessageId);
         setIsOpenModalForForwardMessage(true);
     }, []);
