@@ -1,9 +1,9 @@
 import {MenuFoldOutlined, PhoneTwoTone} from "@ant-design/icons";
-import {Avatar, Checkbox, Modal, Spin, Typography} from "antd";
+import {Avatar, Checkbox, Flex, Modal, Typography, theme} from "antd";
 import React, {type FC, Fragment, useCallback, useMemo, useRef, useState} from "react";
 // own modules
 import {useScrollTrigger} from "../../hooks/useScrollTrigger.hook.ts";
-import ChatContent from "../../components/ChatContent/ChatContent.tsx";
+import RoomContent from "../../components/RoomContent/RoomContent.tsx";
 import InputMessage from "../InputMessage/InputMessage.tsx";
 import ScrollDownButton from "../../components/ScrollDownButton/ScrollDownButton.tsx";
 import type {IUserDto} from "../../models/IStore/IAuthentication.ts";
@@ -18,7 +18,7 @@ import {
     IRoom,
     RoomType,
     TSendMessage
-} from "../../models/IStore/IChats.ts";
+} from "../../models/IStore/IRoom.ts";
 // actions
 import {useAppDispatch, useAppSelector} from "../../hooks/store.hook.ts";
 import {
@@ -26,24 +26,26 @@ import {
     editMessageSocket, pinMessageSocket,
     sendMessageSocket,
     toggleUserTypingSocket
-} from "../../store/thunks/chat.ts";
-// styles
-import "./active-room.scss";
+} from "../../store/thunks/room.ts";
 import {truncateTheText} from "../../utils/truncateTheText.ts";
 import PinnedMessagesList from "../../components/PinnedMessagesList/PinnedMessagesList.tsx";
+// styles
+import "./active-room.scss";
 
+const {useToken} = theme;
 const {Text, Title} = Typography;
 
 interface IActiveChatProps {
     user: IUserDto;
-    room: IRoom
+    room: IRoom | null
     onOpenUsersListForForwardMessage: (forwardedMessageId: TValueOf<Pick<IForwardMessage, "forwardedMessageId">>) => void;
 }
 
 const ActiveRoom: FC<IActiveChatProps> = ({user, room, onOpenUsersListForForwardMessage}) => {
+    const {token} = useToken();
     const dispatch = useAppDispatch();
     const interlocutor = useAppSelector(state => {
-        if (room.roomType === RoomType.GROUP) return;
+        if (!room || room.roomType === RoomType.GROUP) return;
         return state.users.users.find(user => user.id === room.participants[0].userId);
     });
     const [messageForEdit, setMessageForEdit] = useState<IMessage | null>(null);
@@ -103,15 +105,17 @@ const ActiveRoom: FC<IActiveChatProps> = ({user, room, onOpenUsersListForForward
         });
     }, []);
 
-    const removeMessageForDelete = () => {
+    const removeMessageForDelete = useCallback(() => {
         setMessageForDelete(null);
-    };
+    }, []);
 
-    const removeMessageForPin = () => {
+    const removeMessageForPin = useCallback(() => {
         setMessageForPin(null);
-    };
+    }, []);
 
-    const onTyping = () => {
+    const onTyping = useCallback(() => {
+        if (!room) return;
+        
         if (typingTimoutRef.current) {
             // if the user has recently typed
             clearTimeout(typingTimoutRef.current);
@@ -145,7 +149,7 @@ const ActiveRoom: FC<IActiveChatProps> = ({user, room, onOpenUsersListForForward
             );
             typingTimoutRef.current = null;
         }, 4000);
-    };
+    }, [dispatch, room]);
 
     const onDeleteMessage = () => {
         if (!messageForDelete) return;
@@ -158,8 +162,8 @@ const ActiveRoom: FC<IActiveChatProps> = ({user, room, onOpenUsersListForForward
         removeMessageForDelete();
     };
 
-    const onPinMessage = () => {
-        if (!messageForPin) return;
+    const onPinMessage = useCallback(() => {
+        if (!room || !messageForPin) return;
 
         void dispatch(pinMessageSocket({
                 roomId: room.id,
@@ -167,7 +171,7 @@ const ActiveRoom: FC<IActiveChatProps> = ({user, room, onOpenUsersListForForward
             })
         );
         removeMessageForPin();
-    };
+    }, [dispatch, messageForPin, removeMessageForPin, room]);
 
     const onSendEditedMessage = (text: TValueOf<Pick<IEditMessage, "text">>) => {
         if (!messageForEdit) return;
@@ -180,7 +184,9 @@ const ActiveRoom: FC<IActiveChatProps> = ({user, room, onOpenUsersListForForward
         removeMessageForEdit();
     };
 
-    const onSendMessage = (text: TValueOf<Pick<TSendMessage, "text">>, attachments: IAttachment[]) => {
+    const onSendMessage = useCallback((text: TValueOf<Pick<TSendMessage, "text">>, attachments: IAttachment[]) => {
+        if (!room) return;
+
         const message: TSendMessage = {
             roomId: room.id,
             text,
@@ -194,7 +200,7 @@ const ActiveRoom: FC<IActiveChatProps> = ({user, room, onOpenUsersListForForward
         }
         void dispatch(sendMessageSocket(message));
         removeMessageForReply();
-    };
+    }, [room, messageForReply, dispatch, removeMessageForReply]);
 
     const sendVoiceMessage = async (record: Blob) => {
         const buffer = await record.arrayBuffer();
@@ -210,7 +216,7 @@ const ActiveRoom: FC<IActiveChatProps> = ({user, room, onOpenUsersListForForward
     };
 
     const userStatuses = useMemo(() => {
-        if (!room.participants || room.participants.length === 0) {
+        if (!room || !room.participants || room.participants.length === 0) {
             return;
         }
 
@@ -234,11 +240,19 @@ const ActiveRoom: FC<IActiveChatProps> = ({user, room, onOpenUsersListForForward
                 });
             }
         }
-    }, [room.participants, room.roomType, interlocutor]);
+    }, [room, interlocutor]);
 
     const content = (): JSX.Element => {
         if (!room) {
-            return <Spin/>;
+            return (
+                <Flex
+                    className="active-room__not-exist"
+                    justify="center"
+                    align="center"
+                >
+                    <Title level={5} style={{color: token.colorTextSecondary}}>Выберите чат</Title>
+                </Flex>
+            );
         }
 
         return (
@@ -263,13 +277,14 @@ const ActiveRoom: FC<IActiveChatProps> = ({user, room, onOpenUsersListForForward
                     </div>
                 </div>
 
-                { room.pinnedMessages &&
+                { room.pinnedMessages.length > 0 &&
                     <div>
                         <PinnedMessagesList pinnedMessages={room.pinnedMessages}/>
                     </div>
                 }
                 
-                <ChatContent
+                <RoomContent
+                    className="active-room__content"
                     ref={refChatContent}
                     user={user}
                     room={room}

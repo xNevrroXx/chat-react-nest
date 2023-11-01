@@ -326,7 +326,7 @@ export class ChatGateway
         if (!message.roomId) {
             room = await this.roomService.create({
                 data: {
-                    roomType: RoomType.PRIVATE
+                    type: RoomType.PRIVATE
                 }
             });
         }
@@ -422,7 +422,7 @@ export class ChatGateway
         if (!message.roomId) {
             room = await this.roomService.create({
                 data: {
-                    roomType: RoomType.PRIVATE
+                    type: RoomType.PRIVATE
                 }
             });
         }

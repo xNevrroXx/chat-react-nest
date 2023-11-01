@@ -2,10 +2,10 @@ import React, {FC} from "react";
 import * as classNames from "classnames";
 import {Avatar, Typography} from "antd";
 // own modules
-import {IRoom, RoomType} from "../../models/IStore/IChats.ts";
+import {useAppSelector} from "../../hooks/store.hook.ts";
+import {IRoom, RoomType} from "../../models/IStore/IRoom.ts";
 // styles
 import "./room-card.scss";
-import {useAppSelector} from "../../hooks/store.hook.ts";
 
 const {Title, Text} = Typography;
 

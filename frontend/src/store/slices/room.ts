@@ -1,40 +1,51 @@
 import {createSlice} from "@reduxjs/toolkit";
 // interfaces
 import type {
-    IChats,
     IInnerMessage,
     IFile,
     IInnerForwardedMessage,
     IForwardedMessage
-} from "../../models/IStore/IChats.ts";
+} from "../../models/IStore/IRoom.ts";
 import {
     checkIsInnerMessageSocket,
-    IMessage,
+    IMessage, IRoomSlice,
     RoomType,
-} from "../../models/IStore/IChats.ts";
+} from "../../models/IStore/IRoom.ts";
 // actions
-import {createSocketInstance, getAll} from "../thunks/chat.ts";
 import {
+    getAll,
+    createRoom,
+    createSocketInstance
+} from "../thunks/room.ts";
+import {
+    setUserId,
     handleEditedMessageSocket,
     handleForwardedMessageSocket,
     handleMessageSocket,
     handleChangeUserTypingSocket,
-    setUserId, handleDeletedMessageSocket, handlePinnedMessageSocket
-} from "../actions/chat.ts";
+    handleDeletedMessageSocket,
+    handlePinnedMessageSocket
+} from "../actions/room.ts";
 
 
-const initialState: IChats = {
+const initialState: IRoomSlice = {
     userId: "",
-    chats: [],
+    rooms: [],
     socket: null
 };
 
-const chat = createSlice({
-    name: "chat",
+const room = createSlice({
+    name: "room",
     initialState,
     reducers: {},
     extraReducers: builder => {
         builder
+            .addCase(getAll.fulfilled, (state, action) => {
+                state.rooms = action.payload;
+            })
+            .addCase(createRoom.fulfilled, (state, action) => {
+                state.rooms.push(action.payload);
+            })
             .addCase(setUserId, (state, action) => {
                 state.userId = action.payload;
             })
@@ -43,7 +54,7 @@ const chat = createSlice({
                 state.socket = action.payload;
             })
             .addCase(handleMessageSocket, (state, action) => {
-                const targetChat = state.chats.find(chat => chat.id === action.payload.roomId);
+                const targetChat = state.rooms.find(chat => chat.id === action.payload.roomId);
                 const messageSocket = action.payload;
                 const newMessage: IMessage = {
                     ...messageSocket,
@@ -98,7 +109,7 @@ const chat = createSlice({
                 const message = newMessage;
 
                 if (!targetChat) {
-                    state.chats.push({ // todo repair of the getting first message in the unrecognized room
+                    state.rooms.push({ // todo repair of the getting first message in the unrecognized room
                         id: message.roomId,
                         userId: "",
                         name: "",
@@ -116,7 +127,7 @@ const chat = createSlice({
                 }
             })
             .addCase(handleForwardedMessageSocket, (state, action) => {
-                const targetChat = state.chats.find(chat => chat.id === action.payload.roomId);
+                const targetChat = state.rooms.find(chat => chat.id === action.payload.roomId);
                 const messageSocket = action.payload;
                 let innerMessage: IInnerMessage | IInnerForwardedMessage | null;
 
@@ -158,7 +169,7 @@ const chat = createSlice({
                 const message = newMessage;
 
                 if (!targetChat) {
-                    state.chats.push({ // todo repair of the getting first message in the unrecognized room
+                    state.rooms.push({ // todo repair of the getting first message in the unrecognized room
                         id: message.roomId,
                         userId: "",
                         name: "",
@@ -176,13 +187,13 @@ const chat = createSlice({
                 }
             })
             .addCase(handlePinnedMessageSocket, (state, action) => {
-                const targetRoom = state.chats.find(chat => chat.id === action.payload.roomId);
+                const targetRoom = state.rooms.find(chat => chat.id === action.payload.roomId);
                 if (!targetRoom) return;
 
                 targetRoom.pinnedMessages = action.payload.messages;
             })
             .addCase(handleEditedMessageSocket, (state, action) => {
-                const targetChat = state.chats.find(chat => chat.id === action.payload.roomId);
+                const targetChat = state.rooms.find(chat => chat.id === action.payload.roomId);
                 if (!targetChat) return;
 
                 const targetMessage = targetChat.messages.find(chat => chat.id === action.payload.messageId);
@@ -190,7 +201,7 @@ const chat = createSlice({
                 targetMessage.text = action.payload.text;
             })
             .addCase(handleDeletedMessageSocket, (state, action) => {
-                const targetChat = state.chats.find(chat => chat.id === action.payload.roomId);
+                const targetChat = state.rooms.find(chat => chat.id === action.payload.roomId);
                 if (!targetChat) return;
 
                 const targetMessage = targetChat.messages.find(chat => chat.id === action.payload.messageId);
@@ -198,19 +209,16 @@ const chat = createSlice({
                 targetMessage.isDeleted = action.payload.isDeleted;
             })
             .addCase(handleChangeUserTypingSocket, (state, action) => {
-                const targetChat = state.chats.find(chat => chat.id === action.payload[0].roomId);
+                const targetChat = state.rooms.find(chat => chat.id === action.payload[0].roomId);
                 if (!targetChat) {
                     return;
                 }
 
                 targetChat.participants = action.payload;
-            })
-            .addCase(getAll.fulfilled, (state, action) => {
-                state.chats = action.payload;
             });
     }
 });
 
-const {reducer} = chat;
+const {reducer} = room;
 
 export default reducer;

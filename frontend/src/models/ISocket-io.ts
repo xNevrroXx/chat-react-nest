@@ -11,7 +11,7 @@ import {
     IEditedMessageSocket,
     IDeletedMessageSocket,
     TPinnedMessagesSocket
-} from "./IStore/IChats.ts";
+} from "./IStore/IRoom.ts";
 import {TUserOnline} from "./IStore/IAuthentication.ts";
 
 export interface ServerToClientEvents {

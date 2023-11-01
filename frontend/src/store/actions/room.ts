@@ -4,8 +4,9 @@ import {
     IMessageSocket,
     IEditedMessageSocket,
     IDeletedMessageSocket,
-    IForwardedMessageSocket, TPinnedMessagesSocket
-} from "../../models/IStore/IChats.ts";
+    TPinnedMessagesSocket,
+    IForwardedMessageSocket
+} from "../../models/IStore/IRoom.ts";
 import {TValueOf} from "../../models/TUtils.ts";
 import {IUserDto} from "../../models/IStore/IAuthentication.ts";
 

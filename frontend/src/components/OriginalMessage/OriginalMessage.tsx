@@ -5,7 +5,7 @@ import emojiParser from "universal-emoji-parser";
 import LinkPreviewer from "../LinkPreviewer/LinkPreviewer.tsx";
 import {UrlMatcher} from "interweave-autolink";
 import {TValueOf} from "../../models/TUtils.ts";
-import {IOriginalMessage} from "../../models/IStore/IChats.ts";
+import {IOriginalMessage} from "../../models/IStore/IRoom.ts";
 
 interface IOriginalMessageProps {
     text: TValueOf<Pick<IOriginalMessage, "text">>

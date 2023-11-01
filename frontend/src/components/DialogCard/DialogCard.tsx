@@ -7,8 +7,8 @@ import emojiParser from "universal-emoji-parser";
 // own modules
 import {IUserDto} from "../../models/IStore/IAuthentication.ts";
 import {TValueOf} from "../../models/TUtils.ts";
-import {IRoom, RoomType} from "../../models/IStore/IChats.ts";
-import {ILastMessageInfo} from "../../models/IChat.ts";
+import {IRoom, RoomType} from "../../models/IStore/IRoom.ts";
+import {ILastMessageInfo} from "../../models/IRoom.ts";
 // styles
 import "./dialog.scss";
 

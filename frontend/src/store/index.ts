@@ -2,7 +2,7 @@ import {type Action, type Middleware, configureStore} from "@reduxjs/toolkit";
 import reduxThunk from "redux-thunk";
 // reducers
 import authentication from "./slices/authentication";
-import chat from "./slices/chat.ts";
+import room from "./slices/room.ts";
 import users from "./slices/users";
 
 const loggerMiddleware: Middleware = (api) => (next: AppDispatch) => <A extends Action>(action: A) => {
@@ -12,21 +12,21 @@ const loggerMiddleware: Middleware = (api) => (next: AppDispatch) => <A extends 
 };
 
 const store = configureStore({
-    reducer: {authentication, chat, users},
+    reducer: {authentication, room, users},
     middleware: getDefaultMiddleware =>
         getDefaultMiddleware({
           serializableCheck: {
               ignoredActionPaths: ["authentication/login/rejected"],
               ignoredActions: [
-                  "chat/socket:create-instance/fulfilled",
-                  "chat/get-all/fulfilled",
-                  "chat/socket:room:handle-message",
-                  "chat/socket:room:send-message/pending",
-                  "chat/socket:room:send-message/fulfilled",
+                  "room/socket:create-instance/fulfilled",
+                  "room/get-all/fulfilled",
+                  "room/socket:room:handle-message",
+                  "room/socket:room:send-message/pending",
+                  "room/socket:room:send-message/fulfilled",
 
                   "users/get-all/fulfilled"
               ],
-              ignoredPaths: ["chat.socket", "chat.chats", "users"]
+              ignoredPaths: ["room.socket", "room.room", "users"]
           }
         }).concat(reduxThunk, loggerMiddleware),
     enhancers: [],

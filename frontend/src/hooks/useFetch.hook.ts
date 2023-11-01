@@ -1,5 +1,6 @@
 import {useCallback, useState} from "react";
-import axios from "axios";
+import {AxiosRequestConfig} from "axios";
+import $api from "../http";
 
 export enum FetchingStatus {
     IDLE = "IDLE",
@@ -13,12 +14,12 @@ const useFetch = <T>(url: string | undefined) => {
     const [data, setData] = useState<T | null>(null);
     const [error, setError] = useState<unknown | null>(null);
 
-    const request = useCallback(async () => {
+    const request = useCallback(async (config: AxiosRequestConfig): Promise<T | void> => {
         if (!url) return;
         setStatus(FetchingStatus.FETCHING);
 
         try {
-            const response = await axios.get<T>(url);
+            const response = await $api<T>(url, config);
             setData(response.data);
             setStatus(FetchingStatus.FULFILLED);
         } catch (error) {

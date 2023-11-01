@@ -1,4 +1,4 @@
-import {Room} from "@prisma/client";
+import {Room, RoomType} from "@prisma/client";
 import {IMessage} from "../message/TMessage";
 
 export interface IRoom extends Room {
@@ -9,3 +9,5 @@ export interface IRoom extends Room {
         text: string
     }[]
 }
+
+export type TPreviewRooms = {id: string, name: string, type: RoomType};

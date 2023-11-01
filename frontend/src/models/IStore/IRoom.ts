@@ -16,9 +16,9 @@ export enum RoomType {
 }
 
 // Store types
-export interface IChats {
+export interface IRoomSlice {
     userId: TValueOf<Pick<IUserDto, "id">>;
-    chats: IRoom[];
+    rooms: IRoom[];
     socket: SocketIOService | null;
 }
 export interface IRoom {
@@ -101,7 +101,9 @@ export interface IFile {
 }
 
 // HTTP response types
-type TFileHTTP = Omit<IFile, "buffer" | "createdAt"> & {
+export type TTemporarilyRoomBySearch = Pick<IRoom, "id" | "name" | "roomType">
+
+export type TFileHTTP = Omit<IFile, "buffer" | "createdAt"> & {
     buffer: {
         type: "Buffer",
         data: number[]
@@ -163,6 +165,17 @@ export interface IDeletedMessageSocket {
 
 
 // only client types(without responses) to send data
+export type TCreateRoom = TCreatePrivateRoom | TCreateGroupRoom;
+export type TCreateGroupRoom = {
+    name: TValueOf<Pick<IRoom, "name">>,
+    roomType: RoomType.GROUP,
+    interlocutorsId: TValueOf<Pick<IUserDto, "id">>[]
+}
+export type TCreatePrivateRoom = {
+    roomType: RoomType.PRIVATE,
+    interlocutorsId: [TValueOf<Pick<IUserDto, "id">>]
+};
+
 export type TSendUserTyping = Omit<IUserTyping, "updatedAt" | "userId">
 
 export type TSendMessage = {

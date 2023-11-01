@@ -1,6 +1,6 @@
 import {createAsyncThunk} from "@reduxjs/toolkit";
 // services
-import {ChatService} from "../../services/Chat.service.ts";
+import {RoomService} from "../../services/RoomService.ts";
 import {SocketIOService} from "../../services/SocketIO.service.ts";
 // actions
 import {
@@ -10,7 +10,7 @@ import {
     handleDeletedMessageSocket,
     handleChangeUserTypingSocket,
     handleForwardedMessageSocket
-} from "../actions/chat.ts";
+} from "../actions/room.ts";
 import {handleChangeUserOnlineSocket} from "../actions/users.ts";
 // types
 import {
@@ -25,12 +25,15 @@ import {
     IForwardMessage,
     IForwardedMessage,
     IInnerMessage,
-    IInnerForwardedMessage, IDeleteMessage, IPinMessage
-} from "../../models/IStore/IChats.ts";
+    IInnerForwardedMessage,
+    IDeleteMessage,
+    IPinMessage,
+    TTemporarilyRoomBySearch
+} from "../../models/IStore/IRoom.ts";
 import {RootState} from "../index.ts";
 
 const createSocketInstance = createAsyncThunk<SocketIOService, string, { state: RootState }>(
-    "chat/socket:create-instance",
+    "room/socket:create-instance",
     (token: string, thunkAPI) => {
         try {
             const socket = new SocketIOService(token);
@@ -43,10 +46,10 @@ const createSocketInstance = createAsyncThunk<SocketIOService, string, { state: 
 );
 
 const connectSocket = createAsyncThunk<void, void, { state: RootState }>(
-    "chat/socket:connect",
+    "room/socket:connect",
     async (_, thunkApi) => {
         try {
-            const socket = thunkApi.getState().chat.socket;
+            const socket = thunkApi.getState().room.socket;
             await socket?.connect();
 
             socket?.on("user:toggle-online", (data) => {
@@ -77,10 +80,10 @@ const connectSocket = createAsyncThunk<void, void, { state: RootState }>(
 );
 
 const disconnectSocket = createAsyncThunk<void, void, { state: RootState }>(
-    "chat/socket:disconnect",
+    "room/socket:disconnect",
     async (_, thunkApi) => {
         try {
-            const socket = thunkApi.getState().chat.socket;
+            const socket = thunkApi.getState().room.socket;
             await socket?.disconnect();
             return;
         } catch (error) {
@@ -90,10 +93,10 @@ const disconnectSocket = createAsyncThunk<void, void, { state: RootState }>(
 );
 
 const sendMessageSocket = createAsyncThunk<void, TSendMessage, { state: RootState }>(
-    "chat/socket:room:send-message",
+    "room/socket:room:send-message",
     (data, thunkAPI) => {
         try {
-            const socket = thunkAPI.getState().chat.socket;
+            const socket = thunkAPI.getState().room.socket;
             if (!socket) {
                 throw new Error("There is no socket");
             }
@@ -107,10 +110,10 @@ const sendMessageSocket = createAsyncThunk<void, TSendMessage, { state: RootStat
 );
 
 const pinMessageSocket  = createAsyncThunk<void, IPinMessage, { state: RootState }>(
-    "chat/socket:room:pin-message",
+    "room/socket:room:pin-message",
     (data, thunkAPI) => {
         try {
-            const socket = thunkAPI.getState().chat.socket;
+            const socket = thunkAPI.getState().room.socket;
             if (!socket) {
                 throw new Error("There is no socket");
             }
@@ -124,10 +127,10 @@ const pinMessageSocket  = createAsyncThunk<void, IPinMessage, { state: RootState
 );
 
 const editMessageSocket = createAsyncThunk<void, IEditMessage, { state: RootState }>(
-    "chat/socket:room:edit-message",
+    "room/socket:room:edit-message",
     (data, thunkAPI) => {
         try {
-            const socket = thunkAPI.getState().chat.socket;
+            const socket = thunkAPI.getState().room.socket;
             if (!socket) {
                 throw new Error("There is no socket");
             }
@@ -141,10 +144,10 @@ const editMessageSocket = createAsyncThunk<void, IEditMessage, { state: RootStat
 );
 
 const deleteMessageSocket = createAsyncThunk<void, IDeleteMessage, { state: RootState }>(
-    "chat/socket:room:delete-message",
+    "room/socket:room:delete-message",
     (data, thunkAPI) => {
         try {
-            const socket = thunkAPI.getState().chat.socket;
+            const socket = thunkAPI.getState().room.socket;
             if (!socket) {
                 throw new Error("There is no socket");
             }
@@ -158,10 +161,10 @@ const deleteMessageSocket = createAsyncThunk<void, IDeleteMessage, { state: Root
 );
 
 const forwardMessageSocket = createAsyncThunk<void, IForwardMessage, { state: RootState }>(
-    "chat/socket:room:forward-message",
+    "room/socket:room:forward-message",
     (data, thunkAPI) => {
         try {
-            const socket = thunkAPI.getState().chat.socket;
+            const socket = thunkAPI.getState().room.socket;
             if (!socket) {
                 throw new Error("There is no socket");
             }
@@ -175,10 +178,10 @@ const forwardMessageSocket = createAsyncThunk<void, IForwardMessage, { state: Ro
 );
 
 const toggleUserTypingSocket = createAsyncThunk<void, TSendUserTyping, { state: RootState }>(
-    "chat/socket:room:send-toggle-typing",
+    "room/socket:room:send-toggle-typing",
     (data, thunkAPI) => {
         try {
-            const socket = thunkAPI.getState().chat.socket;
+            const socket = thunkAPI.getState().room.socket;
             if (!socket) {
                 throw new Error("There is no socket");
             }
@@ -192,14 +195,14 @@ const toggleUserTypingSocket = createAsyncThunk<void, TSendUserTyping, { state: 
 );
 
 const getAll = createAsyncThunk(
-    "chat/get-all",
+    "room/get-all",
     async (_, thunkAPI) => {
         try {
-            const response = await ChatService.getAll();
+            const response = await RoomService.getAll();
             const chatsHTTPResponse = response.data;
             const chats: IRoom[] = [];
-            chatsHTTPResponse.forEach(chat => {
-                const messages = chat.messages.reduce<(IMessage | IForwardedMessage)[]>((previousValue, messageHTTP) => {
+            chatsHTTPResponse.forEach(room => {
+                const messages = room.messages.reduce<(IMessage | IForwardedMessage)[]>((previousValue, messageHTTP) => {
                     let message: IMessage | IForwardedMessage;
                     let newMessage = {} as (IMessage | IForwardedMessage);
                     let innerMessage: IInnerMessage | IInnerForwardedMessage | null;
@@ -309,7 +312,7 @@ const getAll = createAsyncThunk(
                 }, []);
 
                 chats.push({
-                    ...chat,
+                    ...room,
                     messages
                 });
             });
@@ -321,8 +324,23 @@ const getAll = createAsyncThunk(
     }
 );
 
+const createRoom = createAsyncThunk<IRoom, TTemporarilyRoomBySearch>(
+    "room/create",
+    async (newRoomData, thunkAPI) => {
+        try {
+            const response = await RoomService.create(newRoomData);
+            return response.data;
+        }
+        catch(error) {
+            return thunkAPI.rejectWithValue(error);
+        }
+    }
+);
+
 export {
     getAll,
+    createRoom,
+
     createSocketInstance,
     disconnectSocket,
     connectSocket,

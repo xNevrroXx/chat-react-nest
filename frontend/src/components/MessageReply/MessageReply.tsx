@@ -8,7 +8,7 @@ import {messageOwnerSelector} from "../../store/selectors/messageOwnerSelector.t
 import {
     IInnerMessage,
     IInnerForwardedMessage, checkIsInnerMessage
-} from "../../models/IStore/IChats.ts";
+} from "../../models/IStore/IRoom.ts";
 // styles
 import "./message-reply.scss";
 

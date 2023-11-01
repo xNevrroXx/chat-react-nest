@@ -13,11 +13,11 @@ import {Modal} from "antd";
 // own modules
 import Message from "../../HOC/Message.tsx";
 import {IUserDto} from "../../models/IStore/IAuthentication.ts";
-import {IForwardedMessage, IForwardMessage, IMessage, IRoom} from "../../models/IStore/IChats.ts";
+import {IForwardedMessage, IForwardMessage, IMessage, IRoom} from "../../models/IStore/IRoom.ts";
 import {TValueOf} from "../../models/TUtils.ts";
-import {IFileForRender} from "../../models/IChat.ts";
+import {IFileForRender} from "../../models/IRoom.ts";
 // styles
-import "./chat-content.scss";
+import "./room-content.scss";
 
 
 interface IChatContentProps {
@@ -32,7 +32,7 @@ interface IChatContentProps {
     onOpenUsersListForForwardMessage: (forwardedMessageId: TValueOf<Pick<IForwardMessage, "forwardedMessageId">>) => void
 }
 
-const ChatContent = forwardRef<HTMLDivElement, IChatContentProps>(({
+const RoomContent = forwardRef<HTMLDivElement, IChatContentProps>(({
                                                                        className,
                                                                        user,
                                                                        room,
@@ -44,18 +44,15 @@ const ChatContent = forwardRef<HTMLDivElement, IChatContentProps>(({
                                                                        onOpenUsersListForForwardMessage
                                                                    }, outerRef) => {
     const innerRef = useRef<HTMLDivElement | null>(null);
-    const [isPreviewOpen, setIsPreviewOpen] = useState<boolean>(false);
     const [previewFile, setPreviewFile] = useState<IFileForRender | null>(null);
 
     useImperativeHandle(outerRef, () => innerRef.current!, []);
 
     const handlePreview = useCallback((file: IFileForRender) => {
         setPreviewFile(file);
-        setIsPreviewOpen(true);
     }, []);
 
     const handleCancelPreview = useCallback(() => {
-        setIsPreviewOpen(false);
         setPreviewFile(null);
     }, []);
 
@@ -91,16 +88,16 @@ const ChatContent = forwardRef<HTMLDivElement, IChatContentProps>(({
     return (
         <div
             ref={innerRef}
-            className={classNames("chat-content", className)}
+            className={classNames("room-content", className)}
         >
-            <div className="chat-content__wrapper">
+            <div className="room-content__wrapper">
                 {listMessages}
             </div>
 
             <Modal
                 className="file-input__preview-wrapper"
                 title={previewFile?.originalName}
-                open={isPreviewOpen}
+                open={!!previewFile}
                 footer={null}
                 onCancel={handleCancelPreview}
             >
@@ -115,4 +112,4 @@ const ChatContent = forwardRef<HTMLDivElement, IChatContentProps>(({
     );
 });
 
-export default ChatContent;
+export default RoomContent;

@@ -1,4 +1,4 @@
-import {IFile} from "./IStore/IChats.ts";
+import {IFile} from "./IStore/IRoom.ts";
 
 export interface ILastMessageInfo {
     sender: "Вы" | string,

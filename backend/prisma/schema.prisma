@@ -94,7 +94,7 @@ model RefreshToken {
 model Room {
   id            String   @id @default(uuid())
   creatorUserId String?  @map("user_id")
-  roomType      RoomType @map("room_type")
+  type          RoomType
   name          String?
 
   createdAt DateTime  @default(now()) @map("created_at")

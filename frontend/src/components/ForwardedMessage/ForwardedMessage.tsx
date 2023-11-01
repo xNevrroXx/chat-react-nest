@@ -4,7 +4,7 @@ import {useAppSelector} from "../../hooks/store.hook.ts";
 import * as classNames from "classnames";
 // own modules
 import {messageOwnerSelector} from "../../store/selectors/messageOwnerSelector.ts";
-import {IForwardedMessage} from "../../models/IStore/IChats.ts";
+import {IForwardedMessage} from "../../models/IStore/IRoom.ts";
 // styles
 import "./forwarded-message.scss";
 

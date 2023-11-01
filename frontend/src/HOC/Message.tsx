@@ -7,10 +7,10 @@ import {
     checkIsMessage,
     IMessage,
     IForwardedMessage
-} from "../models/IStore/IChats.ts";
+} from "../models/IStore/IRoom.ts";
 import {IUserDto} from "../models/IStore/IAuthentication.ts";
 import {TValueOf} from "../models/TUtils.ts";
-import {IFileForRender, IKnownAndUnknownFiles, TAttachmentType} from "../models/IChat.ts";
+import {IFileForRender, IKnownAndUnknownFiles, TAttachmentType} from "../models/IRoom.ts";
 
 type TMessageProps = {
     userId: TValueOf<Pick<IUserDto, "id">>;

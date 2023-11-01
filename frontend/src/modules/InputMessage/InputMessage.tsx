@@ -12,7 +12,7 @@ import {
     IAttachment,
     TSendMessage,
     IEditMessage, IMessage, IForwardedMessage
-} from "../../models/IStore/IChats.ts";
+} from "../../models/IStore/IRoom.ts";
 import {TValueOf} from "../../models/TUtils.ts";
 // styles
 import "./input-message.scss";

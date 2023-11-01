@@ -4,7 +4,7 @@ import * as classNames from "classnames";
 // own modules
 import {truncateTheText} from "../../utils/truncateTheText.ts";
 import {TValueOf} from "../../models/TUtils.ts";
-import {IOriginalMessage} from "../../models/IStore/IChats.ts";
+import {IOriginalMessage} from "../../models/IStore/IRoom.ts";
 // styles
 import "./link-previewer.scss";
 

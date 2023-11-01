@@ -2,7 +2,7 @@ import React, {FC} from "react";
 // own modules
 import PinnedMessage from "../PinnedMessage/PinnedMessage.tsx";
 import {TValueOf} from "../../models/TUtils.ts";
-import {IRoom} from "../../models/IStore/IChats.ts";
+import {IRoom} from "../../models/IStore/IRoom.ts";
 // styles
 import "./pinned-message-list.scss";
 

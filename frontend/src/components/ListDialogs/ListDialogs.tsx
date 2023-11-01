@@ -1,27 +1,24 @@
 import {FC, useCallback, useMemo} from "react";
-import {Input, Typography} from "antd";
 // own modules
-import DialogCard from "../../components/DialogCard/DialogCard.tsx";
+import DialogCard from "../DialogCard/DialogCard.tsx";
 // types
-import {checkIsMessage, IRoom} from "../../models/IStore/IChats.ts";
+import {checkIsMessage, IRoom} from "../../models/IStore/IRoom.ts";
 import {TValueOf} from "../../models/TUtils.ts";
 import {IUserDto} from "../../models/IStore/IAuthentication.ts";
-import {ILastMessageInfo} from "../../models/IChat.ts";
+import {ILastMessageInfo} from "../../models/IRoom.ts";
 // styles
 import "./list-dialogs.scss";
-
-const {Title} = Typography;
 
 interface IDialogsProps {
     user: IUserDto,
     rooms: IRoom[],
     activeRoomId: TValueOf<Pick<IRoom, "id">> | null,
-    onChangeDialog: (roomId: TValueOf<Pick<IRoom, "id">>) => void,
+    onClickDialog: (roomId: TValueOf<Pick<IRoom, "id">>) => void,
 }
 
-const ListDialogs: FC<IDialogsProps> = ({user, rooms, onChangeDialog, activeRoomId}) => {
+const ListDialogs: FC<IDialogsProps> = ({user, rooms, onClickDialog, activeRoomId}) => {
     const findLastMessageInfo = useCallback((room: IRoom): ILastMessageInfo | null => {
-        const lastMessage = room.messages.at(-1);
+        const lastMessage = room.messages ? room.messages.at(-1) : null;
         if (!lastMessage) {
             return null;
         }
@@ -55,7 +52,7 @@ const ListDialogs: FC<IDialogsProps> = ({user, rooms, onChangeDialog, activeRoom
                 <DialogCard
                     key={room.id.toString() + "dialog card"}
                     id={room.id}
-                    onClick={() => onChangeDialog(room.id)}
+                    onClick={() => onClickDialog(room.id)}
                     dialogName={room.name}
                     isActive={activeRoomId === room.id}
                     lastMessageInfo={lastMessageInfo}
@@ -63,18 +60,12 @@ const ListDialogs: FC<IDialogsProps> = ({user, rooms, onChangeDialog, activeRoom
                 />
             );
         });
-    }, [rooms, activeRoomId, onChangeDialog, findLastMessageInfo]);
+    }, [rooms, activeRoomId, onClickDialog, findLastMessageInfo]);
 
     return (
-        <div className="list-dialogs">
-            <div className="list-dialogs__header">
-                <Title level={4}>Диалоги</Title>
-                <Input placeholder={"поиск..."}/>
-            </div>
-            <ul className="list-dialogs__list">
-                {list}
-            </ul>
-        </div>
+        <ul className="dialogs__list">
+            {list}
+        </ul>
     );
 };
 

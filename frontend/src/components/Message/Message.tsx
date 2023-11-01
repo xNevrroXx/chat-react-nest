@@ -11,8 +11,8 @@ import ReplyOutlined from "../../icons/ReplyOutlined.tsx";
 import PinOutlined from "../../icons/PinOutlined.tsx";
 import ForwardOutlined from "../../icons/ForwardOutlined.tsx";
 // types
-import {checkIsMessage, IForwardedMessage, IMessage} from "../../models/IStore/IChats.ts";
-import {IFileForRender, IKnownAndUnknownFiles} from "../../models/IChat.ts";
+import {checkIsMessage, IForwardedMessage, IMessage} from "../../models/IStore/IRoom.ts";
+import {IFileForRender, IKnownAndUnknownFiles} from "../../models/IRoom.ts";
 // styles
 import "./message.scss";
 

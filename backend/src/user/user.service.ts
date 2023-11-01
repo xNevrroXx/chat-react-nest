@@ -1,5 +1,5 @@
 import {Injectable} from "@nestjs/common";
-import {type User, Prisma, UserOnline, UserTyping, Room} from "@prisma/client";
+import {Prisma, Room, type User, UserOnline, UserTyping} from "@prisma/client";
 import {DatabaseService} from "../database/database.service";
 import HttpError from "../exceptions/http-error";
 import {TValueOf} from "../models/TUtils";
@@ -13,12 +13,10 @@ export class UserService {
         userWhereUniqueInput: Prisma.UserWhereUniqueInput,
         include?: T
     ): Promise<Prisma.UserGetPayload<{include: T}> | User | null> {
-        const user = await this.prisma.user.findUnique({
+        return this.prisma.user.findUnique({
             where: userWhereUniqueInput,
             include
         });
-
-        return user;
     }
 
     async findMany<T extends Prisma.UserInclude>(params: {
@@ -31,7 +29,7 @@ export class UserService {
     }): Promise<Prisma.UserGetPayload<{include: T}>[] | User[]> {
         const { skip, take, cursor, where, orderBy, include } = params;
 
-        const users = await this.prisma.user.findMany({
+        const users = this.prisma.user.findMany({
             skip,
             take,
             cursor,
@@ -50,13 +48,9 @@ export class UserService {
             throw HttpError.BadRequest(`Пользователь с почтовым адресом ${data.email} уже существует`);
         }
 
-        const newUser = await this.prisma.user.create({
-            data: {
-                ...data
-            }
-
+        return this.prisma.user.create({
+            data
         });
-        return newUser;
     }
 
     async update(params: {
@@ -64,7 +58,7 @@ export class UserService {
         data: Prisma.UserUpdateInput;
     }): Promise<User> {
         const { where, data } = params;
-        const isExist = await this.prisma.user.findUnique({where});
+        const isExist = this.prisma.user.findUnique({where});
         if (!isExist) {
             throw HttpError.BadRequest(`Пользователя с почтовым адресом ${data.email} не сущeствует`);
         }
@@ -76,7 +70,7 @@ export class UserService {
     }
 
     async delete(where: Prisma.UserWhereUniqueInput): Promise<User> {
-        const isExist = await this.prisma.user.findUnique({where});
+        const isExist = this.prisma.user.findUnique({where});
         if (!isExist) {
             throw HttpError.BadRequest(`Пользователя с почтовым адресом ${"BOILERPLATE"} не существует`);
         }
@@ -93,9 +87,9 @@ export class UserService {
             where: {userId: userId}
         });
 
-        let userOnline: UserOnline;
+        let userOnline: Promise<UserOnline>;
         if (!isExistAlready) {
-            userOnline = await this.prisma.userOnline.create({
+            userOnline = this.prisma.userOnline.create({
                 data: {
                     userId,
                     isOnline
@@ -103,7 +97,7 @@ export class UserService {
             });
         }
         else {
-            userOnline = await this.prisma.userOnline.update({
+            userOnline = this.prisma.userOnline.update({
                 where: {userId: userId},
                 data: {
                     isOnline
@@ -124,9 +118,9 @@ export class UserService {
             where: {userId: userId}
         });
 
-        let userTyping: UserTyping;
+        let userTyping: Promise<UserTyping>;
         if (!isExistAlready) {
-            userTyping = await this.prisma.userTyping.create({
+            userTyping = this.prisma.userTyping.create({
                 data: {
                     userId,
                     roomId,
@@ -135,7 +129,7 @@ export class UserService {
             });
         }
         else {
-            userTyping = await this.prisma.userTyping.update({
+            userTyping = this.prisma.userTyping.update({
                 where: {userId: userId},
                 data: {
                     roomId,

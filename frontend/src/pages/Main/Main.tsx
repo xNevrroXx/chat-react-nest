@@ -6,12 +6,12 @@ import {ROUTES} from "../../router/routes.ts";
 import {useAppDispatch, useAppSelector} from "../../hooks/store.hook.ts";
 import {createRoute} from "../../router/createRoute.ts";
 import ListRooms from "../../modules/ListRooms/ListRooms.tsx";
-import ListDialogs from "../../modules/Dialogs/ListDialogs.tsx";
 import ActiveRoom from "../../modules/ActiveRoom/ActiveRoom.tsx";
+import Dialogs from "../../modules/Dialogs/Dialogs.tsx";
 // selectors & actions
-import {forwardMessageSocket} from "../../store/thunks/chat.ts";
+import {createRoom, forwardMessageSocket} from "../../store/thunks/room.ts";
 // own types
-import type {IRoom, IForwardMessage} from "../../models/IStore/IChats.ts";
+import type {IForwardMessage, IRoom, TTemporarilyRoomBySearch} from "../../models/IStore/IRoom.ts";
 import type {TValueOf} from "../../models/TUtils.ts";
 // styles
 import "./main.scss";
@@ -20,7 +20,7 @@ const Main = () => {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
     const user = useAppSelector(state => state.authentication.user!);
-    const rooms = useAppSelector(state => state.chat.chats);
+    const rooms = useAppSelector(state => state.room.rooms);
     const [activeRoom, setActiveRoom] = useState<IRoom | null>(null);
     const [isOpenModalForForwardMessage, setIsOpenModalForForwardMessage] = useState<boolean>(false);
     const [forwardedMessageId, setForwardedMessageId] = useState<TValueOf<Pick<IForwardMessage, "forwardedMessageId">> | null>(null);
@@ -42,10 +42,14 @@ const Main = () => {
         setActiveRoom(rooms[0] || null);
     }, [rooms, activeRoom]);
 
-    const onChangeDialog = (roomId: TValueOf<Pick<IRoom, "id">>) => {
+    const onChangeDialog = useCallback((roomId: TValueOf<Pick<IRoom, "id">>) => {
         const targetRoom = rooms.find(room => room.id === roomId)!;
         setActiveRoom(targetRoom);
-    };
+    }, [rooms]);
+
+    const onCreateNewDialog = useCallback((remoteRoom: TTemporarilyRoomBySearch) => {
+        void dispatch(createRoom(remoteRoom));
+    }, [dispatch]);
 
     const onClickRoom = (room: IRoom) => {
         setIsOpenModalForForwardMessage(false);
@@ -72,19 +76,18 @@ const Main = () => {
     return (
         <Fragment>
             <div className="messenger">
-                <ListDialogs
+                <Dialogs
                     user={user}
                     rooms={rooms}
                     onChangeDialog={onChangeDialog}
+                    onCreateNewDialog={onCreateNewDialog}
                     activeRoomId={activeRoom ? activeRoom.id : null}
                 />
-                { activeRoom &&
-                    <ActiveRoom
-                        room={activeRoom}
-                        user={user}
-                        onOpenUsersListForForwardMessage={openUsersListForForwardMessage}
-                    />
-                }
+                <ActiveRoom
+                    room={activeRoom}
+                    user={user}
+                    onOpenUsersListForForwardMessage={openUsersListForForwardMessage}
+                />
             </div>
             <Modal
                 title="Переслать сообщение"
