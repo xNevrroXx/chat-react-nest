@@ -32,6 +32,7 @@ import * as mime from "mime-types";
 import {isFulfilledPromise} from "../utils/isFulfilledPromise";
 import {RoomService} from "../room/room.service";
 import {ParticipantService} from "../participant/participant.service";
+import {brToNewLineChars} from "../utils/brToNewLineChars ";
 
 @UseFilters(BaseWsExceptionFilter)
 @WebSocketGateway({
@@ -320,20 +321,13 @@ export class ChatGateway
             id: senderPayloadJWT.id
         });
         if (!sender) {
-            throw HttpError.BadRequest("Не найден отправитель сообщения");
+            throw new WsException("Не найден отправитель сообщения");
         }
-        let room: Room;
-        if (!message.roomId) {
-            room = await this.roomService.create({
-                data: {
-                    type: RoomType.PRIVATE
-                }
-            });
-        }
-        else {
-            room = await this.roomService.findOne({
-                id: message.roomId
-            });
+        const room = await this.roomService.findOne({
+            id: message.roomId
+        });
+        if (!room) {
+            throw new WsException("Комната не найдена");
         }
 
         const forwardedMessage = await this.messageService.findOne({
@@ -374,7 +368,8 @@ export class ChatGateway
                 },
                 usersDeletedThisMessage: true
             }
-        }) as Prisma.MessageGetPayload<{include: {
+        }) as Prisma.MessageGetPayload<{
+            include: {
                 forwardedMessage: {
                     include: {
                         files: true,
@@ -411,6 +406,13 @@ export class ChatGateway
     async handleMessage(@ConnectedSocket() client, @MessageBody() message: TNewMessage) {
         const senderPayloadJWT: IUserPayloadJWT = client.user;
 
+        if (message.text && message.text.length > 0) {
+            message.text = brToNewLineChars(message.text).trim();
+            if (message.text.length === 0) {
+                return;
+            }
+        }
+
         const sender = await this.userService.findOne({
             id: senderPayloadJWT.id
         });
@@ -418,25 +420,18 @@ export class ChatGateway
             throw HttpError.BadRequest("Не найден отправитель сообщения");
         }
 
-        let room: Room;
-        if (!message.roomId) {
-            room = await this.roomService.create({
-                data: {
-                    type: RoomType.PRIVATE
-                }
-            });
+        const room = await this.roomService.findOne({
+            id: message.roomId
+        });
+        if (!room) {
+            throw new WsException("Комната не найдена");
         }
-        else {
-            room = await this.roomService.findOne({
-                id: message.roomId
-            });
-        }
+
         void this.toggleTypingStatus(client, {
             userId: sender.id,
             roomId: room.id,
             isTyping: false
         });
-
 
         const attachmentPromises = message.attachments.map<Promise<Omit<File, "id" | "messageId" | "createdAt">>>(async (value, index) => {
             let extension: string;
@@ -481,6 +476,7 @@ export class ChatGateway
                 }
             }
         } : null;
+
         const newMessage = await this.messageService.create({
             data: {
                 sender: {

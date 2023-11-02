@@ -11,6 +11,8 @@ import {IRoom, RoomType} from "../../models/IStore/IRoom.ts";
 import {ILastMessageInfo} from "../../models/IRoom.ts";
 // styles
 import "./dialog.scss";
+import {truncateTheText} from "../../utils/truncateTheText.ts";
+// import clip from "text-clipper";
 
 const {Title, Text} = Typography;
 
@@ -20,7 +22,7 @@ interface IDialogCardProps {
     onClick: () => void,
     isActive: boolean,
     lastMessageInfo: ILastMessageInfo | null,
-    roomType: TValueOf<Pick<IRoom, "roomType">>
+    roomType: TValueOf<Pick<IRoom, "type">>
 }
 
 const DialogCard: FC<IDialogCardProps> = ({id, dialogName, lastMessageInfo, onClick, isActive, roomType}) => {
@@ -40,7 +42,17 @@ const DialogCard: FC<IDialogCardProps> = ({id, dialogName, lastMessageInfo, onCl
                     (
                         <p className="dialog__message">
                             {roomType === RoomType.GROUP && <Text strong className="dialog__sender-message">{lastMessageInfo.sender + ": "}</Text>}
-                            <Markup content={emojiParser.parse(lastMessageInfo.text)} />
+                            <Markup
+                                noWrap={true}
+                                disableLineBreaks={true}
+                                content={
+                                    emojiParser.parse(truncateTheText({
+                                        text: lastMessageInfo.text,
+                                        maxLength: 50,
+                                        cutCloseToLastSpace: true
+                                    }))
+                                }
+                            />
                         </p>
                     )
                 }

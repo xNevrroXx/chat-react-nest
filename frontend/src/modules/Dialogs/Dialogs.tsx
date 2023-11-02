@@ -18,10 +18,10 @@ import {useAppSelector} from "../../hooks/store.hook.ts";
 import {filteredRoomsSelector} from "../../store/selectors/filteredRoomsSelector.ts";
 import {FetchingStatus, useFetch} from "../../hooks/useFetch.hook.ts";
 import {Spinner} from "../../components/Spinner/Spinner.tsx";
-import ListDialogs from "../../components/ListDialogs/ListDialogs.tsx";
+import ListLocalDialogs from "../../components/ListDialogs/ListLocalDialogs.tsx";
+import ListRemoteDialogs from "../../components/ListDialogs/ListRemoteDialogs.tsx";
 // styles
 import "./dialogs.scss";
-import ListRemoteDialogs from "../../components/ListRemoteDialogs/ListRemoteDialogs.tsx";
 
 const { useToken } = theme;
 const { Title, Text } = Typography;
@@ -122,7 +122,7 @@ const Dialogs: FC<IDialogsProps> = ({user, activeRoomId, onChangeDialog, onCreat
             return (
                 <Fragment>
                     <Title level={5}>Ваши чаты:</Title>
-                    <ListDialogs
+                    <ListLocalDialogs
                         user={user}
                         rooms={filteredLocalDialogs}
                         activeRoomId={activeRoomId}
@@ -133,7 +133,7 @@ const Dialogs: FC<IDialogsProps> = ({user, activeRoomId, onChangeDialog, onCreat
         }
 
         return (
-            <ListDialogs
+            <ListLocalDialogs
                 user={user}
                 rooms={filteredLocalDialogs}
                 activeRoomId={activeRoomId}
@@ -143,7 +143,15 @@ const Dialogs: FC<IDialogsProps> = ({user, activeRoomId, onChangeDialog, onCreat
     }, [activeRoomId, dialogQueryString, filteredLocalDialogs, isPending, onChangeDialog, user]);
 
     return (
-        <Sider theme="light" className="dialogs" width="20%">
+        <Sider
+            theme="light"
+            className="dialogs"
+            // style={{
+            //     width: "30%",
+            //     maxWidth: "auto",
+            //     flexGrow: "0"
+            // }}
+        >
             <Space direction="vertical" className="dialogs__header">
                 <Title style={{color: token.colorTextSecondary}} level={4}>Диалоги</Title>
                 <Input

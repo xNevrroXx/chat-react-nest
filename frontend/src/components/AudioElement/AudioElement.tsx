@@ -2,12 +2,15 @@ import React, {FC, useRef, useState} from "react";
 import * as classNames from "classnames";
 // @ts-ignore
 import {AudioVisualizer} from "react-audio-visualize";
-import {Button} from "antd";
+import {Button, theme, Typography} from "antd";
 import {PauseCircleOutlined} from "@ant-design/icons";
 // own modules
 import PlayCircleOutlined from "../../icons/PlayCircleOutlined.tsx";
 // styles
 import "./audio-element.scss";
+
+const {useToken} = theme;
+const {Text} = Typography;
 
 interface IVoiceRecording {
     blob: Blob,
@@ -16,9 +19,11 @@ interface IVoiceRecording {
     width?: number,
     // default: 50px
     height?:number,
-    alignCenter?: boolean
+    alignCenter?: boolean,
+    createdAt?: string
 }
-const AudioElement: FC<IVoiceRecording> = ({blob, blobURL, height = 50, width= 600, alignCenter}) => {
+const AudioElement: FC<IVoiceRecording> = ({blob, blobURL, height = 50, width= 600, alignCenter, createdAt}) => {
+    const {token} = useToken();
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const [audioTimestamp, setAudioTimestamp] = useState<number | null>(null);
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
@@ -86,6 +91,10 @@ const AudioElement: FC<IVoiceRecording> = ({blob, blobURL, height = 50, width= 6
                     onTimeUpdate={onTimeUpdate}
                     onEnded={() => setIsPlaying(false)}
                 />
+                <p>
+                    <Text style={{color: token.colorTextSecondary}}>{Number.parseFloat((blob.size / 1024).toString() ).toFixed(1)}KB</Text>
+                    { createdAt && <Text style={{color: token.colorTextSecondary}} className="message__time">{createdAt}</Text> }
+                </p>
             </div>
         </div>
     );

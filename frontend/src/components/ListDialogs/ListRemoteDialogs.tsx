@@ -6,7 +6,6 @@ import {IRoom, TTemporarilyRoomBySearch} from "../../models/IStore/IRoom.ts";
 import {TValueOf} from "../../models/TUtils.ts";
 import {IUserDto} from "../../models/IStore/IAuthentication.ts";
 // styles
-import "./list-dialogs.scss";
 
 
 interface IDialogsProps {
@@ -27,7 +26,7 @@ const ListRemoteDialogs: FC<IDialogsProps> = ({rooms, onCreateNewDialog, activeR
                     onClick={() => onCreateNewDialog(room)}
                     dialogName={room.name}
                     isActive={activeRoomId === room.id}
-                    roomType={room.roomType}
+                    roomType={room.type}
                     lastMessageInfo={null}
                 />
             );

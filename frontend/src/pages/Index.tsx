@@ -1,9 +1,8 @@
 import {Outlet, useLocation, useNavigate} from "react-router-dom";
 import {Suspense, useEffect} from "react";
+import {Layout} from "antd";
 import {createRoute} from "../router/createRoute.ts";
 import {ROUTES} from "../router/routes.ts";
-import {Layout} from "antd";
-import {Content} from "antd/es/layout/layout";
 import {Spinner} from "../components/Spinner/Spinner.tsx";
 
 const Index = () => {
@@ -21,12 +20,10 @@ const Index = () => {
     }, [location, navigate]);
 
     return (
-        <Layout style={{minHeight: "100vh"}}>
-            <Content className="content">
-                <Suspense fallback={<Spinner/>}>
-                    <Outlet/>
-                </Suspense>
-            </Content>
+        <Layout style={{minHeight: "100vh", display: "flex", justifyContent: "center", alignItems: "center"}}>
+            <Suspense fallback={<Spinner/>}>
+                <Outlet/>
+            </Suspense>
         </Layout>
     );
 };

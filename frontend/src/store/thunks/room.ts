@@ -93,7 +93,7 @@ const disconnectSocket = createAsyncThunk<void, void, { state: RootState }>(
 );
 
 const sendMessageSocket = createAsyncThunk<void, TSendMessage, { state: RootState }>(
-    "room/socket:room:send-message",
+    "room/socket:send-message",
     (data, thunkAPI) => {
         try {
             const socket = thunkAPI.getState().room.socket;
@@ -110,7 +110,7 @@ const sendMessageSocket = createAsyncThunk<void, TSendMessage, { state: RootStat
 );
 
 const pinMessageSocket  = createAsyncThunk<void, IPinMessage, { state: RootState }>(
-    "room/socket:room:pin-message",
+    "room/socket:pin-message",
     (data, thunkAPI) => {
         try {
             const socket = thunkAPI.getState().room.socket;
@@ -127,7 +127,7 @@ const pinMessageSocket  = createAsyncThunk<void, IPinMessage, { state: RootState
 );
 
 const editMessageSocket = createAsyncThunk<void, IEditMessage, { state: RootState }>(
-    "room/socket:room:edit-message",
+    "room/socket:edit-message",
     (data, thunkAPI) => {
         try {
             const socket = thunkAPI.getState().room.socket;
@@ -144,7 +144,7 @@ const editMessageSocket = createAsyncThunk<void, IEditMessage, { state: RootStat
 );
 
 const deleteMessageSocket = createAsyncThunk<void, IDeleteMessage, { state: RootState }>(
-    "room/socket:room:delete-message",
+    "room/socket:delete-message",
     (data, thunkAPI) => {
         try {
             const socket = thunkAPI.getState().room.socket;
@@ -161,7 +161,7 @@ const deleteMessageSocket = createAsyncThunk<void, IDeleteMessage, { state: Root
 );
 
 const forwardMessageSocket = createAsyncThunk<void, IForwardMessage, { state: RootState }>(
-    "room/socket:room:forward-message",
+    "room/socket:forward-message",
     (data, thunkAPI) => {
         try {
             const socket = thunkAPI.getState().room.socket;
@@ -178,7 +178,7 @@ const forwardMessageSocket = createAsyncThunk<void, IForwardMessage, { state: Ro
 );
 
 const toggleUserTypingSocket = createAsyncThunk<void, TSendUserTyping, { state: RootState }>(
-    "room/socket:room:send-toggle-typing",
+    "room/socket:send-toggle-typing",
     (data, thunkAPI) => {
         try {
             const socket = thunkAPI.getState().room.socket;

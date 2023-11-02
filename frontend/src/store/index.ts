@@ -20,13 +20,13 @@ const store = configureStore({
               ignoredActions: [
                   "room/socket:create-instance/fulfilled",
                   "room/get-all/fulfilled",
-                  "room/socket:room:handle-message",
-                  "room/socket:room:send-message/pending",
-                  "room/socket:room:send-message/fulfilled",
+                  "room/socket:handle-message",
+                  "room/socket:send-message/pending",
+                  "room/socket:send-message/fulfilled",
 
                   "users/get-all/fulfilled"
               ],
-              ignoredPaths: ["room.socket", "room.room", "users"]
+              ignoredPaths: ["room.socket", "room.rooms", "users"]
           }
         }).concat(reduxThunk, loggerMiddleware),
     enhancers: [],

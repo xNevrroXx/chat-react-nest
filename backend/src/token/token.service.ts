@@ -37,40 +37,24 @@ export class TokenService {
     }
 
     async saveRefreshToken(userId: TValueOf<Pick<IUserPayloadJWT, "id">>, token: string) {
-        const isExistAlready = await this.prisma.refreshToken.findUnique({
-            where: {userId: userId}
-        });
 
-        if (!isExistAlready) {
-            await this.prisma.refreshToken.create({
-                data: {
-                    userId,
-                    token
-                }
-            });
-        }
-        else {
-            await this.prisma.refreshToken.update({
-                where: {userId: userId},
-                data: {
-                    token,
-                    updatedAt: new Date()
-                }
-            });
-        }
+        return this.prisma.refreshToken.upsert({
+            where: {
+                userId
+            },
+            create: {
+                userId,
+                token
+            },
+            update: {
+                token
+            }
+        });
     }
 
     async removeRefreshToken(userId: TValueOf<Pick<IUserPayloadJWT, "id">>) {
-        const isExist = await this.prisma.refreshToken.findUnique({
+        return this.prisma.refreshToken.delete({
             where: {userId}
         });
-        if (!isExist) {
-            return;
-        }
-
-        await this.prisma.refreshToken.delete({
-            where: {userId}
-        });
-        return;
     }
 }

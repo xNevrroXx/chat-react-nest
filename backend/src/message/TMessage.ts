@@ -117,8 +117,8 @@ export interface IOriginalMessage {
     firstLinkInfo: ILinkPreviewInfo | undefined;
     text: string | undefined | null;
 
-    createdAt: string;
-    updatedAt: string | undefined | null;
+    createdAt: Date | string;
+    updatedAt: Date | string | undefined | null;
 }
 
 export interface IFile {

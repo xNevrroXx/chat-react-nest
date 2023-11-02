@@ -21,11 +21,6 @@
     }
   }
 
-  &__message {
-    max-width: 100%;
-    white-space: pre-line;
-  }
-
   &::after {
     content: "";
     position: absolute;
@@ -55,6 +50,9 @@
   }
 
   &__message {
+    max-width: 100%;
+    white-space: normal;
+    line-break: anywhere;
     img {
       display: inline-block;
       width: 18px;

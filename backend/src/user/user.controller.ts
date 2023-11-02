@@ -1,5 +1,5 @@
 import * as bcrypt from "bcrypt";
-import {Body, Controller, Get, Post, Req, Res, UseFilters, UseGuards} from "@nestjs/common";
+import {Body, Controller, Get, Post, Req, Res, UseGuards} from "@nestjs/common";
 import {UserDto, UserLogin, UserRegister} from "./userDto";
 import {UserService} from "./user.service";
 import {TokenService} from "../token/token.service";
@@ -18,10 +18,10 @@ export class UserController {
 
     @Post("register")
     async register(@Res() response, @Body() user: UserRegister) {
-        const hashPassword = await bcrypt.hash(user.password, 3);
+        const hashedPassword = await bcrypt.hash(user.password, 3);
         const newUser = await this.userService.create({
             ...user,
-            password: hashPassword
+            password: hashedPassword
         });
         const {accessToken, refreshToken} = await this.tokenService.generateTokens({
             id: newUser.id,

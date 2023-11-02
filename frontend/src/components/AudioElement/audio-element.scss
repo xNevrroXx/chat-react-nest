@@ -11,6 +11,11 @@
     audio {
       display: none;
     }
+    p {
+      display: flex;
+      justify-content: space-between;
+      user-select: none;
+    }
   }
   &_align-center {
     align-items: center;

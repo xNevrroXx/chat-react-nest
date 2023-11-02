@@ -65,7 +65,7 @@ const InputDuringAudio: FC<IInputDuringAudioProps> = ({
                     :
                     <LiveAudioVisualizer
                         width={"610px"}
-                        height={"50px"}
+                        height={"35px"}
                         mediaRecorder={mediaRecorder}
                     />
                 }

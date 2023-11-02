@@ -114,7 +114,7 @@ const room = createSlice({
                         userId: "",
                         name: "",
                         participants: [],
-                        roomType: RoomType.PRIVATE,
+                        type: RoomType.PRIVATE,
                         messages: [message],
                         pinnedMessages: [],
 
@@ -174,7 +174,7 @@ const room = createSlice({
                         userId: "",
                         name: "",
                         participants: [],
-                        roomType: RoomType.PRIVATE,
+                        type: RoomType.PRIVATE,
                         messages: [message],
                         pinnedMessages: [],
 

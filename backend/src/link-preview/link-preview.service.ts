@@ -51,7 +51,7 @@ export class LinkPreviewService {
             );
         }
         catch (error) {
-            console.log("getMetaTag!!");
+            return "";
         }
     }
 
@@ -60,7 +60,7 @@ export class LinkPreviewService {
             return this.getMetaTag($, "title") || $("title").first().text();
         }
         catch {
-            console.log("getTitle!!");
+            return "";
         }
     }
 
@@ -90,7 +90,7 @@ export class LinkPreviewService {
             return $("link[rel='icon']").attr("href") || $("link[rel='shortcut icon']").attr("href") || $("link[rel='alternate icon']").attr("href");
         }
         catch {
-            console.log("getFavicon!!");
+            return "";
         }
     }
 
@@ -99,7 +99,7 @@ export class LinkPreviewService {
         return this.getMetaTag($, "description");
         }
         catch {
-            console.log("getDescription!!");
+            return "";
         }
     }
 
@@ -108,7 +108,7 @@ export class LinkPreviewService {
         return this.getMetaTag($, "image");
         }
         catch {
-            console.log("getImage!!");
+            return "";
         }
     }
 
@@ -117,7 +117,7 @@ export class LinkPreviewService {
             return this.getMetaTag($, "author");
         }
         catch (error) {
-            console.log("getAuthor");
+            return "";
         }
     }
 }

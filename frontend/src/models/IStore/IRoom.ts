@@ -25,7 +25,7 @@ export interface IRoom {
     id: string
     name: string,
     userId: TValueOf<Pick<IUserDto, "id">>,
-    roomType: RoomType,
+    type: RoomType,
     creatorUser?: TValueOf<Pick<IUserDto, "id">>,
     messages: (IMessage | IForwardedMessage)[],
     participants: IParticipant[],
@@ -101,7 +101,7 @@ export interface IFile {
 }
 
 // HTTP response types
-export type TTemporarilyRoomBySearch = Pick<IRoom, "id" | "name" | "roomType">
+export type TTemporarilyRoomBySearch = Pick<IRoom, "id" | "name" | "type">
 
 export type TFileHTTP = Omit<IFile, "buffer" | "createdAt"> & {
     buffer: {

@@ -14,7 +14,7 @@ export type TNewMessage = {
 } & IGetAttachments
 
 export type TNewForwardedMessage = {
-    roomId?: TValueOf<Pick<Room, "id">>;
+    roomId: TValueOf<Pick<Room, "id">>;
     forwardedMessageId: TValueOf<Pick<Message, "id">>;
 }
 

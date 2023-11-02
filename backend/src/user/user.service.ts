@@ -29,7 +29,7 @@ export class UserService {
     }): Promise<Prisma.UserGetPayload<{include: T}>[] | User[]> {
         const { skip, take, cursor, where, orderBy, include } = params;
 
-        const users = this.prisma.user.findMany({
+        return this.prisma.user.findMany({
             skip,
             take,
             cursor,
@@ -37,7 +37,6 @@ export class UserService {
             orderBy,
             include
         });
-        return users;
     }
 
     async create(data: Prisma.UserCreateInput): Promise<User> {
@@ -64,7 +63,10 @@ export class UserService {
         }
 
         return this.prisma.user.update({
-            data,
+            data: {
+                ...data,
+                updatedAt: new Date()
+            },
             where,
         });
     }
@@ -87,25 +89,18 @@ export class UserService {
             where: {userId: userId}
         });
 
-        let userOnline: Promise<UserOnline>;
-        if (!isExistAlready) {
-            userOnline = this.prisma.userOnline.create({
-                data: {
-                    userId,
-                    isOnline
-                }
-            });
-        }
-        else {
-            userOnline = this.prisma.userOnline.update({
-                where: {userId: userId},
-                data: {
-                    isOnline
-                }
-            });
-        }
-
-        return userOnline;
+        return this.prisma.userOnline.upsert({
+            where: {
+                userId
+            },
+            update: {
+                isOnline
+            },
+            create: {
+                userId,
+                isOnline
+            },
+        });
     }
 
     async updateTypingStatus(params: {
@@ -114,30 +109,27 @@ export class UserService {
         isTyping: TValueOf<Pick<UserTyping, "isTyping">>
     }): Promise<UserTyping> {
         const {userId, roomId, isTyping} = params;
-        const isExistAlready = await this.prisma.userTyping.findUnique({
-            where: {userId: userId}
+
+        return this.prisma.userTyping.upsert({
+            where: {
+                userId
+            },
+            update: {
+                isTyping
+            },
+            create: {
+                isTyping,
+                user: {
+                    connect: {
+                        id: userId
+                    }
+                },
+                room: {
+                    connect: {
+                        id: roomId
+                    }
+                }
+            }
         });
-
-        let userTyping: Promise<UserTyping>;
-        if (!isExistAlready) {
-            userTyping = this.prisma.userTyping.create({
-                data: {
-                    userId,
-                    roomId,
-                    isTyping
-                }
-            });
-        }
-        else {
-            userTyping = this.prisma.userTyping.update({
-                where: {userId: userId},
-                data: {
-                    roomId,
-                    isTyping
-                }
-            });
-        }
-
-        return userTyping;
     }
 }

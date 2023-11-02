@@ -253,7 +253,6 @@ export class RoomController {
     async getManyBySearch(@Req() request: Request): Promise<{name: string}[]> {
         const userPayloadJWT = request.user;
         const {query} = request.query;
-        console.log("query: ", query);
 
         const users = await this.prismaService.$queryRaw<User[]>`
             SELECT u.*
@@ -293,7 +292,6 @@ export class RoomController {
         const roomsAndUsers =
             users
                 .map<TPreviewRooms>((user) => {
-                    console.log("user: ", user);
                     return {
                         id: user.id,
                         name: user.name + " " + user.surname,
@@ -308,7 +306,11 @@ export class RoomController {
                             type: RoomType.GROUP
                         };
                     })
-                );
+                )
+                .filter(room => room.name.toLowerCase().includes((query as string).toLowerCase()))
+                .sort((room1, room2) => {
+                    return stringSimilarity(query as string, room2.name) - stringSimilarity(query as string, room2.name);
+                });
 
         return roomsAndUsers.sort(user => stringSimilarity(query as string, user.name));
     }

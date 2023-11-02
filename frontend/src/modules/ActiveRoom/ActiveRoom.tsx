@@ -1,5 +1,5 @@
 import {MenuFoldOutlined, PhoneTwoTone} from "@ant-design/icons";
-import {Avatar, Checkbox, Flex, Modal, Typography, theme} from "antd";
+import {Avatar, Checkbox, Flex, Modal, theme, Typography} from "antd";
 import React, {type FC, Fragment, useCallback, useMemo, useRef, useState} from "react";
 // own modules
 import {useScrollTrigger} from "../../hooks/useScrollTrigger.hook.ts";
@@ -23,7 +23,8 @@ import {
 import {useAppDispatch, useAppSelector} from "../../hooks/store.hook.ts";
 import {
     deleteMessageSocket,
-    editMessageSocket, pinMessageSocket,
+    editMessageSocket,
+    pinMessageSocket,
     sendMessageSocket,
     toggleUserTypingSocket
 } from "../../store/thunks/room.ts";
@@ -45,7 +46,7 @@ const ActiveRoom: FC<IActiveChatProps> = ({user, room, onOpenUsersListForForward
     const {token} = useToken();
     const dispatch = useAppDispatch();
     const interlocutor = useAppSelector(state => {
-        if (!room || room.roomType === RoomType.GROUP) return;
+        if (!room || room.type === RoomType.GROUP) return;
         return state.users.users.find(user => user.id === room.participants[0].userId);
     });
     const [messageForEdit, setMessageForEdit] = useState<IMessage | null>(null);
@@ -220,7 +221,7 @@ const ActiveRoom: FC<IActiveChatProps> = ({user, room, onOpenUsersListForForward
             return;
         }
 
-        switch (room.roomType) {
+        switch (room.type) {
             case RoomType.PRIVATE: {
                 if (!interlocutor || !interlocutor.userOnline.isOnline) {
                     return "Не в сети";
@@ -321,7 +322,7 @@ const ActiveRoom: FC<IActiveChatProps> = ({user, room, onOpenUsersListForForward
                     onOk={onDeleteMessage}
                     open={!!messageForDelete}
                 >
-                    {room.roomType === RoomType.PRIVATE && messageForDelete && messageForDelete.message.senderId === user.id
+                    {room.type === RoomType.PRIVATE && messageForDelete && messageForDelete.message.senderId === user.id
                         ?
                         <Checkbox
                             checked={messageForDelete.isForEveryone}
@@ -335,7 +336,7 @@ const ActiveRoom: FC<IActiveChatProps> = ({user, room, onOpenUsersListForForward
                             <Text>Удалить у всех</Text>
                         </Checkbox>
                         :
-                        room.roomType === RoomType.PRIVATE && messageForDelete && messageForDelete.message.senderId !== user.id
+                        room.type === RoomType.PRIVATE
                             ? <Text>Сообщение будет удалено только у вас.</Text>
                             : <Text>Сообщение будет удалено у всех в этом чате.</Text>
                     }

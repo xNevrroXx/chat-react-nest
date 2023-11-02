@@ -18,6 +18,7 @@ import {FileService} from "../file/file.service";
 import {findLinksInText} from "../utils/findLinksInText";
 import {LinkPreviewService} from "../link-preview/link-preview.service";
 import {TValueOf} from "../models/TUtils";
+import {normalizeDate} from "../utils/normalizeDate";
 
 @Injectable()
 export class MessageService {
@@ -91,7 +92,8 @@ export class MessageService {
     }
 
     async normalize(recipientId: TValueOf<Pick<User, "id">>, input: TNormalizeMessageArgument): Promise<IMessage> {
-        const message = excludeSensitiveFields(input, ["isDeleteForEveryone", "usersDeletedThisMessage"]);
+        const message = excludeSensitiveFields(input, ["isDeleteForEveryone", "usersDeletedThisMessage"]) as never as IMessage;
+        message.createdAt = normalizeDate(message.createdAt);
         let normalizedMessage: TMessage | TForwardedMessage;
         if (!isForwardedMessagePrisma(message as any)) {
             normalizedMessage = excludeSensitiveFields(message, ["forwardedMessageId", "forwardedMessage" as any]) as TMessage;
@@ -113,6 +115,7 @@ export class MessageService {
             }
 
             if (normalizedMessage.replyToMessage) {
+                normalizedMessage.replyToMessage.createdAt = normalizeDate(normalizedMessage.replyToMessage.createdAt);
                 if (isInnerForwardedMessage(normalizedMessage.replyToMessage)) {
                     normalizedMessage = {
                         ...normalizedMessage,
@@ -141,12 +144,14 @@ export class MessageService {
             normalizedMessage = excludeSensitiveFields(message, ["files", "replyToMessage", "replyToMessageId" as any]) as TForwardedMessage;
 
             if (isInnerForwardedMessage(normalizedMessage.forwardedMessage)) {
+                normalizedMessage.forwardedMessage.createdAt = normalizeDate(normalizedMessage.forwardedMessage.createdAt);
                 normalizedMessage = {
                     ...normalizedMessage,
                     forwardedMessage: excludeSensitiveFields(normalizedMessage.forwardedMessage, ["files", "replyToMessageId", "replyToMessage"] as any)
                 } as TForwardedMessage; 
             }
             else {
+                normalizedMessage.forwardedMessage.createdAt = normalizeDate(normalizedMessage.forwardedMessage.createdAt);
                 normalizedMessage = {
                     ...normalizedMessage,
                     forwardedMessage: excludeSensitiveFields(normalizedMessage.forwardedMessage, ["forwardedMessageId"] as any)

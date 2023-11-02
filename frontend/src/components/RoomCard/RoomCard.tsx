@@ -16,7 +16,7 @@ interface IUserCardProps {
 
 const RoomCard:FC<IUserCardProps> = ({room, onClick}) => {
     const interlocutor = useAppSelector(state => {
-        if (room.roomType === RoomType.GROUP) return;
+        if (room.type === RoomType.GROUP) return;
         return state.users.users.find(user => user.id === room.participants[0].userId);
     });
 
@@ -28,7 +28,7 @@ const RoomCard:FC<IUserCardProps> = ({room, onClick}) => {
         >
             <div className="room-card__left">
                 <Avatar size={48} className="room-card__photo">
-                    { room.roomType === RoomType.PRIVATE
+                    { room.type === RoomType.PRIVATE
                         ? room.name[0] + room.name.split(" ")[1][0]
                         : room.name.slice(0, 1)
                     }
@@ -39,7 +39,7 @@ const RoomCard:FC<IUserCardProps> = ({room, onClick}) => {
                     { room.name}
                 </Title>
                 <Text>
-                    { room.roomType === RoomType.GROUP
+                    { room.type === RoomType.GROUP
                         ? "Группа"
                         : interlocutor && interlocutor.userOnline.isOnline
                             ? "В сети" : "Не в сети"

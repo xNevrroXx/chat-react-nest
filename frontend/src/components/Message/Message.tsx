@@ -1,6 +1,6 @@
 import React, {FC, Fragment, useCallback, useMemo, useRef} from "react";
 import * as classNames from "classnames";
-import {Button} from "antd";
+import {Button, theme, Typography} from "antd";
 import {FileTwoTone, EditOutlined, DeleteOutlined} from "@ant-design/icons";
 // own modules
 import OriginalMessage from "../OriginalMessage/OriginalMessage.tsx";
@@ -15,6 +15,9 @@ import {checkIsMessage, IForwardedMessage, IMessage} from "../../models/IStore/I
 import {IFileForRender, IKnownAndUnknownFiles} from "../../models/IRoom.ts";
 // styles
 import "./message.scss";
+
+const {useToken} = theme;
+const {Text} = Typography;
 
 interface IMessageProps {
     message: IMessage | IForwardedMessage;
@@ -41,6 +44,7 @@ const Message: FC<IMessageProps> = ({
                                         onChooseMessageForReply,
                                         onChooseMessageForForward
                                     }) => {
+    const {token} = useToken();
     const downloadLinkRef = useRef<HTMLAnchorElement | null>(null);
 
     const handleDownload = useCallback((fileInfo: IFileForRender) => {
@@ -142,35 +146,41 @@ const Message: FC<IMessageProps> = ({
         if (checkIsMessage(message)) {
             return (
                 <Fragment>
-                    {
-                        message.replyToMessage &&
+                    { message.replyToMessage &&
                         <MessageReply message={message.replyToMessage}/>
                     }
+
                     {isVoice && (files.known.length === 1) ?
                         <div className="message__audio-element-wrapper">
                             <AudioElement
                                 blob={files.known[0].blob}
                                 blobURL={files.known[0].blobUrl}
                                 width={200}
-                                height={35}
+                                height={27}
                                 alignCenter={true}
+                                createdAt={message.createdAt}
                             />
                         </div>
                         :
                         <Fragment>
                             {knownAttachments &&
-                                <div className="message__attachments-wrapper">
+                                <ul className="message__attachments-wrapper">
                                     {knownAttachments}
-                                </div>
+                                    {!message.text && !unknownAttachments &&
+                                        <Text className="message__time message__time_on-attachments">{message.createdAt}</Text>
+                                    }
+                                </ul>
                             }
                             {unknownAttachments &&
-                                <div
-                                    className={classNames("message__attachments-unknown-wrapper", message.text && "message__attachments-unknown-wrapper_with-line")}>
+                                <ul
+                                    className={classNames("message__attachments-unknown-wrapper", message.text && "message__attachments-unknown-wrapper_with-line")}
+                                >
                                     {unknownAttachments}
-                                </div>
+                                    {!message.text && <Text style={{color: token.colorTextSecondary}} className="message__time-on-attachments">{message.createdAt}</Text> }
+                                </ul>
                             }
                             {message.text &&
-                                <OriginalMessage text={message.text} firstLinkInfo={message.firstLinkInfo}/>
+                                <OriginalMessage text={message.text} firstLinkInfo={message.firstLinkInfo} createdAt={message.createdAt}/>
                             }
                         </Fragment>
                     }
@@ -179,7 +189,7 @@ const Message: FC<IMessageProps> = ({
         }
 
         return <ForwardedMessage message={message} isMine={isMine}/>;
-    }, [knownAttachments, unknownAttachments, files, isVoice, message, isMine]);
+    }, [message, isMine, isVoice, files.known, knownAttachments, unknownAttachments, token.colorTextSecondary]);
 
     return (
         <div

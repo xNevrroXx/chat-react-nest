@@ -1,5 +1,5 @@
 import {Fragment, useCallback, useEffect, useState} from "react";
-import {Modal} from "antd";
+import {Layout, Modal} from "antd";
 import {useNavigate} from "react-router-dom";
 // own modules
 import {ROUTES} from "../../router/routes.ts";
@@ -15,6 +15,8 @@ import type {IForwardMessage, IRoom, TTemporarilyRoomBySearch} from "../../model
 import type {TValueOf} from "../../models/TUtils.ts";
 // styles
 import "./main.scss";
+
+const {Content} = Layout;
 
 const Main = () => {
     const navigate = useNavigate();
@@ -75,7 +77,7 @@ const Main = () => {
 
     return (
         <Fragment>
-            <div className="messenger">
+            <Content className="messenger">
                 <Dialogs
                     user={user}
                     rooms={rooms}
@@ -88,7 +90,7 @@ const Main = () => {
                     user={user}
                     onOpenUsersListForForwardMessage={openUsersListForForwardMessage}
                 />
-            </div>
+            </Content>
             <Modal
                 title="Переслать сообщение"
                 open={isOpenModalForForwardMessage}
