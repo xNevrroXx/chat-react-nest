@@ -253,13 +253,21 @@ export class RoomController {
     async getManyBySearch(@Req() request: Request): Promise<{name: string}[]> {
         const userPayloadJWT = request.user;
         const {query} = request.query;
+        console.log("query: ", query);
 
         const users = await this.prismaService.$queryRaw<User[]>`
-            SELECT * FROM user 
-            WHERE 
-                user.id <> ${userPayloadJWT.id}
+            SELECT u.*
+            FROM user u
+                LEFT JOIN (participant as p
+                    INNER JOIN participant as target_user_participant
+                        ON target_user_participant.user_id = ${userPayloadJWT.id}
+                        AND p.room_id = target_user_participant.room_id
+                ) ON u.id = p.user_id
+            WHERE
+                target_user_participant.user_id is null
                 AND
-                CONCAT(user.name, " ", user.surname) LIKE ${"%" + query + "%"}`;
+                CONCAT(u.name, " ", u.surname) LIKE ${"%" + query + "%"};
+        `;
 
         const rooms = await this.roomService.findMany({
             where: {
@@ -285,6 +293,7 @@ export class RoomController {
         const roomsAndUsers =
             users
                 .map<TPreviewRooms>((user) => {
+                    console.log("user: ", user);
                     return {
                         id: user.id,
                         name: user.name + " " + user.surname,
