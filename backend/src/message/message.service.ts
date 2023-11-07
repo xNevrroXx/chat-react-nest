@@ -77,10 +77,7 @@ export class MessageService {
 
         return this.prisma.message.update({
             where,
-            data: {
-                ...data,
-                updatedAt: new Date()
-            },
+            data,
             include
         });
     }

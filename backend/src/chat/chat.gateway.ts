@@ -9,11 +9,18 @@ import {
 } from "@nestjs/websockets";
 import {UseFilters, UseGuards} from "@nestjs/common";
 import {Server, Socket} from "socket.io";
+import * as mime from "mime-types";
 // own modules
 import {WsAuth} from "../auth/ws-auth.guard";
 import {UserService} from "../user/user.service";
 import {AuthService} from "../auth/auth.service";
 import {MessageService} from "../message/message.service";
+import {RoomService} from "../room/room.service";
+import {ParticipantService} from "../participant/participant.service";
+import {FileService} from "../file/file.service";
+import {generateFileName} from "../utils/generateFileName";
+import {brToNewLineChars} from "../utils/brToNewLineChars ";
+import {isFulfilledPromise} from "../utils/isFulfilledPromise";
 // types
 import {IUserPayloadJWT} from "../user/IUser";
 import {
@@ -24,14 +31,11 @@ import {
     TNewEditedMessage,
     TDeleteMessage, TPinMessage
 } from "./IChat";
-import {FileService} from "../file/file.service";
-import {generateFileName} from "../utils/generateFileName";
-import {Prisma, File, Room, RoomType} from "@prisma/client";
-import * as mime from "mime-types";
-import {isFulfilledPromise} from "../utils/isFulfilledPromise";
-import {RoomService} from "../room/room.service";
-import {ParticipantService} from "../participant/participant.service";
-import {brToNewLineChars} from "../utils/brToNewLineChars ";
+import {Prisma, File, User} from "@prisma/client";
+import {TValueOf} from "../models/TUtils";
+import {SocketRoomsInfo} from "./SocketRoomsInfo.class";
+
+
 
 @UseFilters(BaseWsExceptionFilter)
 @WebSocketGateway({
@@ -43,6 +47,10 @@ import {brToNewLineChars} from "../utils/brToNewLineChars ";
 export class ChatGateway
         implements OnGatewayConnection, OnGatewayDisconnect
 {
+    @WebSocketServer()
+    server: Server;
+    socketRoomsInfo: SocketRoomsInfo;
+
     constructor(
         private readonly roomService: RoomService,
         private readonly messageService: MessageService,
@@ -50,31 +58,53 @@ export class ChatGateway
         private readonly authService: AuthService,
         private readonly fileService: FileService,
         private readonly participantService: ParticipantService
-    ) {}
-
-    @WebSocketServer()
-    server: Server;
-
-    socketToUserId: IUserIdToSocketId = {};
+    ) {
+        this.socketRoomsInfo = new SocketRoomsInfo();
+    }
 
     async handleConnection(@ConnectedSocket() client: Socket) {
         const userData = await this.authService.verify(client.handshake.headers.authorization);
-        this.socketToUserId[client.id] = userData.id;
+        const userRooms = await this.roomService.findMany({
+            where: {
+                participants: {
+                    some: {
+                        userId: {
+                            equals: userData.id
+                        }
+                    }
+                }
+            }
+        });
+
         const userOnline = await this.userService.updateOnlineStatus({
             userId: userData.id,
             isOnline: true
         });
-        client.broadcast.emit("user:toggle-online", userOnline);
+
+        userRooms.forEach(room => {
+            this.socketRoomsInfo.join(room.id, userData.id, client.id);
+            client.join(room.id);
+
+            client.broadcast
+                .to(room.id)
+                .emit("user:toggle-online", userOnline);
+        });
     }
 
+
     async handleDisconnect(@ConnectedSocket() client) {
-        const userId = this.socketToUserId[client.id];
-        delete this.socketToUserId[client.id];
+        const {userId, roomIDs} = this.socketRoomsInfo.leave(client.id);
+
         const userOnline = await this.userService.updateOnlineStatus({
             userId: userId,
             isOnline: false
         });
-        client.broadcast.emit("user:toggle-online", userOnline);
+
+        roomIDs.forEach(roomId => {
+            client.broadcast
+                .to(roomId)
+                .emit("user:toggle-online", userOnline);
+        });
     }
 
     @UseGuards(WsAuth)
@@ -109,15 +139,16 @@ export class ChatGateway
         });
         const normalizedParticipants = participants.map(this.participantService.normalize);
         normalizedParticipants.forEach(participant => {
-            const socketInfo: [string, string] | undefined = Object.entries(this.socketToUserId)
-                .find(([socketId, userId]) => participant.userId === userId && socketId !== client.id);
+            const userIdToSocketId = Object.entries(this.socketRoomsInfo.getRoomInfo(roomId))
+                .find(([userId, socketId]) => participant.userId === userId && socketId !== client.id);
 
-            if (!socketInfo) return;
+            if (!userIdToSocketId) return;
+            const [userId, clientId] = userIdToSocketId;
             const excludingThisUserTypingInfo = normalizedParticipants
-                .filter(participant => participant.userId !== socketInfo[1]);
+                .filter(participant => participant.userId !== userId);
 
             client.broadcast
-                .to(socketInfo[0])
+                .to(clientId)
                 .emit("room:toggle-typing", excludingThisUserTypingInfo);
         });
     }
@@ -169,12 +200,6 @@ export class ChatGateway
             }
         }>;
 
-        const participants = await this.participantService.findMany({
-            where: {
-                roomId: pinnedMessage.roomId
-            }
-        });
-
         const responseInfo = {
             roomId: pinnedMessage.roomId,
             messages: pinnedMessage.room.pinnedMessages.map(pinnedMessage => {
@@ -186,21 +211,18 @@ export class ChatGateway
             })
         };
 
-        client.emit("message:pinned", responseInfo);
-        participants.forEach(participant => {
-            const socketId = Object.entries(this.socketToUserId)
-                .find(([, userId]) => participant.userId === userId);
-
-            if (!socketId) return;
-            client
-                .to(socketId)
-                .emit("message:pinned", responseInfo);
-        });
+        this.server
+            .to(pinnedMessage.roomId)
+            .emit("message:pinned", responseInfo);
     }
 
     @UseGuards(WsAuth)
     @SubscribeMessage("message:delete")
     async handleDeleteMessage(@ConnectedSocket() client, @MessageBody() message: TDeleteMessage) {
+        // todo
+        //  if this one shouldn't be delete for everyone -
+        //      check if there are users who have deleted this message.
+        //          And if every user deleted this message - clear all data about this one.
         const senderPayloadJWT: IUserPayloadJWT = client.user;
 
         const sender = await this.userService.findOne({
@@ -210,7 +232,7 @@ export class ChatGateway
             throw new WsException("Не найден отправитель сообщения");
         }
         const deletedMessageQuery: Prisma.MessageUpdateInput = message.isForEveryone ?
-            { isDeleteForEveryone: true }
+            {isDeleteForEveryone: true}
             :
             {
                 usersDeletedThisMessage: {
@@ -228,41 +250,40 @@ export class ChatGateway
                 repliesThisMessage: true,
                 forwardThisMessage: true
             }
-        }) as Prisma.MessageGetPayload<{ include: {
+        }) as Prisma.MessageGetPayload<{
+            include: {
                 repliesThisMessage: true,
                 forwardThisMessage: true
             }
         }>;
 
-        if (message.isForEveryone && deletedMessage.repliesThisMessage.length === 0 && deletedMessage.forwardThisMessage.length === 0) {
-            // delete the message there no references to this one in other messages
-            void this.messageService.delete({
-                id: deletedMessage.id
-            });
-        }
-
-        const participants = await this.participantService.findMany({
-            where: {
-                roomId: deletedMessage.roomId
-            }
-        });
         const editedMessageInfo = {
             roomId: deletedMessage.roomId,
             messageId: deletedMessage.id,
             isDeleted: true
         };
-        client.emit("message:deleted", editedMessageInfo);
-
-        if (!message.isForEveryone) return;
-        participants.forEach(participant => {
-            const socketId = Object.entries(this.socketToUserId)
-                .find(([, userId]) => participant.userId === userId);
-
-            if (!socketId) return;
-            client
-                .to(socketId)
+        if (!message.isForEveryone) {
+            client.emit("message:deleted", editedMessageInfo);
+        }
+        else if (deletedMessage.repliesThisMessage.length === 0 && deletedMessage.forwardThisMessage.length === 0) {
+            // delete the message there no references to this one in other messages
+            void this.messageService.delete({
+                id: deletedMessage.id
+            });
+            this.server
+                .to(deletedMessage.roomId)
                 .emit("message:deleted", editedMessageInfo);
-        });
+        }
+        else {
+            client.broadcast
+                .to(deletedMessage.roomId)
+                .emit("message:deleted", editedMessageInfo);
+        }
+        /*
+        * todo:
+        *   if delete for everyone  -> client.broadcast.to(roomId).emit(...)
+        *   else                    -> send
+        * */
     }
 
     @UseGuards(WsAuth)
@@ -282,7 +303,8 @@ export class ChatGateway
                 id: message.messageId
             },
             data: {
-                text: message.text
+                text: message.text,
+                updatedAt: new Date()
             }
         });
         if (!updatedMessage || updatedMessage.senderId !== sender.id) {
@@ -294,21 +316,9 @@ export class ChatGateway
             ...message
         };
 
-        client.emit("message:edited", editedMessageInfo);
-        const participants = await this.participantService.findMany({
-            where: {
-                roomId: updatedMessage.roomId
-            }
-        });
-        participants.forEach(participant => {
-            const socketId = Object.entries(this.socketToUserId)
-                .find(([, userId]) => participant.userId === userId);
-
-            if (!socketId) return;
-            client
-                .to(socketId)
-                .emit("message:edited", editedMessageInfo);
-        });
+        this.server
+            .to(editedMessageInfo.roomId)
+            .emit("message:edited", editedMessageInfo);
     }
 
     @UseGuards(WsAuth)
@@ -383,21 +393,9 @@ export class ChatGateway
             }}>;
         const normalizedMessage = await this.messageService.normalize(sender.id, newMessage);
 
-        client.emit("message:forwarded", normalizedMessage);
-        const participants = await this.participantService.findMany({
-            where: {
-                roomId: newMessage.roomId
-            }
-        });
-        participants.forEach(participant => {
-            const socketId = Object.entries(this.socketToUserId)
-                .find(([, userId]) => participant.userId === userId);
-
-            if (!socketId) return;
-            client
-                .to(socketId)
-                .emit("message:forwarded", normalizedMessage);
-        });
+        this.server
+            .to(forwardedMessage.roomId)
+            .emit("message:forwarded", normalizedMessage);
     }
 
     @UseGuards(WsAuth)
@@ -516,20 +514,8 @@ export class ChatGateway
             }>;
         const normalizedMessage = await this.messageService.normalize(sender.id, newMessage);
 
-        client.emit("message", normalizedMessage);
-        const participants = await this.participantService.findMany({
-            where: {
-                roomId: newMessage.roomId
-            }
-        });
-        participants.forEach(participant => {
-            const socketId = Object.entries(this.socketToUserId)
-                .find(([, userId]) => participant.userId === userId);
-
-            if (!socketId) return;
-            client
-                .to(socketId)
-                .emit("message", normalizedMessage);
-        });
+        this.server
+            .to(message.roomId)
+            .emit("message", normalizedMessage);
     }
 }
