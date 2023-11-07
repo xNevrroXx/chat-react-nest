@@ -8,7 +8,7 @@ export interface INewVoiceMessage {
 }
 
 export type TNewMessage = {
-    roomId?: TValueOf<Pick<Room, "id">>;
+    roomId: TValueOf<Pick<Room, "id">>;
     text: TValueOf<Pick<Message, "text">>;
     replyToMessageId: TValueOf<Pick<Message, "id">> | null
 } & IGetAttachments

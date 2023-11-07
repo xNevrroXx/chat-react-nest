@@ -79,9 +79,6 @@ export class UserService {
         isOnline: TValueOf<Pick<UserOnline, "isOnline">>
     }): Promise<UserOnline> {
         const {userId, isOnline} = params;
-        const isExistAlready = await this.prisma.userOnline.findUnique({
-            where: {userId: userId}
-        });
 
         return this.prisma.userOnline.upsert({
             where: {

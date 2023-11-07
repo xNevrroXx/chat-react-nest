@@ -2,7 +2,7 @@ import * as cookieParser from "cookie-parser";
 import {NestFactory} from "@nestjs/core";
 import {AppModule} from "./app.module";
 import {ValidationPipe} from "@nestjs/common";
-import {HttpExceptionsFilter} from "./exceptions/http-exceptions.filter";
+import {HttpExceptionFilter} from "./exceptions/http-exception.filter";
 import {SocketIoAdapter} from "./socket.adapter";
 import {ConfigService} from "@nestjs/config";
 
@@ -18,7 +18,7 @@ async function bootstrap() {
     app.use(cookieParser());
     app.useGlobalPipes(new ValidationPipe());
     app.useWebSocketAdapter(new SocketIoAdapter(app, configService));
-    app.useGlobalFilters(new HttpExceptionsFilter());
+    app.useGlobalFilters(new HttpExceptionFilter());
     await app.listen(3000); 
 
 
