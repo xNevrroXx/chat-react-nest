@@ -1,16 +1,6 @@
 import {createSlice} from "@reduxjs/toolkit";
 // interfaces
-import type {
-    IInnerMessage,
-    IFile,
-    IInnerForwardedMessage,
-    IForwardedMessage
-} from "../../models/IStore/IRoom.ts";
-import {
-    checkIsInnerMessageSocket,
-    IMessage, IRoomSlice,
-    RoomType,
-} from "../../models/IStore/IRoom.ts";
+import {IRoomSlice} from "../../models/IStore/IRoom.ts";
 // actions
 import {
     getAll,
@@ -55,136 +45,11 @@ const room = createSlice({
             })
             .addCase(handleMessageSocket, (state, action) => {
                 const targetChat = state.rooms.find(chat => chat.id === action.payload.roomId);
-                const messageSocket = action.payload;
-                const newMessage: IMessage = {
-                    ...messageSocket,
-                    files: [], // temporarily
-                    replyToMessage: null, // temporarily
-                };
-                let innerMessage: IInnerMessage | IInnerForwardedMessage | null;
-                newMessage.files = messageSocket.files.map<IFile>(file => {
-                    const u = new Uint8Array(file.buffer); // file.buffer.data
-                    const blob = new Blob([u], {type: file.mimeType});
-                    return {
-                        id: file.id,
-                        originalName: file.originalName,
-                        fileType: file.fileType,
-                        mimeType: file.mimeType,
-                        extension: file.extension,
-                        blob: blob,
-
-                        createdAt: file.createdAt
-                    };
-                });
-
-                if (messageSocket.replyToMessage) {
-                    if (checkIsInnerMessageSocket(messageSocket.replyToMessage)) {
-                        const innerFiles = messageSocket.replyToMessage.files.map<IFile>(file => {
-                            const u = new Uint8Array(file.buffer); // file.buffer.data
-                            const blob = new Blob([u], {type: file.mimeType});
-                            return {
-                                id: file.id,
-                                originalName: file.originalName,
-                                fileType: file.fileType,
-                                mimeType: file.mimeType,
-                                extension: file.extension,
-                                blob: blob,
-
-                                createdAt: file.createdAt
-                            };
-                        });
-
-                        innerMessage = {
-                            ...messageSocket.replyToMessage,
-                            files: innerFiles
-                        };
-                    }
-                    else {
-                        innerMessage = messageSocket.replyToMessage;
-                    }
-
-                    newMessage.replyToMessage = innerMessage;
-                }
-
-                const message = newMessage;
-
-                if (!targetChat) {
-                    state.rooms.push({ // todo repair of the getting first message in the unrecognized room
-                        id: message.roomId,
-                        userId: "",
-                        name: "",
-                        participants: [],
-                        type: RoomType.PRIVATE,
-                        messages: [message],
-                        pinnedMessages: [],
-
-                        createdAt: "",
-                        updatedAt: undefined
-                    });
-                }
-                else {
-                    targetChat.messages.push(message);
-                }
+                targetChat!.messages.push(action.payload);
             })
             .addCase(handleForwardedMessageSocket, (state, action) => {
                 const targetChat = state.rooms.find(chat => chat.id === action.payload.roomId);
-                const messageSocket = action.payload;
-                let innerMessage: IInnerMessage | IInnerForwardedMessage | null;
-
-                const newMessage: IForwardedMessage = {
-                    ...messageSocket,
-                    forwardedMessage: null as unknown as IInnerMessage, // temporarily
-                };
-
-                if (messageSocket.forwardedMessage) {
-                    if (checkIsInnerMessageSocket(messageSocket.forwardedMessage)) {
-                        const innerFiles = messageSocket.forwardedMessage.files.map<IFile>(file => {
-                            const u = new Uint8Array(file.buffer); // file.buffer.data
-                            const blob = new Blob([u], {type: file.mimeType});
-                            return {
-                                id: file.id,
-                                originalName: file.originalName,
-                                fileType: file.fileType,
-                                mimeType: file.mimeType,
-                                extension: file.extension,
-                                blob: blob,
-
-                                createdAt: file.createdAt
-                            };
-                        });
-
-                        innerMessage = {
-                            ...messageSocket.forwardedMessage,
-                            files: innerFiles
-                        };
-                    } else {
-                        innerMessage = {
-                            ...messageSocket.forwardedMessage,
-                            createdAt: messageSocket.forwardedMessage.createdAt,
-                            updatedAt: messageSocket.forwardedMessage.updatedAt,
-                        };
-                    }
-                    newMessage.forwardedMessage = innerMessage;
-                }
-                const message = newMessage;
-
-                if (!targetChat) {
-                    state.rooms.push({ // todo repair of the getting first message in the unrecognized room
-                        id: message.roomId,
-                        userId: "",
-                        name: "",
-                        participants: [],
-                        type: RoomType.PRIVATE,
-                        messages: [message],
-                        pinnedMessages: [],
-
-                        createdAt: "",
-                        updatedAt: undefined
-                    });
-                }
-                else {
-                    targetChat.messages.push(message);
-                }
+                targetChat!.messages.push(action.payload);
             })
             .addCase(handlePinnedMessageSocket, (state, action) => {
                 const targetRoom = state.rooms.find(chat => chat.id === action.payload.roomId);

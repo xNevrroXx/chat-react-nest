@@ -1,12 +1,12 @@
 import * as fs from "fs";
-import {Injectable} from "@nestjs/common";
+import {Injectable, InternalServerErrorException} from "@nestjs/common";
 import {DatabaseService} from "../database/database.service";
 import {AppConstantsService} from "../app.constants.service";
 import {type File, Prisma} from "@prisma/client";
-import HttpError from "../exceptions/http-error";
 import * as path from "path";
 import {TFileToClient} from "./IFile";
 import {excludeSensitiveFields} from "../utils/excludeSensitiveFields";
+import {byteSize} from "../utils/byteSize";
 
 @Injectable()
 export class FileService {
@@ -38,7 +38,7 @@ export class FileService {
         const pathToFile = path.join(this.constants.USERS_DATA_FOLDER_PATH, filename);
         fs.writeFile(pathToFile, buffer, (error) => {
             if (error) {
-                throw HttpError.InternalServerError();
+                throw new InternalServerErrorException();
             }
         });
     }
@@ -78,16 +78,14 @@ export class FileService {
         });
     }
 
-    async addBlobToFiles(filesWithoutBlob: File[]): Promise<TFileToClient[]> {
-        const filePromises: Promise<TFileToClient>[] = filesWithoutBlob.map(file => {
-            const f: TFileToClient = excludeSensitiveFields(file, ["fileName"]) as TFileToClient;
-            return this.findOnDisk(file.fileName)
-                .then((buffer) => {
-                    f.buffer = buffer;
-                    return f;
-                });
-        });
+    normalizeFiles(files: File[]): TFileToClient[] {
+        return files.map<TFileToClient>(file => {
+            const filePath = path.join(this.constants.USERS_DATA_FOLDER_PATH, file.fileName);
+            const f = excludeSensitiveFields(file, ["fileName"]) as TFileToClient;
 
-        return Promise.all(filePromises);
+            f.url = file.fileName;
+            f.size = byteSize({sizeInBytes: fs.statSync(filePath).size});
+            return f;
+        });
     }
 }

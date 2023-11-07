@@ -61,7 +61,7 @@ const InputDuringAudio: FC<IInputDuringAudioProps> = ({
 
             <div className="input-message__field">
                 {audio && audioURL ?
-                    <AudioElement blob={audio} blobURL={audioURL}/>
+                    <AudioElement blob={audio} url={audioURL}/>
                     :
                     <LiveAudioVisualizer
                         width={"610px"}

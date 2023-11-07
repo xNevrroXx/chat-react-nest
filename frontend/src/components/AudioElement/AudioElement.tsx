@@ -1,4 +1,4 @@
-import React, {FC, useRef, useState} from "react";
+import React, {FC, useEffect, useRef, useState} from "react";
 import * as classNames from "classnames";
 // @ts-ignore
 import {AudioVisualizer} from "react-audio-visualize";
@@ -8,25 +8,64 @@ import {PauseCircleOutlined} from "@ant-design/icons";
 import PlayCircleOutlined from "../../icons/PlayCircleOutlined.tsx";
 // styles
 import "./audio-element.scss";
+import {IFile} from "../../models/IStore/IRoom.ts";
+import {TValueOf} from "../../models/TUtils.ts";
 
 const {useToken} = theme;
 const {Text} = Typography;
 
 interface IVoiceRecording {
-    blob: Blob,
-    blobURL: string,
+    blob?: Blob,
+    url: string,
+    size?: TValueOf<Pick<IFile, "size">>,
     // default: 600px
     width?: number,
     // default: 50px
-    height?:number,
+    height?: number,
     alignCenter?: boolean,
     createdAt?: string
 }
-const AudioElement: FC<IVoiceRecording> = ({blob, blobURL, height = 50, width= 600, alignCenter, createdAt}) => {
+
+const AudioElement: FC<IVoiceRecording> = ({
+                                               blob: inputBlob,
+                                               url,
+                                               size,
+                                               height = 50,
+                                               width = 600,
+                                               alignCenter,
+                                               createdAt,
+                                           }) => {
     const {token} = useToken();
+    const [blob, setBlob] = useState<Blob | undefined>(inputBlob);
+    const [blobUrl, setBlobUrl] = useState<string | null>(inputBlob ? URL.createObjectURL(inputBlob) : "");
+    // const {data, request, status, clear} = useFetch<unknown>(import.meta.env.VITE_BACKEND_BASE_URL + "/file?name=" + url);
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const [audioTimestamp, setAudioTimestamp] = useState<number | null>(null);
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
+
+    // useEffect(() => {
+    //     if (blob) {
+    //         return;
+    //     }
+    //
+    //     void request({
+    //         method: "GET"
+    //     });
+    // }, [blob, request, url]);
+
+    useEffect(() => {
+        if (inputBlob) {
+            return;
+        }
+
+        async function getBlobInfo() {
+            const blob = await fetch(import.meta.env.VITE_BACKEND_BASE_URL + "/file?name=" + url).then(r => r.blob());
+            setBlob(blob);
+            setBlobUrl(URL.createObjectURL(blob));
+        }
+
+        void getBlobInfo();
+    }, [inputBlob, url]);
 
     const playAudio = () => {
         if (!audioRef.current) {
@@ -57,7 +96,7 @@ const AudioElement: FC<IVoiceRecording> = ({blob, blobURL, height = 50, width= 6
     return (
         <div className={classNames("audio-element", alignCenter && "audio-element_align-center")}>
             <div className="audio-element__control-btn">
-                { isPlaying ?
+                {isPlaying ?
                     <Button
                         type={"text"}
                         onClick={pauseAudio}
@@ -74,28 +113,37 @@ const AudioElement: FC<IVoiceRecording> = ({blob, blobURL, height = 50, width= 6
                 }
             </div>
 
-            <div className="audio-element__waves">
-                <AudioVisualizer
-                    blob={blob}
-                    width={width}
-                    height={height}
-                    barWidth={3}
-                    gap={2}
-                    barColor={"rgb(99,162,255)"}
-                    barPlayedColor={"rgb(22, 119, 255)"}
-                    currentTime={audioTimestamp}
-                />
-                <audio
-                    ref={audioRef}
-                    src={blobURL}
-                    onTimeUpdate={onTimeUpdate}
-                    onEnded={() => setIsPlaying(false)}
-                />
-                <p>
-                    <Text style={{color: token.colorTextSecondary}}>{Number.parseFloat((blob.size / 1024).toString() ).toFixed(1)}KB</Text>
-                    { createdAt && <Text style={{color: token.colorTextSecondary}} className="message__time">{createdAt}</Text> }
-                </p>
-            </div>
+            {blob && blobUrl && (
+                <div className="audio-element__waves">
+                    <AudioVisualizer
+                        blob={blob}
+                        width={width}
+                        height={height}
+                        barWidth={3}
+                        gap={2}
+                        barColor={"rgb(99,162,255)"}
+                        barPlayedColor={"rgb(22, 119, 255)"}
+                        currentTime={audioTimestamp}
+                    />
+                    <audio
+                        ref={audioRef}
+                        src={blobUrl || undefined}
+                        onTimeUpdate={onTimeUpdate}
+                        onEnded={() => setIsPlaying(false)}
+                    />
+                    <p>
+                        {size && <Text style={{color: token.colorTextSecondary}}>{size.value} {size.unit}</Text>}
+                        {createdAt &&
+                            <Text
+                                style={{color: token.colorTextSecondary}}
+                                className="message__time"
+                            >
+                                {createdAt}
+                            </Text>
+                        }
+                    </p>
+                </div>
+            )}
         </div>
     );
 };

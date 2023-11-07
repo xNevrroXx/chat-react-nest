@@ -1,6 +1,6 @@
-import React, {FC, Fragment, useCallback, useMemo, useRef} from "react";
+import React, {FC, Fragment, useCallback, useMemo} from "react";
 import * as classNames from "classnames";
-import {Button, theme, Typography} from "antd";
+import {Button, Image, theme, Typography} from "antd";
 import {FileTwoTone, EditOutlined, DeleteOutlined} from "@ant-design/icons";
 // own modules
 import OriginalMessage from "../OriginalMessage/OriginalMessage.tsx";
@@ -10,11 +10,13 @@ import ForwardedMessage from "../ForwardedMessage/ForwardedMessage.tsx";
 import ReplyOutlined from "../../icons/ReplyOutlined.tsx";
 import PinOutlined from "../../icons/PinOutlined.tsx";
 import ForwardOutlined from "../../icons/ForwardOutlined.tsx";
+import VideoPlayer from "../VideoPlayer/VideoPlayer.tsx";
 // types
-import {checkIsMessage, IForwardedMessage, IMessage} from "../../models/IStore/IRoom.ts";
-import {IFileForRender, IKnownAndUnknownFiles} from "../../models/IRoom.ts";
+import {checkIsMessage, IFile, IForwardedMessage, IMessage} from "../../models/IStore/IRoom.ts";
+import {IKnownAndUnknownFiles} from "../../models/IRoom.ts";
 // styles
 import "./message.scss";
+import Time from "../Time/Time.tsx";
 
 const {useToken} = theme;
 const {Text} = Typography;
@@ -24,7 +26,6 @@ interface IMessageProps {
     files: IKnownAndUnknownFiles;
     isMine: boolean;
     isVoice: boolean;
-    handlePreview: (file: IFileForRender) => void;
     onChooseMessageForPin: () => void;
     onChooseMessageForEdit: () => void;
     onChooseMessageForDelete: () => void;
@@ -37,7 +38,6 @@ const Message: FC<IMessageProps> = ({
                                         isMine,
                                         isVoice,
                                         files,
-                                        handlePreview,
                                         onChooseMessageForPin,
                                         onChooseMessageForEdit,
                                         onChooseMessageForDelete,
@@ -45,51 +45,35 @@ const Message: FC<IMessageProps> = ({
                                         onChooseMessageForForward
                                     }) => {
     const {token} = useToken();
-    const downloadLinkRef = useRef<HTMLAnchorElement | null>(null);
 
-    const handleDownload = useCallback((fileInfo: IFileForRender) => {
-        if (!downloadLinkRef.current) {
-            return;
-        }
-
-        downloadLinkRef.current.href = fileInfo.blobUrl;
-        downloadLinkRef.current.download = fileInfo.originalName.length > 0 ?
-            fileInfo.originalName : "file".concat(fileInfo.extension);
-        downloadLinkRef.current.click();
+    const handleDownload = useCallback((fileInfo: IFile) => {
+        const anchor = document.createElement("a");
+        anchor.href = import.meta.env.VITE_BACKEND_BASE_URL + "/file?name=" + fileInfo.url;
+        anchor.title = fileInfo.originalName;
+        anchor.download = fileInfo.originalName;
+        anchor.click();
     }, []);
 
-    const videoElem = useCallback((fileInfo: IFileForRender): JSX.Element => {
+    const imageElem = useCallback((fileInfo: IFile): JSX.Element => {
         return (
-            <Fragment>
-                <video
-                    tabIndex={-1}
-                    controls={true}
-                    src={fileInfo.blobUrl}
-                />
-            </Fragment>
+            <Image
+                alt={`attachment ${fileInfo.id}`}
+                src={import.meta.env.VITE_BACKEND_BASE_URL + "/file?name=" + fileInfo.url}
+            />
         );
     }, []);
 
-    const imageElem = useCallback((fileInfo: IFileForRender): JSX.Element => {
-        return (
-            <Fragment>
-                <img
-                    alt={`attachment ${fileInfo.id}`}
-                    src={fileInfo.blobUrl}
-                />
-            </Fragment>
-        );
-    }, []);
-
-    const otherElem = useCallback((fileInfo: IFileForRender): JSX.Element => {
+    const otherElem = useCallback((fileInfo: IFile): JSX.Element => {
         return (
             <Fragment>
                 <FileTwoTone/>
-                <span className="message__attachment-file-name">{fileInfo.originalName}</span>
-                <a style={{display: "none"}} ref={downloadLinkRef}/>
+                <p>
+                    <Text className="message__attachment-file-name">{fileInfo.originalName}</Text><br/>
+                    <Text style={{color: token.colorTextSecondary}}>{fileInfo.size.value} {fileInfo.size.unit}</Text>
+                </p>
             </Fragment>
         );
-    }, []);
+    }, [token.colorTextSecondary]);
 
     const knownAttachments = useMemo(() => {
         if (files.known.length === 0) {
@@ -99,7 +83,7 @@ const Message: FC<IMessageProps> = ({
         return files.known.map((fileInfo) => {
             let fileElem: JSX.Element;
             if (fileInfo.attachmentType === "video") {
-                fileElem = videoElem(fileInfo);
+                fileElem = <VideoPlayer {...fileInfo}/>;
             } else if (fileInfo.attachmentType === "image") {
                 fileElem = imageElem(fileInfo);
             } else if (fileInfo.attachmentType === "audio") {
@@ -110,20 +94,19 @@ const Message: FC<IMessageProps> = ({
                 <li
                     key={fileInfo.id}
                     className="message__attachment"
-                    onClick={fileInfo.attachmentType !== "video" ? () => handlePreview(fileInfo) : undefined}
                 >
                     {fileElem!}
                 </li>
             );
         });
-    }, [files, handlePreview, imageElem, videoElem]);
+    }, [files, imageElem]);
 
     const unknownAttachments = useMemo(() => {
         if (files.unknown.length === 0) {
             return null;
         }
 
-        return files.unknown.map((fileInfo: IFileForRender) => {
+        return files.unknown.map((fileInfo: IFile, index) => {
             const fileElem = otherElem(fileInfo);
 
             return (
@@ -133,15 +116,15 @@ const Message: FC<IMessageProps> = ({
                     onClick={() => handleDownload(fileInfo)}
                 >
                     {fileElem}
+                    {!message.text && index === files.unknown.length - 1
+                        && <Time createdAt={message.createdAt} hasRead={message.hasRead} hasEdited={!!message.updatedAt}/>
+                    }
                 </li>
             );
         });
-    }, [files.unknown, handleDownload, otherElem]);
+    }, [files.unknown, handleDownload, message.createdAt, message.hasRead, message.text, message.updatedAt, otherElem]);
 
     const messageContent = useMemo(() => {
-        if (!message) {
-            return;
-        }
 
         if (checkIsMessage(message)) {
             return (
@@ -153,12 +136,12 @@ const Message: FC<IMessageProps> = ({
                     {isVoice && (files.known.length === 1) ?
                         <div className="message__audio-element-wrapper">
                             <AudioElement
-                                blob={files.known[0].blob}
-                                blobURL={files.known[0].blobUrl}
+                                url={files.known[0].url}
                                 width={200}
                                 height={27}
                                 alignCenter={true}
                                 createdAt={message.createdAt}
+                                size={files.known[0].size}
                             />
                         </div>
                         :
@@ -166,9 +149,6 @@ const Message: FC<IMessageProps> = ({
                             {knownAttachments &&
                                 <ul className="message__attachments-wrapper">
                                     {knownAttachments}
-                                    {!message.text && !unknownAttachments &&
-                                        <Text className="message__time message__time_on-attachments">{message.createdAt}</Text>
-                                    }
                                 </ul>
                             }
                             {unknownAttachments &&
@@ -176,12 +156,9 @@ const Message: FC<IMessageProps> = ({
                                     className={classNames("message__attachments-unknown-wrapper", message.text && "message__attachments-unknown-wrapper_with-line")}
                                 >
                                     {unknownAttachments}
-                                    {!message.text && <Text style={{color: token.colorTextSecondary}} className="message__time-on-attachments">{message.createdAt}</Text> }
                                 </ul>
                             }
-                            {message.text &&
-                                <OriginalMessage text={message.text} firstLinkInfo={message.firstLinkInfo} createdAt={message.createdAt}/>
-                            }
+                            <OriginalMessage {...message}/>
                         </Fragment>
                     }
                 </Fragment>
@@ -189,7 +166,7 @@ const Message: FC<IMessageProps> = ({
         }
 
         return <ForwardedMessage message={message} isMine={isMine}/>;
-    }, [message, isMine, isVoice, files.known, knownAttachments, unknownAttachments, token.colorTextSecondary]);
+    }, [message, isMine, isVoice, files.known, knownAttachments, unknownAttachments]);
 
     return (
         <div

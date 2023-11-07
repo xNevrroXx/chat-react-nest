@@ -25,8 +25,7 @@ interface IInputMessage {
     onTyping: () => void;
     messageForReply: IMessage | IForwardedMessage | null;
     messageForEdit: IMessage | null;
-    removeMessageForEdit: () => void;
-    removeMessageForReply: () => void;
+    removeMessageForAction: () => void;
 }
 
 const InputMessage: FC<IInputMessage> = ({
@@ -36,8 +35,7 @@ const InputMessage: FC<IInputMessage> = ({
                                              onSendMessage,
                                              onSendVoiceMessage,
                                              onSendEditedMessage,
-                                             removeMessageForEdit,
-                                             removeMessageForReply
+                                             removeMessageForAction
                                          }) => {
     const inputRef = useRef<HTMLDivElement | null>(null);
     const [message, setMessage] = useState<string>("");
@@ -121,31 +119,17 @@ const InputMessage: FC<IInputMessage> = ({
     return (
         <>
             <Flex className="input-message" justify="space-between" vertical align="self-start" gap="small">
-                {messageForReply &&
+                { (messageForEdit || messageForReply) &&
                     <Flex align="center">
                         <MessageReply
                             isInput={true}
-                            message={messageForReply}
+                            message={messageForEdit! || messageForReply!}
                         />
                         <Button
                             size="small"
                             type="text"
                             icon={<DeleteOutlined/>}
-                            onClick={removeMessageForReply}
-                        />
-                    </Flex>
-                }
-                {messageForEdit &&
-                    <Flex align="center">
-                        <MessageReply
-                            isInput={true}
-                            message={messageForEdit}
-                        />
-                        <Button
-                            size="small"
-                            type="text"
-                            icon={<DeleteOutlined/>}
-                            onClick={removeMessageForEdit}
+                            onClick={removeMessageForAction}
                         />
                     </Flex>
                 }

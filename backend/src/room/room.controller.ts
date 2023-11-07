@@ -248,7 +248,7 @@ export class RoomController {
         return await Promise.all(normalizedRoomPromises);
     }
 
-    @Get("query")
+    @Get("find-by-query")
     @UseGuards(AuthGuard)
     async getManyBySearch(@Req() request: Request): Promise<{name: string}[]> {
         const userPayloadJWT = request.user;

@@ -12,9 +12,7 @@ import {
     FileType,
     IAttachment,
     IEditMessage,
-    IForwardedMessage,
     IForwardMessage,
-    IMessage,
     IRoom,
     RoomType,
     TSendMessage
@@ -32,6 +30,7 @@ import {truncateTheText} from "../../utils/truncateTheText.ts";
 import PinnedMessagesList from "../../components/PinnedMessagesList/PinnedMessagesList.tsx";
 // styles
 import "./active-room.scss";
+import {MessageAction, TMessageForAction} from "../../models/IRoom.ts";
 
 const {useToken} = theme;
 const {Text, Title} = Typography;
@@ -39,26 +38,20 @@ const {Text, Title} = Typography;
 interface IActiveChatProps {
     user: IUserDto;
     room: IRoom | null
-    onOpenUsersListForForwardMessage: (forwardedMessageId: TValueOf<Pick<IForwardMessage, "forwardedMessageId">>) => void;
+    openUsersListForForwardMessage: (forwardedMessageId: TValueOf<Pick<IForwardMessage, "forwardedMessageId">>) => void;
 }
 
-const ActiveRoom: FC<IActiveChatProps> = ({user, room, onOpenUsersListForForwardMessage}) => {
+const ActiveRoom: FC<IActiveChatProps> = ({user, room, openUsersListForForwardMessage}) => {
     const {token} = useToken();
     const dispatch = useAppDispatch();
+    const typingTimoutRef = useRef<number | null>(null);
     const interlocutor = useAppSelector(state => {
         if (!room || room.type === RoomType.GROUP) return;
         return state.users.users.find(user => user.id === room.participants[0].userId);
     });
-    const [messageForEdit, setMessageForEdit] = useState<IMessage | null>(null);
-    const [messageForPin, setMessageForPin] = useState<IMessage | IForwardedMessage | null>(null);
-    const [messageForReply, setMessageForReply] = useState<IMessage | IForwardedMessage | null>(null);
-    const [messageForDelete, setMessageForDelete] = useState<{
-        message: IMessage | IForwardedMessage,
-        isForEveryone: boolean
-    } | null>(null);
+    const [messageForAction, setMessageForAction] = useState<TMessageForAction | null>(null);
     const [isVisibleScrollButtonState, setIsVisibleScrollButtonState] = useState<boolean>(true);
     const isNeedScrollToLastMessage = useRef<boolean>(true);
-    const typingTimoutRef = useRef<number | null>(null);
     const refChatContent = useScrollTrigger({
         onIntersectionBreakpoint: {
             toTop: () => {
@@ -79,39 +72,12 @@ const ActiveRoom: FC<IActiveChatProps> = ({user, room, onOpenUsersListForForward
         refChatContent.current.scrollTo(0, refChatContent.current?.scrollHeight);
     };
 
-    const onChooseMessageForReply = useCallback((message: IMessage | IForwardedMessage) => {
-        setMessageForReply(message);
+    const onChooseMessageForAction = useCallback((messageForAction: TMessageForAction) => {
+        setMessageForAction(messageForAction);
     }, []);
 
-    const removeMessageForReply = useCallback(() => {
-        setMessageForReply(null);
-    }, []);
-
-    const onChooseMessageForPin = useCallback((message: IMessage | IForwardedMessage) => {
-        setMessageForPin(message);
-    }, []);
-
-    const onChooseMessageForEdit = useCallback((message: IMessage) => {
-        setMessageForEdit(message);
-    }, []);
-
-    const removeMessageForEdit = () => {
-        setMessageForEdit(null);
-    };
-
-    const onChooseMessageForDelete = useCallback((message: IMessage | IForwardedMessage) => {
-        setMessageForDelete({
-            message,
-            isForEveryone: false
-        });
-    }, []);
-
-    const removeMessageForDelete = useCallback(() => {
-        setMessageForDelete(null);
-    }, []);
-
-    const removeMessageForPin = useCallback(() => {
-        setMessageForPin(null);
+    const removeMessageForAction = useCallback(() => {
+        setMessageForAction(null);
     }, []);
 
     const onTyping = useCallback(() => {
@@ -150,39 +116,39 @@ const ActiveRoom: FC<IActiveChatProps> = ({user, room, onOpenUsersListForForward
             );
             typingTimoutRef.current = null;
         }, 4000);
-    }, [dispatch, room]);
+    }, [dispatch, room]); // todo: need fix, because during the change the active room - the typing status will not change back
 
     const onDeleteMessage = () => {
-        if (!messageForDelete) return;
+        if (!messageForAction || messageForAction.action !== MessageAction.DELETE) return;
 
         void dispatch(deleteMessageSocket({
-                messageId: messageForDelete.message.id,
-                isForEveryone: messageForDelete.isForEveryone
+                messageId: messageForAction.message.id,
+                isForEveryone: messageForAction.isForEveryone
             })
         );
-        removeMessageForDelete();
+        removeMessageForAction();
     };
 
     const onPinMessage = useCallback(() => {
-        if (!room || !messageForPin) return;
+        if (!room || !messageForAction || messageForAction.action !== MessageAction.PIN) return;
 
         void dispatch(pinMessageSocket({
                 roomId: room.id,
-                messageId: messageForPin.id
+                messageId: messageForAction.message.id
             })
         );
-        removeMessageForPin();
-    }, [dispatch, messageForPin, removeMessageForPin, room]);
+        removeMessageForAction();
+    }, [dispatch, messageForAction, removeMessageForAction, room]);
 
     const onSendEditedMessage = (text: TValueOf<Pick<IEditMessage, "text">>) => {
-        if (!messageForEdit) return;
+        if (!messageForAction || messageForAction.action !== MessageAction.EDIT) return;
 
         void dispatch(editMessageSocket({
-                messageId: messageForEdit.id,
+                messageId: messageForAction.message.id,
                 text: text
             })
         );
-        removeMessageForEdit();
+        removeMessageForAction();
     };
 
     const onSendMessage = useCallback((text: TValueOf<Pick<TSendMessage, "text">>, attachments: IAttachment[]) => {
@@ -192,7 +158,7 @@ const ActiveRoom: FC<IActiveChatProps> = ({user, room, onOpenUsersListForForward
             roomId: room.id,
             text,
             attachments,
-            replyToMessageId: messageForReply && messageForReply.id
+            replyToMessageId: messageForAction && messageForAction.action === MessageAction.REPLY ? messageForAction.message.id : null
         };
 
         if (typingTimoutRef.current) {
@@ -200,8 +166,8 @@ const ActiveRoom: FC<IActiveChatProps> = ({user, room, onOpenUsersListForForward
             typingTimoutRef.current = null;
         }
         void dispatch(sendMessageSocket(message));
-        removeMessageForReply();
-    }, [room, messageForReply, dispatch, removeMessageForReply]);
+        removeMessageForAction();
+    }, [dispatch, room, messageForAction, removeMessageForAction]);
 
     const sendVoiceMessage = async (record: Blob) => {
         const buffer = await record.arrayBuffer();
@@ -290,11 +256,8 @@ const ActiveRoom: FC<IActiveChatProps> = ({user, room, onOpenUsersListForForward
                     user={user}
                     room={room}
                     isNeedScrollToLastMessage={isNeedScrollToLastMessage}
-                    onChooseMessageForPin={onChooseMessageForPin}
-                    onChooseMessageForEdit={onChooseMessageForEdit}
-                    onChooseMessageForReply={onChooseMessageForReply}
-                    onChooseMessageForDelete={onChooseMessageForDelete}
-                    onOpenUsersListForForwardMessage={onOpenUsersListForForwardMessage}
+                    onChooseMessageForAction={onChooseMessageForAction}
+                    onOpenUsersListForForwardMessage={openUsersListForForwardMessage}
                 />
 
                 <div className="active-room__footer">
@@ -305,10 +268,9 @@ const ActiveRoom: FC<IActiveChatProps> = ({user, room, onOpenUsersListForForward
                         />
                     }
                     <InputMessage
-                        messageForEdit={messageForEdit}
-                        messageForReply={messageForReply}
-                        removeMessageForReply={removeMessageForReply}
-                        removeMessageForEdit={removeMessageForEdit}
+                        messageForEdit={messageForAction && messageForAction.action === MessageAction.EDIT ? messageForAction.message : null}
+                        messageForReply={messageForAction && messageForAction.action === MessageAction.REPLY ? messageForAction.message : null}
+                        removeMessageForAction={removeMessageForAction}
                         onTyping={onTyping}
                         onSendMessage={onSendMessage}
                         onSendVoiceMessage={sendVoiceMessage}
@@ -318,17 +280,18 @@ const ActiveRoom: FC<IActiveChatProps> = ({user, room, onOpenUsersListForForward
 
                 <Modal
                     title="Вы хотите удалить сообщение?"
-                    onCancel={removeMessageForDelete}
+                    onCancel={removeMessageForAction}
                     onOk={onDeleteMessage}
-                    open={!!messageForDelete}
+                    open={!!(messageForAction && messageForAction.action === MessageAction.DELETE)}
                 >
-                    {room.type === RoomType.PRIVATE && messageForDelete && messageForDelete.message.senderId === user.id
+                    {room.type === RoomType.PRIVATE && messageForAction && messageForAction.action === MessageAction.DELETE && messageForAction.message.senderId === user.id
                         ?
                         <Checkbox
-                            checked={messageForDelete.isForEveryone}
+                            checked={messageForAction.isForEveryone}
                             onChange={event => {
-                                setMessageForDelete({
-                                    ...messageForDelete,
+                                setMessageForAction({
+                                    message: messageForAction.message,
+                                    action: MessageAction.DELETE,
                                     isForEveryone: event.target.checked
                                 });
                             }}
@@ -344,9 +307,9 @@ const ActiveRoom: FC<IActiveChatProps> = ({user, room, onOpenUsersListForForward
 
                 <Modal
                     title="Вы хотели бы закрепить сообщение?"
-                    onCancel={removeMessageForPin}
+                    onCancel={removeMessageForAction}
                     onOk={onPinMessage}
-                    open={!!messageForPin}
+                    open={!!(messageForAction && messageForAction.action === MessageAction.PIN)}
                 />
             </Fragment>
         );

@@ -1,7 +1,6 @@
-import {Injectable} from "@nestjs/common";
+import {BadRequestException, Injectable} from "@nestjs/common";
 import {Prisma, Room, type User, UserOnline, UserTyping} from "@prisma/client";
 import {DatabaseService} from "../database/database.service";
-import HttpError from "../exceptions/http-error";
 import {TValueOf} from "../models/TUtils";
 import {IUserPayloadJWT} from "./IUser";
 
@@ -44,7 +43,7 @@ export class UserService {
             where: { email: data.email }
         });
         if (isExistAlready) {
-            throw HttpError.BadRequest(`Пользователь с почтовым адресом ${data.email} уже существует`);
+            throw new BadRequestException(`Пользователь с почтовым адресом ${data.email} уже существует`);
         }
 
         return this.prisma.user.create({
@@ -59,7 +58,7 @@ export class UserService {
         const { where, data } = params;
         const isExist = this.prisma.user.findUnique({where});
         if (!isExist) {
-            throw HttpError.BadRequest(`Пользователя с почтовым адресом ${data.email} не сущeствует`);
+            throw new BadRequestException(`Пользователя с почтовым адресом ${data.email} не сущeствует`);
         }
 
         return this.prisma.user.update({
@@ -72,11 +71,6 @@ export class UserService {
     }
 
     async delete(where: Prisma.UserWhereUniqueInput): Promise<User> {
-        const isExist = this.prisma.user.findUnique({where});
-        if (!isExist) {
-            throw HttpError.BadRequest(`Пользователя с почтовым адресом ${"BOILERPLATE"} не существует`);
-        }
-
         return this.prisma.user.delete({where});
     }
 

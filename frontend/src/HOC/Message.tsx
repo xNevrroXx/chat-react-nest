@@ -2,36 +2,28 @@ import React, {FC, useCallback, useEffect, useMemo, useState} from "react";
 // own modules
 import DumbMessage from "../components/Message/Message.tsx";
 // types
-import {
-    FileType,
-    checkIsMessage,
-    IMessage,
-    IForwardedMessage
-} from "../models/IStore/IRoom.ts";
+import {checkIsMessage, FileType, IForwardedMessage, IMessage} from "../models/IStore/IRoom.ts";
 import {IUserDto} from "../models/IStore/IAuthentication.ts";
 import {TValueOf} from "../models/TUtils.ts";
-import {IFileForRender, IKnownAndUnknownFiles, TAttachmentType} from "../models/IRoom.ts";
+import {
+    IKnownAndUnknownFiles,
+    MessageAction,
+    TAttachmentType,
+    TMessageForAction
+} from "../models/IRoom.ts";
 
 type TMessageProps = {
     userId: TValueOf<Pick<IUserDto, "id">>;
     message: IMessage | IForwardedMessage;
-    onOpenUsersListForForwardMessage: () => void;
-    onChooseMessageForPin: (message: IMessage | IForwardedMessage) => void;
-    onChooseMessageForEdit: (message: IMessage) => void;
-    onChooseMessageForDelete: (message: IMessage | IForwardedMessage) => void;
-    onChooseMessageForReply: (message: IMessage | IForwardedMessage) => void;
-    handlePreview: (file: IFileForRender) => void;
+    onChooseMessageForForward: () => void;
+    onChooseMessageForAction: (messageForAction: TMessageForAction) => void;
 };
 
 const Message: FC<TMessageProps> = ({
                                         userId,
                                         message,
-                                        onChooseMessageForPin,
-                                        onChooseMessageForEdit,
-                                        onChooseMessageForReply,
-                                        onChooseMessageForDelete,
-                                        onOpenUsersListForForwardMessage,
-                                        handlePreview
+                                        onChooseMessageForAction,
+                                        onChooseMessageForForward
                                     }) => {
     const [isVoice, setIsVoice] = useState<boolean>(false);
     const [filesWithBlobUrls, setFilesWithBlobUrls] = useState<IKnownAndUnknownFiles>({
@@ -40,79 +32,88 @@ const Message: FC<TMessageProps> = ({
     });
 
     useEffect(() => {
-        if (checkIsMessage(message)) {
-            if (!message.files || message.files.length === 0) {
-                return;
-            }
+        if (!checkIsMessage(message) || !message.files || message.files.length === 0) {
+            return;
+        }
 
-            if (message.files[0].fileType === FileType[FileType.VOICE_RECORD]) {
-                const blob = message.files[0].blob;
-                const blobUrl = URL.createObjectURL(blob);
-                const voiceInfo = {
+        if (message.files[0].fileType === FileType[FileType.VOICE_RECORD]) {
+            // const blob = message.files[0].blob;
+            // const blobUrl = URL.createObjectURL(blob);
+            // const voiceInfo = {
+            //     ...message.files[0],
+            //     blobUrl
+            // };
+            setFilesWithBlobUrls({
+                known: [{
                     ...message.files[0],
-                    blobUrl
-                };
-                setFilesWithBlobUrls({
-                    known: [{
-                        ...voiceInfo,
-                        attachmentType: "audio"
-                    }],
-                    unknown: []
-                });
-                setIsVoice(true);
-            } else {
-                const filesWithBlobUrl = message.files.reduce<IKnownAndUnknownFiles>((previousValue, file) => {
-                    let attachmentType: TAttachmentType;
-                    if (file.mimeType.includes("video")) {
-                        attachmentType = "video";
-                    } else if (file.mimeType.includes("image")) {
-                        attachmentType = "image";
-                    } else if (file.mimeType.includes("audio")) {
-                        attachmentType = "audio";
-                    } else {
-                        attachmentType = "unknown";
-                    }
-                    const blobUrl = URL.createObjectURL(file.blob);
+                    attachmentType: "audio"
+                }],
+                unknown: []
+            });
+            setIsVoice(true);
+        } else {
+            const filesWithBlobUrl = message.files.reduce<IKnownAndUnknownFiles>((previousValue, file) => {
+                let attachmentType: TAttachmentType;
+                if (file.mimeType.includes("video")) {
+                    attachmentType = "video";
+                } else if (file.mimeType.includes("image")) {
+                    attachmentType = "image";
+                } else if (file.mimeType.includes("audio") && file.fileType === FileType.VOICE_RECORD) {
+                    attachmentType = "audio";
+                } else {
+                    attachmentType = "unknown";
+                }
+                // const blobUrl = URL.createObjectURL(file.blob);
 
-                    attachmentType !== "unknown"
-                        ? previousValue.known.push({
-                            ...file,
-                            blobUrl,
-                            attachmentType
-                        })
-                        : previousValue.unknown.push({
-                            ...file,
-                            blobUrl,
-                            attachmentType
-                        });
-                    return previousValue;
-                }, {
-                    known: [],
-                    unknown: []
-                });
+                attachmentType !== "unknown"
+                    ? previousValue.known.push({
+                        ...file,
+                        attachmentType
+                    })
+                    : previousValue.unknown.push({
+                        ...file,
+                        attachmentType
+                    });
+                return previousValue;
+            }, {
+                known: [],
+                unknown: []
+            });
 
-                setFilesWithBlobUrls(filesWithBlobUrl);
-            }
+            setFilesWithBlobUrls(filesWithBlobUrl);
         }
     }, [message]);
 
     const onClickMessageForPin = useCallback(() => {
-        onChooseMessageForPin(message);
-    }, [onChooseMessageForPin, message]);
+        onChooseMessageForAction({
+            message,
+            action: MessageAction.PIN
+        });
+    }, [onChooseMessageForAction, message]);
 
     const onClickMessageForReply = useCallback(() => {
-        onChooseMessageForReply(message);
-    }, [onChooseMessageForReply, message]);
+        onChooseMessageForAction({
+            message,
+            action: MessageAction.REPLY
+        });
+    }, [onChooseMessageForAction, message]);
 
     const onClickMessageForEdit = useCallback(() => {
         if (!checkIsMessage(message)) return;
 
-        onChooseMessageForEdit(message);
-    }, [onChooseMessageForEdit, message]);
+        onChooseMessageForAction({
+            message,
+            action: MessageAction.EDIT
+        });
+    }, [onChooseMessageForAction, message]);
 
     const onClickMessageForDelete = useCallback(() => {
-        onChooseMessageForDelete(message);
-    }, [onChooseMessageForDelete, message]);
+        onChooseMessageForAction({
+            message,
+            action: MessageAction.DELETE,
+            isForEveryone: false
+        });
+    }, [onChooseMessageForAction, message]);
 
     const isMine = useMemo((): boolean => {
         return userId === message.senderId;
@@ -123,12 +124,11 @@ const Message: FC<TMessageProps> = ({
             isMine={isMine}
             isVoice={isVoice}
             files={filesWithBlobUrls}
-            handlePreview={handlePreview}
             onChooseMessageForPin={onClickMessageForPin}
             onChooseMessageForEdit={onClickMessageForEdit}
             onChooseMessageForDelete={onClickMessageForDelete}
             onChooseMessageForReply={onClickMessageForReply}
-            onChooseMessageForForward={onOpenUsersListForForwardMessage}
+            onChooseMessageForForward={onChooseMessageForForward}
             message={message}
         />
     );

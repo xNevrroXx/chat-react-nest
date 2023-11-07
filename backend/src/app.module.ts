@@ -12,6 +12,7 @@ import {RoomModule} from "./room/room.module";
 import {ParticipantService} from "./participant/participant.service";
 import {LinkPreviewController} from "./link-preview/link-preview.controller";
 import {LinkPreviewService} from "./link-preview/link-preview.service";
+import { FileController } from './file/file.controller';
 
 
 @Module({
@@ -23,7 +24,7 @@ import {LinkPreviewService} from "./link-preview/link-preview.service";
         ChatModule,
         RoomModule
     ],
-    controllers: [AppController, LinkPreviewController],
+    controllers: [AppController, LinkPreviewController, FileController],
     providers: [TokenService, AuthService, AppConstantsService, ParticipantService, LinkPreviewService]
 })
 export class AppModule {

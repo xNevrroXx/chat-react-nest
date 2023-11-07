@@ -5,7 +5,6 @@ import {ValidationPipe} from "@nestjs/common";
 import {HttpExceptionsFilter} from "./exceptions/http-exceptions.filter";
 import {SocketIoAdapter} from "./socket.adapter";
 import {ConfigService} from "@nestjs/config";
-import {BaseWsExceptionFilter} from "@nestjs/websockets";
 
 async function bootstrap() {
     const app = await NestFactory.create(AppModule, {
@@ -20,7 +19,6 @@ async function bootstrap() {
     app.useGlobalPipes(new ValidationPipe());
     app.useWebSocketAdapter(new SocketIoAdapter(app, configService));
     app.useGlobalFilters(new HttpExceptionsFilter());
-    app.useGlobalFilters(new BaseWsExceptionFilter());
     await app.listen(3000); 
 
 

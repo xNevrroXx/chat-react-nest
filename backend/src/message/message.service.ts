@@ -101,7 +101,7 @@ export class MessageService {
             const hasFiles = normalizedMessage.files.length > 0;
             let files: TFileToClient[] = [];
             if (hasFiles) {
-                files = await this.fileService.addBlobToFiles(normalizedMessage.files);
+                files = this.fileService.normalizeFiles(normalizedMessage.files as any[]);
             }
             normalizedMessage = {
                 ...normalizedMessage,
@@ -123,7 +123,7 @@ export class MessageService {
                     } as TMessage;
                 }
                 else if (isInnerMessage(normalizedMessage.replyToMessage)) {
-                    normalizedMessage.replyToMessage.files = await this.fileService.addBlobToFiles(normalizedMessage.replyToMessage.files);
+                    normalizedMessage.replyToMessage.files = this.fileService.normalizeFiles(normalizedMessage.replyToMessage.files as any);
 
                     normalizedMessage = {
                         ...normalizedMessage,
@@ -163,7 +163,7 @@ export class MessageService {
                 }
 
                 if (isInnerMessage(normalizedMessage.forwardedMessage)) {
-                    normalizedMessage.forwardedMessage.files = await this.fileService.addBlobToFiles(normalizedMessage.forwardedMessage.files);
+                    normalizedMessage.forwardedMessage.files = this.fileService.normalizeFiles(normalizedMessage.forwardedMessage.files as any);
                 }
             }
         }

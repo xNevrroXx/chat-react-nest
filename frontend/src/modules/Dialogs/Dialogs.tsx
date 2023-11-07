@@ -42,7 +42,7 @@ const Dialogs: FC<IDialogsProps> = ({user, activeRoomId, onChangeDialog, onCreat
         data,
         request,
         clear
-    } = useFetch<TTemporarilyRoomBySearch[]>(import.meta.env.VITE_BACKEND_BASE_URL.concat("/room/query"));
+    } = useFetch<TTemporarilyRoomBySearch[]>(import.meta.env.VITE_BACKEND_BASE_URL.concat("/room/find-by-query"));
     const [dialogQueryString, setDialogQueryString] = useState<string>("");
     const filteredLocalDialogs = useAppSelector(state => filteredRoomsSelector(state, dialogQueryString));
     const [isPending, startTransition] = useTransition();

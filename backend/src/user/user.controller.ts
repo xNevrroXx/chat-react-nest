@@ -1,9 +1,18 @@
 import * as bcrypt from "bcrypt";
-import {Body, Controller, Get, Post, Req, Res, UseGuards} from "@nestjs/common";
+import {
+    BadRequestException,
+    Body,
+    Controller,
+    Get,
+    Post,
+    Req,
+    Res,
+    UnauthorizedException,
+    UseGuards
+} from "@nestjs/common";
 import {UserDto, UserLogin, UserRegister} from "./userDto";
 import {UserService} from "./user.service";
 import {TokenService} from "../token/token.service";
-import HttpError from "../exceptions/http-error";
 import {AuthGuard} from "../auth/auth.guard";
 import {excludeSensitiveFields} from "../utils/excludeSensitiveFields";
 import {Request, Response} from "express";
@@ -41,12 +50,12 @@ export class UserController {
     async login(@Res({passthrough: true}) response, @Body() {email, password}: UserLogin) {
         const targetUser = await this.userService.findOne({email});
         if (!targetUser) {
-            throw HttpError.BadRequest(`Пользователя с почтовым адресом ${email} не существует`);
+            throw new BadRequestException(`Пользователя с почтовым адресом ${email} не существует`);
         }
         const isPasswordEquals = await bcrypt.compare(password, targetUser.password);
         if (!isPasswordEquals) {
             response.cookie("refreshToken", "", {maxAge: 0, httpOnly: true});
-            throw HttpError.BadRequest("Пароль неверный");
+            throw new BadRequestException("Пароль неверный");
         }
         const {accessToken, refreshToken} = await this.tokenService.generateTokens({
             id: targetUser.id,
@@ -69,7 +78,7 @@ export class UserController {
             id: request.user.id
         });
         if (!targetUser) {
-            throw HttpError.UnauthorizedError();
+            throw new UnauthorizedException();
         }
         await this.tokenService.removeRefreshToken(targetUser.id);
 
@@ -82,7 +91,7 @@ export class UserController {
         const {refreshToken: oldRefreshToken} = request.cookies;
         const userPayload: IUserPayloadJWT = await this.tokenService.validateRefreshToken(oldRefreshToken);
         if (!userPayload) {
-            throw HttpError.UnauthorizedError();
+            throw new UnauthorizedException();
         }
 
         const targetUser = await this.userService.findOne(
@@ -91,7 +100,7 @@ export class UserController {
         );
         if (!isUserWithRefreshToken(targetUser) || targetUser.refreshToken.token !== oldRefreshToken) {
             response.clearCookie("refreshToken");
-            throw HttpError.UnauthorizedError();
+            throw new UnauthorizedException();
         }
 
         const {accessToken, refreshToken} = await this.tokenService.generateTokens({

@@ -1,8 +1,8 @@
 import {
     TSendMessage,
-    IMessageSocket,
+    IMessage,
     IForwardMessage,
-    IForwardedMessageSocket,
+    IForwardedMessage,
     TSendUserTyping,
     IParticipant,
     IPinMessage,
@@ -15,11 +15,11 @@ import {
 import {TUserOnline} from "./IStore/IAuthentication.ts";
 
 export interface ServerToClientEvents {
-    "message": (data: IMessageSocket) => void;
+    "message": (data: IMessage) => void;
     "message:pinned": (data: TPinnedMessagesSocket) => void;
     "message:edited": (data: IEditedMessageSocket) => void;
     "message:deleted": (data: IDeletedMessageSocket) => void;
-    "message:forwarded": (data: IForwardedMessageSocket) => void;
+    "message:forwarded": (data: IForwardedMessage) => void;
     "user:toggle-online": (data: TUserOnline) => void;
     "room:toggle-typing": (data: IParticipant[]) => void;
 }

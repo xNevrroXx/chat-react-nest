@@ -38,10 +38,7 @@ const Main = () => {
         const currentModifiedRoom = activeRoom && rooms.find(room => room.id === activeRoom.id);
         if (currentModifiedRoom) {
             setActiveRoom(currentModifiedRoom);
-            return;
         }
-
-        setActiveRoom(rooms[0] || null);
     }, [rooms, activeRoom]);
 
     const onChangeDialog = useCallback((roomId: TValueOf<Pick<IRoom, "id">>) => {
@@ -88,7 +85,7 @@ const Main = () => {
                 <ActiveRoom
                     room={activeRoom}
                     user={user}
-                    onOpenUsersListForForwardMessage={openUsersListForForwardMessage}
+                    openUsersListForForwardMessage={openUsersListForForwardMessage}
                 />
             </Content>
             <Modal

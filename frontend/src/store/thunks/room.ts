@@ -4,30 +4,23 @@ import {RoomService} from "../../services/RoomService.ts";
 import {SocketIOService} from "../../services/SocketIO.service.ts";
 // actions
 import {
-    handleMessageSocket,
-    handlePinnedMessageSocket,
-    handleEditedMessageSocket,
-    handleDeletedMessageSocket,
     handleChangeUserTypingSocket,
-    handleForwardedMessageSocket
+    handleDeletedMessageSocket,
+    handleEditedMessageSocket,
+    handleForwardedMessageSocket,
+    handleMessageSocket,
+    handlePinnedMessageSocket
 } from "../actions/room.ts";
 import {handleChangeUserOnlineSocket} from "../actions/users.ts";
 // types
 import {
-    checkIsInnerMessageHTTP,
-    checkIsMessageHTTP,
-    IFile,
-    IRoom,
-    IMessage,
+    IDeleteMessage,
     IEditMessage,
+    IForwardMessage,
+    IPinMessage,
+    IRoom,
     TSendMessage,
     TSendUserTyping,
-    IForwardMessage,
-    IForwardedMessage,
-    IInnerMessage,
-    IInnerForwardedMessage,
-    IDeleteMessage,
-    IPinMessage,
     TTemporarilyRoomBySearch
 } from "../../models/IStore/IRoom.ts";
 import {RootState} from "../index.ts";
@@ -199,125 +192,7 @@ const getAll = createAsyncThunk(
     async (_, thunkAPI) => {
         try {
             const response = await RoomService.getAll();
-            const chatsHTTPResponse = response.data;
-            const chats: IRoom[] = [];
-            chatsHTTPResponse.forEach(room => {
-                const messages = room.messages.reduce<(IMessage | IForwardedMessage)[]>((previousValue, messageHTTP) => {
-                    let message: IMessage | IForwardedMessage;
-                    let newMessage = {} as (IMessage | IForwardedMessage);
-                    let innerMessage: IInnerMessage | IInnerForwardedMessage | null;
-                    if (checkIsMessageHTTP(messageHTTP)) {
-                        const files = messageHTTP.files.map<IFile>(file => {
-                            const u = new Uint8Array(file.buffer.data);
-                            const blob = new Blob([u], {type: file.mimeType});
-                            return {
-                                id: file.id,
-                                originalName: file.originalName,
-                                fileType: file.fileType,
-                                mimeType: file.mimeType,
-                                extension: file.extension,
-                                blob: blob,
-
-                                createdAt: file.createdAt
-                            };
-                        });
-
-                        newMessage = {
-                            ...messageHTTP,
-                            files: files,
-                            replyToMessage: undefined, // temporarily
-                            createdAt: messageHTTP.createdAt,
-                            updatedAt: messageHTTP.updatedAt,
-                        } as IMessage;
-
-                        if (messageHTTP.replyToMessage) {
-                            if (checkIsInnerMessageHTTP(messageHTTP.replyToMessage)) {
-                                const innerFiles = messageHTTP.replyToMessage.files.map<IFile>(file => {
-                                    const u = new Uint8Array(file.buffer.data);
-                                    const blob = new Blob([u], {type: file.mimeType});
-                                    return {
-                                        id: file.id,
-                                        originalName: file.originalName,
-                                        fileType: file.fileType,
-                                        mimeType: file.mimeType,
-                                        extension: file.extension,
-                                        blob: blob,
-
-                                        createdAt: file.createdAt
-                                    };
-                                });
-
-                                innerMessage = {
-                                    ...messageHTTP.replyToMessage,
-                                    files: innerFiles,
-                                    createdAt: messageHTTP.replyToMessage.createdAt,
-                                    updatedAt: messageHTTP.replyToMessage.updatedAt,
-                                };
-                            }
-                            else {
-                                innerMessage = {
-                                    ...messageHTTP.replyToMessage,
-                                    createdAt: messageHTTP.replyToMessage.createdAt,
-                                    updatedAt: messageHTTP.replyToMessage.updatedAt,
-                                };
-                            }
-                            newMessage.replyToMessage = innerMessage;
-                        }
-
-                        message = newMessage;
-                    }
-                    else {
-                        newMessage = {
-                            ...messageHTTP,
-                            forwardedMessage: null as unknown as IInnerMessage, // temporarily
-                        } as IForwardedMessage;
-
-                        if (messageHTTP.forwardedMessage) {
-                            if (checkIsInnerMessageHTTP(messageHTTP.forwardedMessage)) {
-                                const innerFiles = messageHTTP.forwardedMessage.files.map<IFile>(file => {
-                                    const u = new Uint8Array(file.buffer.data);
-                                    const blob = new Blob([u], {type: file.mimeType});
-                                    return {
-                                        id: file.id,
-                                        originalName: file.originalName,
-                                        fileType: file.fileType,
-                                        mimeType: file.mimeType,
-                                        extension: file.extension,
-                                        blob: blob,
-
-                                        createdAt: file.createdAt
-                                    };
-                                });
-
-                                innerMessage = {
-                                    ...messageHTTP.forwardedMessage,
-                                    files: innerFiles,
-                                    createdAt: messageHTTP.forwardedMessage.createdAt,
-                                    updatedAt: messageHTTP.forwardedMessage.updatedAt,
-                                };
-                            } else {
-                                innerMessage = {
-                                    ...messageHTTP.forwardedMessage,
-                                    createdAt: messageHTTP.forwardedMessage.createdAt,
-                                    updatedAt: messageHTTP.forwardedMessage.updatedAt,
-                                };
-                            }
-                            newMessage.forwardedMessage = innerMessage;
-                        }
-                        message = newMessage;
-                    }
-
-                    previousValue.push(message);
-                    return previousValue;
-                }, []);
-
-                chats.push({
-                    ...room,
-                    messages
-                });
-            });
-
-            return chats;
+            return response.data;
         } catch (error) {
             return thunkAPI.rejectWithValue(error);
         }

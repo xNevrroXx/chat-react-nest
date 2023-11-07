@@ -1,3 +1,3 @@
-import {TRoomHTTP} from "../IStore/IRoom.ts";
+import {IRoom} from "../IStore/IRoom.ts";
 
-export type TRoomsResponse = TRoomHTTP[];
+export type TRoomsResponse = IRoom[];

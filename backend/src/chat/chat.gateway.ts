@@ -10,7 +10,6 @@ import {
 import {UseFilters, UseGuards} from "@nestjs/common";
 import {Server, Socket} from "socket.io";
 // own modules
-import HttpError from "../exceptions/http-error";
 import {WsAuth} from "../auth/ws-auth.guard";
 import {UserService} from "../user/user.service";
 import {AuthService} from "../auth/auth.service";
@@ -334,7 +333,7 @@ export class ChatGateway
             id: message.forwardedMessageId
         });
         if (!forwardedMessage) {
-            throw HttpError.BadRequest("Пересылаемое сообщение не существует");
+            throw new WsException("Пересылаемое сообщение не существует");
         }
 
         const newMessage = await this.messageService.create({
@@ -417,7 +416,7 @@ export class ChatGateway
             id: senderPayloadJWT.id
         });
         if (!sender) {
-            throw HttpError.BadRequest("Не найден отправитель сообщения");
+            throw new WsException("Не найден отправитель сообщения");
         }
 
         const room = await this.roomService.findOne({
