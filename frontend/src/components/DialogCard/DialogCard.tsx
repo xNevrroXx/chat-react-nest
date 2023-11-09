@@ -9,12 +9,11 @@ import {IUserDto} from "../../models/IStore/IAuthentication.ts";
 import {TValueOf} from "../../models/TUtils.ts";
 import {IRoom, RoomType} from "../../models/IStore/IRoom.ts";
 import {ILastMessageInfo} from "../../models/IRoom.ts";
+import clip from "text-clipper";
 // styles
 import "./dialog.scss";
-import {truncateTheText} from "../../utils/truncateTheText.ts";
-// import clip from "text-clipper";
 
-const {Title, Text} = Typography;
+const {Title, Text, Paragraph} = Typography;
 
 interface IDialogCardProps {
     id: TValueOf<Pick<IUserDto, "id">>,
@@ -40,20 +39,18 @@ const DialogCard: FC<IDialogCardProps> = ({id, dialogName, lastMessageInfo, onCl
                 <Title level={5} style={{margin: 0}}>{dialogName}</Title>
                 {lastMessageInfo &&
                     (
-                        <p className="dialog__message">
+                        <Paragraph className="dialog__message">
                             {roomType === RoomType.GROUP && <Text strong className="dialog__sender-message">{lastMessageInfo.sender + ": "}</Text>}
                             <Markup
                                 noWrap={true}
                                 disableLineBreaks={true}
                                 content={
-                                    emojiParser.parse(truncateTheText({
-                                        text: lastMessageInfo.text,
-                                        maxLength: 50,
-                                        cutCloseToLastSpace: true
-                                    }))
+                                    emojiParser.parse(
+                                        clip(lastMessageInfo.text, 50, {html: true})
+                                    )
                                 }
                             />
-                        </p>
+                        </Paragraph>
                     )
                 }
             </div>

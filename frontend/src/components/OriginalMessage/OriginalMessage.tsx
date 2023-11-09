@@ -9,6 +9,8 @@ import LinkPreviewer from "../LinkPreviewer/LinkPreviewer.tsx";
 import Time from "../Time/Time.tsx";
 import {Typography} from "antd";
 
+const {Paragraph} = Typography;
+
 
 const OriginalMessage: FC<IMessage | IForwardedMessage> = (message) => {
 
@@ -21,7 +23,8 @@ const OriginalMessage: FC<IMessage | IForwardedMessage> = (message) => {
         const {text, firstLinkInfo, files} = message;
         if (text && firstLinkInfo) {
             return (
-                <Typography
+                <Paragraph
+                    style={{marginBottom: 0}}
                     className={classNames("message__wrapper-inner-content", "message__wrapper-inner-content_with-links")}
                 >
                     <Interweave
@@ -36,25 +39,27 @@ const OriginalMessage: FC<IMessage | IForwardedMessage> = (message) => {
                         data={firstLinkInfo}
                     />
                     <Time hasRead={hasRead} hasEdited={!!updatedAt} createdAt={createdAt}/>
-                </Typography>
+                </Paragraph>
             );
-        }
-        else if (text && !firstLinkInfo) {
+        } else if (text && !firstLinkInfo) {
             return (
-                <Typography className={"message__wrapper-inner-content"}>
+                <Paragraph
+                    style={{marginBottom: 0}}
+                    className={"message__wrapper-inner-content"}>
                     <Interweave
                         noWrap={true}
                         content={emojiParser.parse(text)}
                     />
                     <Time hasRead={hasRead} hasEdited={!!updatedAt} createdAt={createdAt}/>
-                </Typography>
+                </Paragraph>
             );
-        }
-        else if (!files.find( f => f.fileType === FileType.ATTACHMENT && !(f.mimeType.includes("video") || f.mimeType.includes("image")) )) {
+        } else if (!files.find(f => f.fileType === FileType.ATTACHMENT && !(f.mimeType.includes("video") || f.mimeType.includes("image")))) {
             return (
-                <Typography className="message__wrapper-inner-content message__wrapper-inner-content_empty">
+                <Paragraph
+                    style={{marginBottom: 0}}
+                    className="message__wrapper-inner-content message__wrapper-inner-content_empty">
                     <Time isMessageEmpty={true} hasRead={hasRead} hasEdited={!!updatedAt} createdAt={createdAt}/>
-                </Typography>
+                </Paragraph>
             );
         }
     }, [message]);

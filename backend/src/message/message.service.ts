@@ -19,6 +19,7 @@ import {findLinksInText} from "../utils/findLinksInText";
 import {LinkPreviewService} from "../link-preview/link-preview.service";
 import {TValueOf} from "../models/TUtils";
 import {normalizeDate} from "../utils/normalizeDate";
+import {codeBlocksToHTML} from "../utils/codeBlocksToHTML";
 
 @Injectable()
 export class MessageService {
@@ -88,12 +89,14 @@ export class MessageService {
         });
     }
 
+
     async normalize(recipientId: TValueOf<Pick<User, "id">>, input: TNormalizeMessageArgument): Promise<IMessage> {
         const message = excludeSensitiveFields(input, ["isDeleteForEveryone", "usersDeletedThisMessage"]) as never as IMessage;
         message.createdAt = normalizeDate(message.createdAt);
         let normalizedMessage: TMessage | TForwardedMessage;
         if (!isForwardedMessagePrisma(message as any)) {
             normalizedMessage = excludeSensitiveFields(message, ["forwardedMessageId", "forwardedMessage" as any]) as TMessage;
+            normalizedMessage.text = codeBlocksToHTML(normalizedMessage.text);
 
             const hasFiles = normalizedMessage.files.length > 0;
             let files: TFileToClient[] = [];

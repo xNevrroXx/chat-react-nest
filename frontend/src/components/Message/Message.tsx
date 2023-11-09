@@ -11,12 +11,12 @@ import ReplyOutlined from "../../icons/ReplyOutlined.tsx";
 import PinOutlined from "../../icons/PinOutlined.tsx";
 import ForwardOutlined from "../../icons/ForwardOutlined.tsx";
 import VideoPlayer from "../VideoPlayer/VideoPlayer.tsx";
+import Time from "../Time/Time.tsx";
 // types
 import {checkIsMessage, IFile, IForwardedMessage, IMessage} from "../../models/IStore/IRoom.ts";
 import {IKnownAndUnknownFiles} from "../../models/IRoom.ts";
 // styles
 import "./message.scss";
-import Time from "../Time/Time.tsx";
 
 const {useToken} = theme;
 const {Text} = Typography;

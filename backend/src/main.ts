@@ -17,9 +17,9 @@ async function bootstrap() {
     app.setGlobalPrefix("api");
     app.use(cookieParser());
     app.useGlobalPipes(new ValidationPipe());
-    app.useWebSocketAdapter(new SocketIoAdapter(app, configService));
     app.useGlobalFilters(new HttpExceptionFilter());
-    await app.listen(3000); 
+    app.useWebSocketAdapter(new SocketIoAdapter(app, configService));
+    await app.listen(3000);
 
 
     const url = new URL(await app.getUrl());
