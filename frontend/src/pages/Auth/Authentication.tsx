@@ -1,4 +1,4 @@
-import {lazy, Suspense, useState} from "react";
+import {lazy, Suspense, useCallback, useState} from "react";
 import {Spinner} from "../../components/Spinner/Spinner.tsx";
 import {Flex, Layout} from "antd";
 import "./auth.scss";
@@ -11,9 +11,9 @@ const RegisterForm = lazy(() => import("../../modules/RegisterForm.tsx"));
 const Authentication = () => {
     const [isLoginForm, setIsLoginForm] = useState<boolean>(true);
 
-    const changeForm = () => {
+    const changeForm = useCallback(() => {
         setIsLoginForm(prev => !prev);
-    };
+    }, []);
 
     return (
         <Content className="auth">

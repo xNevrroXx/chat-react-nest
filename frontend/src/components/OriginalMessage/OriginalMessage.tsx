@@ -3,16 +3,18 @@ import {Interweave} from "interweave";
 import * as classNames from "classnames";
 import emojiParser from "universal-emoji-parser";
 import {UrlMatcher} from "interweave-autolink";
+import {theme} from "antd";
 // own modules
-import {checkIsMessage, FileType, IForwardedMessage, IMessage} from "../../models/IStore/IRoom.ts";
-import LinkPreviewer from "../LinkPreviewer/LinkPreviewer.tsx";
 import Time from "../Time/Time.tsx";
-import {Typography} from "antd";
+import LinkPreviewer from "../LinkPreviewer/LinkPreviewer.tsx";
+import {checkIsMessage, FileType, IForwardedMessage, IMessage} from "../../models/IStore/IRoom.ts";
+import "./atelier-lakeside-light.scss";
 
-const {Paragraph} = Typography;
+const {useToken} = theme;
 
 
 const OriginalMessage: FC<IMessage | IForwardedMessage> = (message) => {
+    const {token} = useToken();
 
     return useMemo(() => {
         const {hasRead, updatedAt, createdAt} = message;
@@ -23,8 +25,8 @@ const OriginalMessage: FC<IMessage | IForwardedMessage> = (message) => {
         const {text, firstLinkInfo, files} = message;
         if (text && firstLinkInfo) {
             return (
-                <Paragraph
-                    style={{marginBottom: 0}}
+                <div
+                    style={{color: token.colorText}}
                     className={classNames("message__wrapper-inner-content", "message__wrapper-inner-content_with-links")}
                 >
                     <Interweave
@@ -39,30 +41,30 @@ const OriginalMessage: FC<IMessage | IForwardedMessage> = (message) => {
                         data={firstLinkInfo}
                     />
                     <Time hasRead={hasRead} hasEdited={!!updatedAt} createdAt={createdAt}/>
-                </Paragraph>
+                </div>
             );
         } else if (text && !firstLinkInfo) {
             return (
-                <Paragraph
-                    style={{marginBottom: 0}}
+                <div
+                    style={{color: token.colorText}}
                     className={"message__wrapper-inner-content"}>
                     <Interweave
                         noWrap={true}
                         content={emojiParser.parse(text)}
                     />
                     <Time hasRead={hasRead} hasEdited={!!updatedAt} createdAt={createdAt}/>
-                </Paragraph>
+                </div>
             );
         } else if (!files.find(f => f.fileType === FileType.ATTACHMENT && !(f.mimeType.includes("video") || f.mimeType.includes("image")))) {
             return (
-                <Paragraph
-                    style={{marginBottom: 0}}
+                <div
+                    style={{color: token.colorText}}
                     className="message__wrapper-inner-content message__wrapper-inner-content_empty">
                     <Time isMessageEmpty={true} hasRead={hasRead} hasEdited={!!updatedAt} createdAt={createdAt}/>
-                </Paragraph>
+                </div>
             );
         }
-    }, [message]);
+    }, [message, token.colorText]);
 };
 
 export default OriginalMessage;

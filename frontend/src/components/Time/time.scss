@@ -23,11 +23,11 @@
   &__inner {
     height: 12px;
     display: flex;
+    align-items: center;
     bottom: 6px;
     pointer-events: all;
     position: absolute;
     right: 0;
-    align-items: center;
     line-height: 1;
     padding: inherit;
     white-space: nowrap;

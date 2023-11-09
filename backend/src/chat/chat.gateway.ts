@@ -18,22 +18,21 @@ import {MessageService} from "../message/message.service";
 import {RoomService} from "../room/room.service";
 import {ParticipantService} from "../participant/participant.service";
 import {FileService} from "../file/file.service";
+import {SocketRoomsInfo} from "./SocketRoomsInfo.class";
 import {generateFileName} from "../utils/generateFileName";
 import {brToNewLineChars} from "../utils/brToNewLineChars ";
 import {isFulfilledPromise} from "../utils/isFulfilledPromise";
+import {codeBlocksToHTML} from "../utils/codeBlocksToHTML";
 // types
 import {IUserPayloadJWT} from "../user/IUser";
 import {
     TNewMessage,
-    IUserIdToSocketId,
     TToggleUserTyping,
     TNewForwardedMessage,
     TNewEditedMessage,
     TDeleteMessage, TPinMessage
 } from "./IChat";
-import {Prisma, File, User} from "@prisma/client";
-import {TValueOf} from "../models/TUtils";
-import {SocketRoomsInfo} from "./SocketRoomsInfo.class";
+import {Prisma, File} from "@prisma/client";
 
 
 
@@ -279,17 +278,19 @@ export class ChatGateway
                 .to(deletedMessage.roomId)
                 .emit("message:deleted", editedMessageInfo);
         }
-        /*
-        * todo:
-        *   if delete for everyone  -> client.broadcast.to(roomId).emit(...)
-        *   else                    -> send
-        * */
     }
 
     @UseGuards(WsAuth)
     @SubscribeMessage("message:edit")
     async handleEditedMessage(@ConnectedSocket() client, @MessageBody() message: TNewEditedMessage) {
         const senderPayloadJWT: IUserPayloadJWT = client.user;
+
+        if (message.text && message.text.length > 0) {
+            message.text = brToNewLineChars(message.text).trim();
+            if (message.text.length === 0) {
+                return;
+            }
+        }
 
         const sender = await this.userService.findOne({
             id: senderPayloadJWT.id
@@ -313,7 +314,9 @@ export class ChatGateway
 
         const editedMessageInfo = {
             roomId: updatedMessage.roomId,
-            ...message
+            messageId: message.messageId,
+            text: codeBlocksToHTML(message.text),
+            updatedAt: updatedMessage.updatedAt
         };
 
         this.server

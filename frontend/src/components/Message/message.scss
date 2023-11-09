@@ -1,6 +1,8 @@
 .message {
   width: max-content;
   min-width: min-content;
+  min-width: -webkit-fill-available;
+  min-width: -moz-available;
   max-width: 60%;
   white-space: pre-wrap;
   display: flex;
@@ -29,7 +31,7 @@
     position: relative;
     gap: 10px;
     justify-content: space-between;
-    padding: 4px 10px 5px;
+    padding: 5px 8px 6px;
     white-space: pre-wrap;
     line-break: normal;
 
@@ -44,10 +46,11 @@
     &_empty {
       position: absolute;
       background-color: rgba(black, .2);
-      border-radius: 20px;
+      border-radius: 4px;
       color: white;
       bottom: 2px;
       right: 10px;
+      padding: 5px 15px;
     }
   }
 
@@ -61,7 +64,7 @@
     align-self: flex-end;
     max-width: calc(100% - 54px);
     overflow: hidden;
-    border-radius: 20px 20px 20px 3px;
+    border-radius: 15px 15px 15px 3px;
     transition: fadeInOut 125ms;
   }
 

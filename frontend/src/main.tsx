@@ -5,18 +5,12 @@ import {Provider} from "react-redux";
 import App from "./app/App.tsx";
 import {store} from "./store";
 // styles
-import "./styles/index.scss";
-import {DevSupport} from "@react-buddy/ide-toolbox";
-import {ComponentPreviews, useInitial} from "./dev";
+import "./index.scss";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
     <React.StrictMode>
         <Provider store={store}>
-            <DevSupport ComponentPreviews={ComponentPreviews}
-                        useInitialHook={useInitial}
-            >
-                <App/>
-            </DevSupport>
+            <App/>
         </Provider>
     </React.StrictMode>,
 ); 

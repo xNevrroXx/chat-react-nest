@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap');
-@import url("./atom-one-dark.css");
 
 ::-webkit-scrollbar {
+  height: 8px;
   width: 8px; /* THIS WILL RESET THE DEFAULT SCROLLBAR STYLING */
   background-color: white;
 }
@@ -13,7 +13,6 @@
 
 /* TO STYLE THE SCROLLBAR THUMB */
 ::-webkit-scrollbar-thumb {
-  scrollbar-gutter: initial;
   background-color: #d3d3d3;
   border-radius: 10px;
   height: 20px;
@@ -33,6 +32,14 @@
 body, html {
   min-height: 100vh;
   background-color: #fdfdfd;
+}
+
+pre {
+  code {
+    border-radius: 4px;
+    padding: 8px;
+    margin: 4px 0;
+  }
 }
 
 svg {

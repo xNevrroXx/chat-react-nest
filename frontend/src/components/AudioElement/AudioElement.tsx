@@ -1,4 +1,4 @@
-import React, {FC, useEffect, useRef, useState} from "react";
+import React, {FC, JSX, useEffect, useRef, useState} from "react";
 import * as classNames from "classnames";
 // @ts-ignore
 import {AudioVisualizer} from "react-audio-visualize";
@@ -23,7 +23,8 @@ interface IVoiceRecording {
     // default: 50px
     height?: number,
     alignCenter?: boolean,
-    createdAt?: string
+    createdAt?: string,
+    children?: JSX.Element
 }
 
 const AudioElement: FC<IVoiceRecording> = ({
@@ -33,7 +34,7 @@ const AudioElement: FC<IVoiceRecording> = ({
                                                height = 50,
                                                width = 600,
                                                alignCenter,
-                                               createdAt,
+                                               children,
                                            }) => {
     const {token} = useToken();
     const [blob, setBlob] = useState<Blob | undefined>(inputBlob);
@@ -133,14 +134,7 @@ const AudioElement: FC<IVoiceRecording> = ({
                     />
                     <p>
                         {size && <Text style={{color: token.colorTextSecondary}}>{size.value} {size.unit}</Text>}
-                        {createdAt &&
-                            <Text
-                                style={{color: token.colorTextSecondary}}
-                                className="message__time"
-                            >
-                                {createdAt}
-                            </Text>
-                        }
+                        {children}
                     </p>
                 </div>
             )}

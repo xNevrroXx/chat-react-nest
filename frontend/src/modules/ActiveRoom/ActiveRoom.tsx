@@ -17,6 +17,8 @@ import {
     RoomType,
     TSendMessage
 } from "../../models/IStore/IRoom.ts";
+import {MessageAction, TMessageForAction} from "../../models/IRoom.ts";
+import PinnedMessages from "../PinnedMessages/PinnedMessages.tsx";
 // actions
 import {useAppDispatch, useAppSelector} from "../../hooks/store.hook.ts";
 import {
@@ -27,10 +29,8 @@ import {
     toggleUserTypingSocket
 } from "../../store/thunks/room.ts";
 import {truncateTheText} from "../../utils/truncateTheText.ts";
-import PinnedMessagesList from "../../components/PinnedMessagesList/PinnedMessagesList.tsx";
 // styles
 import "./active-room.scss";
-import {MessageAction, TMessageForAction} from "../../models/IRoom.ts";
 
 const {useToken} = theme;
 const {Text, Title} = Typography;
@@ -234,7 +234,7 @@ const ActiveRoom: FC<IActiveChatProps> = ({user, room, openUsersListForForwardMe
                             >
                                 {room.name}
                             </Title>
-                            <p className="active-room__status">{userStatuses}</p>
+                            <Text style={{color: token.colorTextDisabled}} className="active-room__status">{userStatuses}</Text>
                         </div>
                     </div>
                     <div className="active-room__space"></div>
@@ -245,9 +245,7 @@ const ActiveRoom: FC<IActiveChatProps> = ({user, room, openUsersListForForwardMe
                 </div>
 
                 { room.pinnedMessages.length > 0 &&
-                    <div>
-                        <PinnedMessagesList pinnedMessages={room.pinnedMessages}/>
-                    </div>
+                    <PinnedMessages pinnedMessages={room.pinnedMessages}/>
                 }
                 
                 <RoomContent

@@ -44,6 +44,7 @@ const DialogCard: FC<IDialogCardProps> = ({id, dialogName, lastMessageInfo, onCl
                             <Markup
                                 noWrap={true}
                                 disableLineBreaks={true}
+                                noHtml={true}
                                 content={
                                     emojiParser.parse(
                                         clip(lastMessageInfo.text, 50, {html: true})

@@ -150,7 +150,8 @@ export type TTemporarilyRoomBySearch = Pick<IRoom, "id" | "name" | "type">
 // }
 
 export interface IEditedMessageSocket extends IEditMessage {
-    roomId: TValueOf<Pick<IRoom, "id">>
+    roomId: TValueOf<Pick<IRoom, "id">>,
+    updatedAt: TValueOf<Pick<IMessage, "updatedAt">>
 }
 
 export type TPinnedMessagesSocket = {

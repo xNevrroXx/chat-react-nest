@@ -142,7 +142,9 @@ const Message: FC<IMessageProps> = ({
                                 alignCenter={true}
                                 createdAt={message.createdAt}
                                 size={files.known[0].size}
-                            />
+                            >
+                                <Time isMessageEmpty={false} hasRead={message.hasRead} hasEdited={!!message.updatedAt} createdAt={message.createdAt}/>
+                            </AudioElement>
                         </div>
                         :
                         <Fragment>

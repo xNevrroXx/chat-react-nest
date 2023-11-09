@@ -64,6 +64,7 @@ const room = createSlice({
                 const targetMessage = targetChat.messages.find(chat => chat.id === action.payload.messageId);
                 if (!targetMessage) return;
                 targetMessage.text = action.payload.text;
+                targetMessage.updatedAt = action.payload.updatedAt;
             })
             .addCase(handleDeletedMessageSocket, (state, action) => {
                 const targetChat = state.rooms.find(chat => chat.id === action.payload.roomId);
