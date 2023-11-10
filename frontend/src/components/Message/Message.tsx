@@ -176,7 +176,11 @@ const Message: FC<IMessageProps> = ({
             id={message.id}
             data-message-id={message.id}
             className={
-                classNames("message", isMine && "message_mine")
+                classNames(
+                    "message",
+                    isMine && "message_mine",
+                    message.text && message.text.includes("<code class=\"hljs") && "message_with-code"
+                )
             }
         >
             <div className="message__content">

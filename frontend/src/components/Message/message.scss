@@ -1,12 +1,14 @@
 .message {
-  width: max-content;
+  width: 65%;
   min-width: min-content;
-  min-width: -webkit-fill-available;
-  min-width: -moz-available;
-  max-width: 60%;
+  max-width: 100%;
   white-space: pre-wrap;
   display: flex;
   gap: 4px;
+  &_with-code {
+    min-width: -moz-available;
+    min-width: -webkit-fill-available;
+  }
 
   &:target {
     .message__content {

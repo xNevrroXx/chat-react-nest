@@ -5,6 +5,7 @@ import {router} from "../router";
 import {useAppDispatch} from "../hooks/store.hook.ts";
 // actions
 import {checkAuthentication} from "../store/thunks/authentication.ts";
+import {ConfigProvider} from "antd";
 
 function App() {
     const dispatch = useAppDispatch();
@@ -21,7 +22,9 @@ function App() {
     }, [dispatch]);
 
     return (
-        <RouterProvider router={router}/>
+        <ConfigProvider>
+            <RouterProvider router={router}/>
+        </ConfigProvider>
     );
 }
 

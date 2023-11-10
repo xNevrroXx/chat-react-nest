@@ -11,7 +11,7 @@ const REGEX = /^(`{3})([a-z0-9+]*$)([\S\s]+?)(^\1$)/gim;
  * */
 function codeBlocksToHTML(text: string): string {
     if (!text) return text;
-    let resultCharsHTML = "";
+    let resultHTML = "";
     const prevEndMatchesIndexes = {
         textIndex: 0,
         htmlIndex: 0,
@@ -26,7 +26,7 @@ function codeBlocksToHTML(text: string): string {
 
     for (const match of matchArray) {
         // add plain text to the resulting string.
-        resultCharsHTML += text.slice(prevEndMatchesIndexes.textIndex, match.index);
+        resultHTML += text.slice(prevEndMatchesIndexes.textIndex, match.index);
         prevEndMatchesIndexes.htmlIndex += match.index - prevEndMatchesIndexes.textIndex;
         prevEndMatchesIndexes.textIndex = match.index + 1;
 
@@ -42,16 +42,22 @@ function codeBlocksToHTML(text: string): string {
 
         const codeWithWrapper =
             "<pre>" +
+                "<div class='header'>" +
+                    `<span>${language ? language : "copy"}</span>` +
+                "</div>" +
                 `<code class="hljs ${language && "language-" + language.toLowerCase()}">` +
                     highlightedCode.value +
                 "</code>" +
             "</pre>";
-        resultCharsHTML += codeWithWrapper;
+        resultHTML += codeWithWrapper;
         prevEndMatchesIndexes.htmlIndex += codeWithWrapper.length;
         prevEndMatchesIndexes.textIndex += match[0].length;
     }
+    if (prevEndMatchesIndexes.textIndex < text.length) {
+        resultHTML += text.slice(prevEndMatchesIndexes.textIndex, text.length);
+    }
 
-    return resultCharsHTML;
+    return resultHTML;
 }
 
 export {codeBlocksToHTML};
