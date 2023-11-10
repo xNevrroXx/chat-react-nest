@@ -39,11 +39,26 @@ pre {
   overflow: hidden;
   border-radius: 4px;
   margin: 4px 0;
-  div.header {
+  div.code-block-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     font-weight: 600;
     padding: 3px 5px;
     color: rgb(82 120 156 / 86%);
     background-color: rgb(168 168 168 / 33%);
+    cursor: pointer;
+    svg {
+      visibility: hidden;
+      width: max-content;
+      height: 14px;
+      vertical-align: middle;
+    }
+    &:hover {
+      svg {
+        visibility: visible;
+      }
+    }
   }
   code {
     display: block;
